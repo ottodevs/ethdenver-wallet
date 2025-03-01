@@ -90,12 +90,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       
       console.log("Attempting OAuth login with token length:", idToken.length);
       
-      // Use the callback to capture the session key
+      // Store the session key in secure storage
       const user = await oktoClient.loginUsingOAuth({
         idToken: idToken,
         provider: 'google',
       }, (sessionKey) => {
         console.log("Session key received, length:", sessionKey.sessionPubKey.length);
+        
+        // Store the session private key securely
+        // For development, we'll use localStorage, but in production
+        // consider more secure options like secure HTTP-only cookies
+        localStorage.setItem('okto_session_key', sessionKey.sessionPrivKey);
       });
       
       console.log("Authentication Success", user);
