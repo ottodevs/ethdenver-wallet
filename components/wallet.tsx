@@ -1,7 +1,7 @@
 "use client"
 
 import { AIChatbox } from "@/components/ai-chatbox"
-import { NFTGallery } from "@/components/nft-gallery"
+// import { NFTGallery } from "@/components/nft-gallery"
 import { OptionsDropdown } from "@/components/options-dropdown"
 import { ReceiveModal } from "@/components/receive-modal"
 import { SwapInterface } from "@/components/swap-interface"
@@ -103,9 +103,9 @@ export function Wallet() {
             <TabsTrigger value="activity" className="flex-1">
               Activity
             </TabsTrigger>
-            <TabsTrigger value="nfts" className="flex-1">
+            {/* <TabsTrigger value="nfts" className="flex-1">
               NFTs
-            </TabsTrigger>
+            </TabsTrigger> */}
           </TabsList>
           <TabsContent value="assets" className="min-h-[300px]">
             <TokenList />
@@ -114,7 +114,7 @@ export function Wallet() {
             <TransactionHistory />
           </TabsContent>
           <TabsContent value="nfts" className="min-h-[300px]">
-            <NFTGallery />
+            {/* <NFTGallery /> */}
           </TabsContent>
         </Tabs>
       </div>

@@ -1,4 +1,5 @@
 import AppProvider from "@/components/providers"
+import { AuthProvider } from "@/contexts/auth-context"
 import { WalletProvider } from "@/hooks/use-wallet"
 import { getServerSession } from "next-auth"
 import { redirect } from "next/navigation"
@@ -17,9 +18,11 @@ export default async function ProtectedLayout({
 
   return (
     <AppProvider session={session}>
-      <WalletProvider>
-        {children}
-      </WalletProvider>
+      <AuthProvider>
+        <WalletProvider>
+          {children}
+        </WalletProvider>
+      </AuthProvider>
     </AppProvider>
   );
 } 

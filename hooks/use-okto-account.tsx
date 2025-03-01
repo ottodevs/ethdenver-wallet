@@ -25,6 +25,7 @@ export function useOktoAccount() {
       try {
         // Check if user is authenticated
         const authStatus = oktoClient.isLoggedIn();
+        console.log("Okto authentication status:", authStatus);
         setIsAuthenticated(authStatus);
       } catch (err) {
         console.error("Failed to check authentication status:", err);
@@ -32,19 +33,30 @@ export function useOktoAccount() {
       }
     };
     
+    // Check immediately and then periodically
     checkAuthStatus();
+    const interval = setInterval(checkAuthStatus, 5000); // Check every 5 seconds
+    
+    return () => clearInterval(interval);
   }, [oktoClient]);
 
   // Fetch accounts only when authenticated
   useEffect(() => {
     async function fetchAccounts() {
-      if (!oktoClient || !isAuthenticated) return;
+      if (!oktoClient || !isAuthenticated) {
+        if (!isAuthenticated) {
+          console.log("Not authenticated, skipping account fetch");
+        }
+        return;
+      }
       
       try {
         setIsLoading(true);
         setError(null);
         
+        console.log("Fetching accounts...");
         const accountsResponse = await getAccount(oktoClient);
+        console.log("Accounts response:", accountsResponse);
         
         if (accountsResponse && accountsResponse.length > 0) {
           const formattedAccounts = accountsResponse.map(account => ({
@@ -55,6 +67,9 @@ export function useOktoAccount() {
           
           setAccounts(formattedAccounts);
           setSelectedAccount(formattedAccounts[0]); // Default to first account
+          console.log("Accounts loaded successfully");
+        } else {
+          console.log("No accounts found in response");
         }
       } catch (err) {
         console.error("Failed to fetch accounts:", err);
