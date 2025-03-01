@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label"
 import { ResponsiveDialog } from "@/components/ui/responsive-dialog"
 import { useOktoPortfolio } from "@/hooks/use-okto-portfolio"
 // import { useChainService } from "@/services/chain-service"
-import { ArrowDown, Check, Loader2 } from "lucide-react"
+import { ArrowDown, Check } from "lucide-react"
 import { useState } from "react"
 
 interface SwapInterfaceProps {
@@ -101,8 +101,8 @@ export function SwapInterface({ open, onOpenChange }: SwapInterfaceProps) {
           </div>
 
           <div className="flex justify-center">
-            <div className="bg-muted rounded-full p-2">
-              <ArrowDown className="h-5 w-5" />
+            <div className="bg-[#181723] rounded-full p-2">
+              <ArrowDown className="h-5 w-5 text-[#4364F9]" />
             </div>
           </div>
 
@@ -126,7 +126,7 @@ export function SwapInterface({ open, onOpenChange }: SwapInterfaceProps) {
           </div>
 
           {fromTokenData && toTokenData && amount && (
-            <div className="p-3 bg-muted rounded-md">
+            <div className="p-3 bg-[#181723] rounded-md">
               <p className="text-sm">
                 Estimated: {parseFloat(amount) * 0.98} {toTokenData.symbol}
               </p>
@@ -136,19 +136,43 @@ export function SwapInterface({ open, onOpenChange }: SwapInterfaceProps) {
             </div>
           )}
 
-          <Button
-            className="w-full"
-            onClick={handleSwap}
-            disabled={!fromToken || !toToken || !amount}
-          >
-            Swap
-          </Button>
+          <div className="flex space-x-2">
+            <Button
+              variant="outline"
+              className="flex-1"
+              onClick={handleClose}
+            >
+              Cancel
+            </Button>
+            <Button
+              className="flex-1 bg-[#4364F9] hover:bg-[#3a58da] text-white"
+              onClick={handleSwap}
+              disabled={!fromToken || !toToken || !amount}
+            >
+              Swap
+            </Button>
+          </div>
         </div>
       )}
 
       {status === "loading" && (
         <div className="flex flex-col items-center justify-center py-8 space-y-4">
-          <Loader2 className="h-12 w-12 animate-spin text-primary" />
+          <div className="relative w-16 h-16 mb-2">
+            {/* Outer spinning ring */}
+            <div className="absolute inset-0 rounded-full border-t-2 border-b-2 border-[#4364F9] animate-spin"></div>
+            
+            {/* Middle pulsing ring */}
+            <div className="absolute inset-2 rounded-full border-r-2 border-l-2 border-[#4364F9]/60 animate-pulse"></div>
+            
+            {/* Inner spinning ring (opposite direction) */}
+            <div className="absolute inset-4 rounded-full border-t-2 border-b-2 border-[#4364F9]/40 animate-spin animate-reverse"></div>
+            
+            {/* Center icon */}
+            <div className="absolute inset-0 flex items-center justify-center">
+              <span className="text-xl animate-bounce">💱</span>
+            </div>
+          </div>
+          
           <p className="text-center font-medium">
             Processing your swap...
           </p>
@@ -160,21 +184,26 @@ export function SwapInterface({ open, onOpenChange }: SwapInterfaceProps) {
 
       {status === "success" && (
         <div className="flex flex-col items-center justify-center py-8 space-y-4">
-          <div className="h-12 w-12 rounded-full bg-green-100 flex items-center justify-center">
-            <Check className="h-6 w-6 text-green-600" />
+          <div className="h-16 w-16 rounded-full bg-[#4364F9]/10 flex items-center justify-center">
+            <Check className="h-8 w-8 text-[#4364F9]" />
           </div>
           <p className="text-center font-medium">Swap Successful!</p>
           <p className="text-center text-sm text-muted-foreground">
             Your swap has been successfully processed.
           </p>
-          <Button onClick={handleClose}>Close</Button>
+          <Button 
+            onClick={handleClose}
+            className="bg-[#4364F9] hover:bg-[#3a58da] text-white"
+          >
+            Close
+          </Button>
         </div>
       )}
 
       {status === "error" && (
         <div className="flex flex-col items-center justify-center py-8 space-y-4">
-          <div className="h-12 w-12 rounded-full bg-red-100 flex items-center justify-center">
-            <span className="text-red-600 text-xl font-bold">!</span>
+          <div className="h-16 w-16 rounded-full bg-red-100 flex items-center justify-center">
+            <span className="text-red-600 text-2xl font-bold">!</span>
           </div>
           <p className="text-center font-medium">Swap Failed</p>
           <p className="text-center text-sm text-muted-foreground">
@@ -184,7 +213,12 @@ export function SwapInterface({ open, onOpenChange }: SwapInterfaceProps) {
             <Button variant="outline" onClick={handleClose}>
               Close
             </Button>
-            <Button onClick={() => setStatus("idle")}>Try Again</Button>
+            <Button 
+              onClick={() => setStatus("idle")}
+              className="bg-[#4364F9] hover:bg-[#3a58da] text-white"
+            >
+              Try Again
+            </Button>
           </div>
         </div>
       )}
@@ -197,9 +231,11 @@ export function SwapInterface({ open, onOpenChange }: SwapInterfaceProps) {
       onOpenChange={onOpenChange}
       title="Swap"
       description="Swap tokens at the best rates"
-      contentClassName="max-w-md"
+      contentClassName="max-w-md bg-gradient-to-br from-[#252531] to-[#13121E]"
     >
-      {swapContent}
+      <div className="space-y-4 pb-6">
+        {swapContent}
+      </div>
     </ResponsiveDialog>
   )
 }

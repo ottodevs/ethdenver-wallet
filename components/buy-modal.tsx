@@ -4,60 +4,54 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { ResponsiveDialog } from "@/components/ui/responsive-dialog"
-import { useOktoPortfolio } from "@/hooks/use-okto-portfolio"
-import { useChainService } from "@/services/chain-service"
-import { useTokenTransferService } from "@/services/token-transfer-service"
-import { Check } from "lucide-react"
+import { Check, CreditCard } from "lucide-react"
 import { useState } from "react"
 
-interface SendModalProps {
+interface BuyModalProps {
   open: boolean
   onOpenChange: (open: boolean) => void
 }
 
-export function SendModal({ open, onOpenChange }: SendModalProps) {
-  const { tokens } = useOktoPortfolio()
-  const { sendToken } = useTokenTransferService()
-  const { chains } = useChainService()
-  
-  const [recipient, setRecipient] = useState("")
+export function BuyModal({ open, onOpenChange }: BuyModalProps) {
   const [amount, setAmount] = useState("")
-  const [selectedToken, setSelectedToken] = useState("")
+  const [paymentMethod, setPaymentMethod] = useState("")
+  const [selectedCrypto, setSelectedCrypto] = useState("")
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle")
   const [errorMessage, setErrorMessage] = useState("")
-  const [txHash, setTxHash] = useState("")
+  const [txId, setTxId] = useState("")
 
-  const selectedTokenData = tokens.find(t => t.id === selectedToken)
+  const cryptoOptions = [
+    { id: "eth", name: "Ethereum", symbol: "ETH", rate: 2500 },
+    { id: "btc", name: "Bitcoin", symbol: "BTC", rate: 40000 },
+    { id: "usdc", name: "USD Coin", symbol: "USDC", rate: 1 },
+    { id: "sol", name: "Solana", symbol: "SOL", rate: 100 },
+  ]
+
+  const paymentMethods = [
+    { id: "card", name: "Credit/Debit Card" },
+    { id: "bank", name: "Bank Transfer" },
+    { id: "apple", name: "Apple Pay" },
+  ]
+
+  const selectedCryptoData = cryptoOptions.find(c => c.id === selectedCrypto)
   
-  const handleSend = async () => {
-    if (!selectedTokenData || !recipient || !amount) return
+  const handleBuy = async () => {
+    if (!selectedCryptoData || !paymentMethod || !amount) return
     
     setStatus("loading")
     setErrorMessage("")
     
     try {
-      // Find the chain for the selected token
-      const tokenChain = selectedTokenData.chain
-      const chainData = chains.find(c => c.name.toLowerCase() === tokenChain)
+      // Simulate a purchase delay
+      await new Promise(resolve => setTimeout(resolve, 3000))
       
-      if (!chainData) {
-        throw new Error("Chain not found for selected token")
-      }
-      
-      const result = await sendToken({
-        tokenId: selectedTokenData.id,
-        symbol: selectedTokenData.symbol,
-        recipient,
-        amount: parseFloat(amount),
-        caip2Id: chainData.caip2Id
-      })
-      
-      setTxHash(result)
+      // For now, we'll just simulate success
+      setTxId(`tx_${Math.random().toString(36).substring(2, 15)}`)
       setStatus("success")
     } catch (error) {
-      console.error("Send transaction failed:", error)
+      console.error("Purchase failed:", error)
       setStatus("error")
-      setErrorMessage(error instanceof Error ? error.message : "Transaction failed")
+      setErrorMessage(error instanceof Error ? error.message : "Purchase failed")
     }
   }
 
@@ -66,12 +60,12 @@ export function SendModal({ open, onOpenChange }: SendModalProps) {
       onOpenChange(false)
       // Reset form after animation completes
       setTimeout(() => {
-        setRecipient("")
         setAmount("")
-        setSelectedToken("")
+        setPaymentMethod("")
+        setSelectedCrypto("")
         setStatus("idle")
         setErrorMessage("")
-        setTxHash("")
+        setTxId("")
       }, 300)
     }
   }
@@ -80,54 +74,67 @@ export function SendModal({ open, onOpenChange }: SendModalProps) {
     <ResponsiveDialog
       open={open}
       onOpenChange={onOpenChange}
-      title="Send"
-      description="Send tokens to another wallet address"
+      title="Buy Crypto"
+      description="Purchase crypto with your preferred payment method"
       contentClassName="max-w-md bg-gradient-to-br from-[#252531] to-[#13121E]"
     >
       <div className="space-y-4 pb-6">
         {status === "idle" && (
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="token">Token</Label>
+              <Label htmlFor="amount">Amount (USD)</Label>
+              <Input
+                id="amount"
+                type="number"
+                placeholder="0.00"
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="crypto">Select Crypto</Label>
               <select
-                id="token"
+                id="crypto"
                 className="w-full rounded-md border border-input bg-background px-3 py-2"
-                value={selectedToken}
-                onChange={(e) => setSelectedToken(e.target.value)}
+                value={selectedCrypto}
+                onChange={(e) => setSelectedCrypto(e.target.value)}
               >
-                <option value="">Select a token</option>
-                {tokens.map((token) => (
-                  <option key={token.id} value={token.id}>
-                    {token.symbol} - {token.balance.toFixed(4)}
+                <option value="">Select a cryptocurrency</option>
+                {cryptoOptions.map((crypto) => (
+                  <option key={crypto.id} value={crypto.id}>
+                    {crypto.name} ({crypto.symbol})
                   </option>
                 ))}
               </select>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="recipient">Recipient Address</Label>
-              <Input
-                id="recipient"
-                placeholder="0x..."
-                value={recipient}
-                onChange={(e) => setRecipient(e.target.value)}
-              />
-            </div>
+            {selectedCryptoData && amount && (
+              <div className="p-3 bg-[#181723] rounded-md">
+                <p className="text-sm">
+                  You will receive approximately: {(parseFloat(amount) / selectedCryptoData.rate).toFixed(6)} {selectedCryptoData.symbol}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  Rate: 1 {selectedCryptoData.symbol} = ${selectedCryptoData.rate.toFixed(2)} USD
+                </p>
+              </div>
+            )}
 
             <div className="space-y-2">
-              <Label htmlFor="amount">Amount</Label>
-              <Input
-                id="amount"
-                type="number"
-                placeholder="0.0"
-                value={amount}
-                onChange={(e) => setAmount(e.target.value)}
-              />
-              {selectedTokenData && (
-                <p className="text-xs text-muted-foreground">
-                  Available: {selectedTokenData.balance.toFixed(4)} {selectedTokenData.symbol}
-                </p>
-              )}
+              <Label htmlFor="payment">Payment Method</Label>
+              <select
+                id="payment"
+                className="w-full rounded-md border border-input bg-background px-3 py-2"
+                value={paymentMethod}
+                onChange={(e) => setPaymentMethod(e.target.value)}
+              >
+                <option value="">Select a payment method</option>
+                {paymentMethods.map((method) => (
+                  <option key={method.id} value={method.id}>
+                    {method.name}
+                  </option>
+                ))}
+              </select>
             </div>
 
             <div className="flex space-x-2">
@@ -140,10 +147,10 @@ export function SendModal({ open, onOpenChange }: SendModalProps) {
               </Button>
               <Button
                 className="flex-1 bg-[#4364F9] hover:bg-[#3a58da] text-white"
-                onClick={handleSend}
-                disabled={!selectedToken || !recipient || !amount}
+                onClick={handleBuy}
+                disabled={!selectedCrypto || !paymentMethod || !amount}
               >
-                Send
+                Buy
               </Button>
             </div>
           </div>
@@ -163,15 +170,15 @@ export function SendModal({ open, onOpenChange }: SendModalProps) {
               
               {/* Center icon */}
               <div className="absolute inset-0 flex items-center justify-center">
-                <span className="text-xl animate-bounce">💸</span>
+                <CreditCard className="h-6 w-6 text-[#4364F9] animate-pulse" />
               </div>
             </div>
             
             <p className="text-center font-medium">
-              Processing your transaction...
+              Processing your purchase...
             </p>
             <p className="text-center text-sm text-muted-foreground">
-              Please wait while we process your transaction. This may take a moment.
+              Please wait while we process your payment. This may take a moment.
             </p>
           </div>
         )}
@@ -181,13 +188,13 @@ export function SendModal({ open, onOpenChange }: SendModalProps) {
             <div className="h-16 w-16 rounded-full bg-[#4364F9]/10 flex items-center justify-center">
               <Check className="h-8 w-8 text-[#4364F9]" />
             </div>
-            <p className="text-center font-medium">Transaction Successful!</p>
+            <p className="text-center font-medium">Purchase Successful!</p>
             <p className="text-center text-sm text-muted-foreground">
-              Your transaction has been successfully processed.
+              Your crypto purchase has been successfully processed.
             </p>
-            {txHash && (
+            {txId && (
               <p className="text-xs text-center break-all">
-                Transaction Hash: {txHash}
+                Transaction ID: {txId}
               </p>
             )}
             <Button 
@@ -204,9 +211,9 @@ export function SendModal({ open, onOpenChange }: SendModalProps) {
             <div className="h-16 w-16 rounded-full bg-red-100 flex items-center justify-center">
               <span className="text-red-600 text-2xl font-bold">!</span>
             </div>
-            <p className="text-center font-medium">Transaction Failed</p>
+            <p className="text-center font-medium">Purchase Failed</p>
             <p className="text-center text-sm text-muted-foreground">
-              {errorMessage || "There was an error processing your transaction."}
+              {errorMessage || "There was an error processing your purchase."}
             </p>
             <div className="flex space-x-2">
               <Button variant="outline" onClick={handleClose}>
@@ -224,5 +231,4 @@ export function SendModal({ open, onOpenChange }: SendModalProps) {
       </div>
     </ResponsiveDialog>
   )
-}
-
+} 

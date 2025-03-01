@@ -1,5 +1,6 @@
 "use client";
 
+import { BuyModal } from "@/components/buy-modal";
 import { DelegationBanner } from "@/components/delegation-banner";
 import { OptionsDropdown } from "@/components/options-dropdown";
 import { SendModal } from "@/components/send-modal";
@@ -32,6 +33,7 @@ export function Wallet() {
   const { pendingTransactions } = useOktoTransactions();
   const [swapInterfaceOpen, setSwapInterfaceOpen] = useState(false);
   const [sendModalOpen, setSendModalOpen] = useState(false);
+  const [buyModalOpen, setBuyModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("assets");
   const [loadingTimeout, setLoadingTimeout] = useState(false);
   const [authTimeout, setAuthTimeout] = useState(false);
@@ -149,24 +151,24 @@ export function Wallet() {
           
           <h2 className="text-2xl font-bold mb-4 text-white animate-pulse">
             {accountLoading && !isAuthenticated 
-              ? "Verificando autenticación..." 
+              ? "Verifying authentication..." 
               : "Loading Your Wallet"}
           </h2>
           
           <div className="space-y-3 mb-6">
             <p className="text-gray-300 font-outfit animate-fade-in-1">
               {accountLoading && !isAuthenticated 
-                ? "Conectando con su cuenta..." 
+                ? "Connecting with your account..." 
                 : "Connecting to the blockchain..."}
             </p>
             <p className="text-gray-400 font-outfit animate-fade-in-2">
               {accountLoading && !isAuthenticated 
-                ? "Verificando credenciales..." 
+                ? "Verifying credentials..." 
                 : "Fetching your latest assets..."}
             </p>
             <p className="text-gray-500 font-outfit animate-fade-in-3">
               {accountLoading && !isAuthenticated 
-                ? "Preparando su wallet..." 
+                ? "Preparing your wallet..." 
                 : "Retrieving transaction history..."}
             </p>
           </div>
@@ -181,13 +183,13 @@ export function Wallet() {
           {loadingTimeout && (
             <div className="mt-6">
               <p className="text-yellow-400 mb-2">
-                La carga está tomando más tiempo de lo esperado.
+                The load is taking longer than expected.
               </p>
               <button 
                 onClick={handleRetry}
                 className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
               >
-                Reintentar
+                Retry
               </button>
             </div>
           )}
@@ -196,13 +198,13 @@ export function Wallet() {
           {authTimeout && (
             <div className="mt-6">
               <p className="text-yellow-400 mb-2">
-                No se pudo verificar la autenticación.
+                Authentication verification failed.
               </p>
               <button 
                 onClick={() => router.push("/auth/signin")}
                 className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
               >
-                Ir a Login
+                Go to Login
               </button>
             </div>
           )}
@@ -222,7 +224,7 @@ export function Wallet() {
           onClick={handleRetry}
           className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
         >
-          Reintentar
+          Retry
         </button>
       </div>
     );
@@ -285,7 +287,10 @@ export function Wallet() {
         {/* Action Buttons */}
         <div className="flex justify-center items-center mb-6">
           <div className="flex justify-around w-full max-w-[400px]">
-            <div className="flex flex-col items-center">
+            <div 
+              className="flex flex-col items-center cursor-pointer"
+              onClick={() => setBuyModalOpen(true)}
+            >
               <div className="w-[48px] h-[48px] bg-[#4364F9] rounded-full flex items-center justify-center">
                 <Image src="/buy.svg" alt="Buy" width={48} height={48} />
               </div>
@@ -396,6 +401,15 @@ export function Wallet() {
           <SendModal
             open={sendModalOpen}
             onOpenChange={setSendModalOpen}
+          />
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {buyModalOpen && (
+          <BuyModal
+            open={buyModalOpen}
+            onOpenChange={setBuyModalOpen}
           />
         )}
       </AnimatePresence>

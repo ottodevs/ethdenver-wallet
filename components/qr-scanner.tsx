@@ -29,6 +29,7 @@ export function QrScanner({
   const [gaveUp, setGaveUp] = useState(false);
   const hasInitializedRef = useRef(false); // Track if we've already tried to initialize
   const isCleaningUpRef = useRef(false); // Track if we're currently cleaning up
+  const initializationPromiseRef = useRef<Promise<void> | null>(null);
 
   // Debug helper
   const logWithTimestamp = (message: string, data?: unknown) => {
@@ -154,6 +155,8 @@ export function QrScanner({
 
     logWithTimestamp("Initializing QR scanner - attempt starting");
 
+    let aborted = false;
+    
     try {
       // Create scanner instance
       const qrScanner = new QrScannerLib(
@@ -171,15 +174,27 @@ export function QrScanner({
 
       scannerRef.current = qrScanner;
 
-      // Start scanning
-      qrScanner
+      // Store the initialization promise to be able to handle cleanup properly
+      initializationPromiseRef.current = qrScanner
         .start()
         .then(() => {
+          if (aborted) {
+            logWithTimestamp("QR Scanner started but component was unmounted");
+            qrScanner.stop();
+            qrScanner.destroy();
+            return;
+          }
+          
           logWithTimestamp("QR Scanner started successfully");
           setIsStarted(true);
           errorAttemptsRef.current = 0; // Reset error counter on success
         })
         .catch((err) => {
+          if (aborted) {
+            logWithTimestamp("QR Scanner error after component unmounted - ignoring");
+            return;
+          }
+          
           logWithTimestamp("QR Scanner failed to start:", err);
 
           // Increment error attempt counter
@@ -221,16 +236,37 @@ export function QrScanner({
 
     // Cleanup function
     return () => {
+      aborted = true;
+      
       if (scannerRef.current && !isCleaningUpRef.current) {
         isCleaningUpRef.current = true;
         logWithTimestamp("Cleaning up QR Scanner");
 
         try {
-          scannerRef.current.stop();
-          scannerRef.current.destroy();
-          scannerRef.current = null;
+          // Wait for any pending initialization to complete before destroying
+          if (initializationPromiseRef.current) {
+            initializationPromiseRef.current
+              .catch(() => {}) // Ignore any pending errors
+              .finally(() => {
+                if (scannerRef.current) {
+                  try {
+                    scannerRef.current.stop();
+                    scannerRef.current.destroy();
+                    scannerRef.current = null;
+                  } catch (cleanupErr) {
+                    logWithTimestamp("Error during scanner cleanup:", cleanupErr);
+                  }
+                }
+              });
+          } else {
+            // No pending initialization, clean up immediately
+            scannerRef.current.stop();
+            scannerRef.current.destroy();
+            scannerRef.current = null;
+          }
+          
           setIsStarted(false);
-          logWithTimestamp("QR Scanner cleanup complete");
+          logWithTimestamp("QR Scanner cleanup initiated");
         } catch (err) {
           logWithTimestamp("Error during scanner cleanup:", err);
         }
@@ -240,7 +276,6 @@ export function QrScanner({
         isCleaningUpRef.current = false;
       }
     };
-    // Include all required dependencies
   }, [active, httpsError, hasCamera, gaveUp, onDecodeAction, onErrorAction, forceHttpsOverride]);
 
   return (
