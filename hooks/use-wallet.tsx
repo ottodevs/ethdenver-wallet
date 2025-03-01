@@ -41,8 +41,11 @@ interface WalletContextType {
   tokens: Token[]
   transactions: Transaction[]
   isLoading: boolean
+  privacyMode: boolean
+  togglePrivacyMode: () => void
   sendTransaction: (params: SendTransactionParams) => Promise<void>
   disconnect: () => void
+  getTokenDistribution: (tokenId: string) => { chain: ChainId; amount: number }[]
 }
 
 // Mock data
@@ -143,6 +146,7 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
   const [pendingTransactions, setPendingTransactions] = useState<Transaction[]>([])
   const [totalBalanceUsd, setTotalBalanceUsd] = useState(0)
   const walletAddress = "0x71C7656EC7ab88b098defB751B7401B5f6d8976F"
+  const [privacyMode, setPrivacyMode] = useState(false)
 
   // Simulate loading data
   useEffect(() => {
@@ -158,6 +162,58 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
 
     loadData()
   }, [])
+
+  // Toggle privacy mode
+  const togglePrivacyMode = () => {
+    setPrivacyMode((prev) => !prev)
+  }
+
+  // Get token distribution across chains
+  const getTokenDistribution = (tokenId: string) => {
+    const token = tokens.find((t) => t.id === tokenId)
+    if (!token) return []
+
+    // Mock distribution data - in a real app this would come from the blockchain
+    const chains: ChainId[] = ["ethereum", "polygon", "arbitrum", "optimism", "base"]
+    const distribution: { chain: ChainId; amount: number }[] = []
+
+    // Generate random distribution that adds up to the total balance
+    let remainingBalance = token.balance
+
+    // Assign random amounts to each chain except the last one
+    for (let i = 0; i < chains.length - 1; i++) {
+      // Skip the chain if it's not the token's primary chain and random chance
+      if (chains[i] !== token.chain && Math.random() > 0.6) continue
+
+      // Assign a random portion of the remaining balance
+      const portion = Math.random() * 0.7
+      const amount = Number((remainingBalance * portion).toFixed(6))
+
+      if (amount > 0) {
+        distribution.push({
+          chain: chains[i],
+          amount,
+        })
+        remainingBalance -= amount
+      }
+    }
+
+    // Assign the remaining balance to the token's primary chain
+    if (remainingBalance > 0) {
+      const existingChainIndex = distribution.findIndex((d) => d.chain === token.chain)
+
+      if (existingChainIndex >= 0) {
+        distribution[existingChainIndex].amount += remainingBalance
+      } else {
+        distribution.push({
+          chain: token.chain,
+          amount: remainingBalance,
+        })
+      }
+    }
+
+    return distribution
+  }
 
   // Optimistic UI updates for transactions
   const sendTransaction = async (params: SendTransactionParams) => {
@@ -239,8 +295,11 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
         tokens,
         transactions: allTransactions,
         isLoading,
+        privacyMode,
+        togglePrivacyMode,
         sendTransaction,
         disconnect,
+        getTokenDistribution,
       }}
     >
       {children}

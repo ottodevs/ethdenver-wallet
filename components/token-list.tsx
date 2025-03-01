@@ -8,10 +8,16 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
 import { useWallet } from "@/hooks/use-wallet"
 import { cn } from "@/lib/utils"
+import { TokenDetail } from "@/components/token-detail"
+import { Share2, Eye, EyeOff } from "lucide-react"
+import { Button } from "@/components/ui/button"
 
 export function TokenList() {
-  const { tokens, isLoading } = useWallet()
+  const { tokens, isLoading, privacyMode, togglePrivacyMode } = useWallet()
   const [expandedToken, setExpandedToken] = useState<string | null>(null)
+  const [showTokenDetail, setShowTokenDetail] = useState<string | null>(null)
+
+  const smallValueTokens = tokens.filter((token) => token.valueUsd < 10)
 
   if (isLoading) {
     return (
@@ -39,6 +45,18 @@ export function TokenList() {
 
   return (
     <div className="space-y-3">
+      <div className="flex items-center justify-between mb-2">
+        <h3 className="text-sm font-medium">Your Assets</h3>
+        <div className="flex items-center gap-2">
+          <Button variant="ghost" size="icon" onClick={togglePrivacyMode} className="h-8 w-8">
+            {privacyMode ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+          </Button>
+          <Button variant="ghost" size="icon" className="h-8 w-8">
+            <Share2 className="h-4 w-4" />
+          </Button>
+        </div>
+      </div>
+
       {tokens.map((token) => (
         <motion.div
           key={token.id}
@@ -69,9 +87,9 @@ export function TokenList() {
                   <p className="text-sm text-muted-foreground">{token.symbol}</p>
                 </div>
                 <div className="text-right">
-                  <p className="font-medium">${token.valueUsd.toLocaleString()}</p>
+                  <p className="font-medium">${privacyMode ? "*****" : token.valueUsd.toLocaleString()}</p>
                   <p className="text-sm text-muted-foreground">
-                    {token.balance.toLocaleString()} {token.symbol}
+                    {privacyMode ? "*****" : token.balance.toLocaleString()} {token.symbol}
                   </p>
                 </div>
               </div>
@@ -83,10 +101,19 @@ export function TokenList() {
                   exit={{ opacity: 0, height: 0 }}
                   className="border-t px-3 py-2 bg-muted/30"
                 >
-                  <div className="grid grid-cols-3 gap-2 text-center text-sm">
+                  <div className="grid grid-cols-4 gap-2 text-center text-sm">
                     <button className="rounded-md py-2 hover:bg-muted transition-colors">Send</button>
                     <button className="rounded-md py-2 hover:bg-muted transition-colors">Receive</button>
                     <button className="rounded-md py-2 hover:bg-muted transition-colors">Swap</button>
+                    <button
+                      className="rounded-md py-2 hover:bg-muted transition-colors"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        setShowTokenDetail(token.id)
+                      }}
+                    >
+                      Details
+                    </button>
                   </div>
                 </motion.div>
               )}
@@ -94,6 +121,31 @@ export function TokenList() {
           </Card>
         </motion.div>
       ))}
+
+      {smallValueTokens.length > 0 && (
+        <Card className="overflow-hidden cursor-pointer bg-muted/30 border-dashed">
+          <CardContent className="p-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="bg-primary/10 h-8 w-8 rounded-full flex items-center justify-center">
+                  <span className="text-xs font-medium text-primary">+{smallValueTokens.length}</span>
+                </div>
+                <div>
+                  <h3 className="text-sm font-medium">{smallValueTokens.length} tokens under $10</h3>
+                  <p className="text-xs text-muted-foreground">
+                    Total: ${smallValueTokens.reduce((sum, t) => sum + t.valueUsd, 0).toFixed(2)}
+                  </p>
+                </div>
+              </div>
+              <Button size="sm" variant="secondary">
+                Consolidate to ETH
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {showTokenDetail && <TokenDetail tokenId={showTokenDetail} onClose={() => setShowTokenDetail(null)} />}
     </div>
   )
 }

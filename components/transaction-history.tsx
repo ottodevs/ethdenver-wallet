@@ -7,9 +7,11 @@ import { Badge } from "@/components/ui/badge"
 import { useWallet } from "@/hooks/use-wallet"
 import { ArrowDownLeft, ArrowUpRight, RefreshCw } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { useState } from "react"
 
 export function TransactionHistory() {
   const { transactions, isLoading } = useWallet()
+  const [expandedTx, setExpandedTx] = useState<string | null>(null)
 
   if (isLoading) {
     return (
@@ -44,7 +46,10 @@ export function TransactionHistory() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3 }}
         >
-          <Card className="overflow-hidden">
+          <Card
+            className={cn("overflow-hidden cursor-pointer", expandedTx === tx.id ? "bg-muted/50" : "")}
+            onClick={() => setExpandedTx(expandedTx === tx.id ? null : tx.id)}
+          >
             <CardContent className="p-0">
               <div className="flex items-center gap-3 p-3">
                 <div
@@ -95,6 +100,50 @@ export function TransactionHistory() {
                   <p className="text-xs text-muted-foreground">{new Date(tx.timestamp).toLocaleDateString()}</p>
                 </div>
               </div>
+
+              {expandedTx === tx.id && tx.chainDetails && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: "auto" }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="border-t px-3 py-2 bg-muted/30"
+                >
+                  <div className="space-y-2">
+                    <h4 className="text-xs font-medium text-muted-foreground">Chain Details</h4>
+                    {tx.chainDetails.map((detail) => (
+                      <div key={detail.chain} className="flex items-center justify-between text-sm">
+                        <div className="flex items-center gap-1.5">
+                          <Badge variant="outline" className="text-xs">
+                            {detail.chain}
+                          </Badge>
+                          <span>
+                            {detail.amount} {tx.token}
+                          </span>
+                        </div>
+                        <span className="text-xs text-muted-foreground">
+                          Gas: {detail.gasFee}{" "}
+                          {detail.chain === "ethereum" ? "ETH" : detail.chain === "polygon" ? "MATIC" : "Gas"}
+                        </span>
+                      </div>
+                    ))}
+
+                    {tx.type === "swap" && tx.swapDetails && (
+                      <div className="mt-2 pt-2 border-t border-dashed">
+                        <div className="flex items-center justify-between text-sm">
+                          <span>Rate</span>
+                          <span>
+                            1 {tx.swapDetails.fromToken} = {tx.swapDetails.rate} {tx.swapDetails.toToken}
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between text-sm">
+                          <span>Slippage</span>
+                          <span>{tx.swapDetails.slippage}%</span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </motion.div>
+              )}
             </CardContent>
           </Card>
         </motion.div>
