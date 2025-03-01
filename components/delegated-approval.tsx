@@ -2,6 +2,7 @@
 
 import { Button } from "@/components/ui/button"
 import { ResponsiveDialog } from "@/components/ui/responsive-dialog"
+import { useAuth } from "@/contexts/auth-context"
 import { useOkto } from "@okto_web3/react-sdk"
 import { Check, Loader2, Shield, X } from "lucide-react"
 import { useState } from "react"
@@ -13,11 +14,20 @@ interface DelegatedApprovalProps {
 
 export function DelegatedApproval({ open, onOpenChange }: DelegatedApprovalProps) {
   const oktoClient = useOkto()
+  const { isAuthenticated, checkAuthStatus } = useAuth()
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle")
   const [errorMessage, setErrorMessage] = useState("")
   
   const handleApprove = async () => {
     if (!oktoClient) return
+    
+    // Verificar autenticación antes de continuar
+    const isAuth = await checkAuthStatus()
+    if (!isAuth) {
+      setStatus("error")
+      setErrorMessage("Authentication required")
+      return
+    }
     
     setStatus("loading")
     setErrorMessage("")

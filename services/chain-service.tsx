@@ -1,8 +1,8 @@
 "use client";
 
+import { useAuth } from "@/contexts/auth-context";
+import { getChains, useOkto } from "@okto_web3/react-sdk";
 import { useEffect, useState } from "react";
-import { useOkto } from "@okto_web3/react-sdk";
-import { getChains } from "@okto_web3/react-sdk";
 
 export interface Chain {
   id: string;
@@ -13,6 +13,7 @@ export interface Chain {
 
 export function useChainService() {
   const oktoClient = useOkto();
+  const { isAuthenticated } = useAuth();
   const [chains, setChains] = useState<Chain[]>([]);
   const [selectedChain, setSelectedChain] = useState<Chain | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -20,7 +21,7 @@ export function useChainService() {
 
   useEffect(() => {
     async function fetchChains() {
-      if (!oktoClient) return;
+      if (!oktoClient || !isAuthenticated) return;
       
       try {
         setIsLoading(true);
@@ -59,7 +60,7 @@ export function useChainService() {
     }
 
     fetchChains();
-  }, [oktoClient]);
+  }, [oktoClient, isAuthenticated]);
 
   const selectChain = (chainId: string) => {
     const chain = chains.find(c => c.id === chainId);

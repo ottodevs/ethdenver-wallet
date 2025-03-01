@@ -327,6 +327,7 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
 }
 
 export function useWallet() {
+  // const { isAuthenticated } = useAuth();
   const context = useContext(WalletContext)
   if (context === undefined) {
     throw new Error("useWallet must be used within a WalletProvider")

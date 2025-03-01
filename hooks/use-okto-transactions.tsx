@@ -1,5 +1,6 @@
 "use client";
 
+import { useAuth } from "@/contexts/auth-context";
 import { useOktoAccount } from "@/hooks/use-okto-account";
 import { getPortfolioActivity, useOkto } from "@okto_web3/react-sdk";
 import { useEffect, useState } from "react";
@@ -46,7 +47,8 @@ interface UserPortfolioActivity {
 
 export function useOktoTransactions() {
   const oktoClient = useOkto();
-  const { selectedAccount, isAuthenticated } = useOktoAccount();
+  const { selectedAccount } = useOktoAccount();
+  const { isAuthenticated } = useAuth();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [pendingTransactions, setPendingTransactions] = useState<Transaction[]>([]);
   const [isLoading, setIsLoading] = useState(true);

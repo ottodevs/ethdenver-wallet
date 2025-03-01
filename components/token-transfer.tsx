@@ -1,13 +1,13 @@
 "use client";
 
-import { useState } from "react";
-import { useOkto, UserOp } from "@okto_web3/react-sdk";
-import { tokenTransfer } from "@okto_web3/react-sdk";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useAuth } from "@/contexts/auth-context";
 import { useWallet } from "@/hooks/use-wallet";
+import { tokenTransfer, useOkto, UserOp } from "@okto_web3/react-sdk";
+import { useState } from "react";
 
 type TokenTransferParams = {
   amount: bigint;
@@ -18,6 +18,7 @@ type TokenTransferParams = {
 
 export function TokenTransfer() {
   const oktoClient = useOkto();
+  const { /*isAuthenticated,*/ checkAuthStatus } = useAuth();
   const { tokens } = useWallet();
   const [recipient, setRecipient] = useState("");
   const [amount, setAmount] = useState("");
@@ -28,6 +29,12 @@ export function TokenTransfer() {
   async function handleTransfer() {
     if (!recipient || !amount || !selectedToken) {
       setStatus("Please fill all fields");
+      return;
+    }
+
+    const isAuth = await checkAuthStatus();
+    if (!isAuth) {
+      setStatus("Authentication required");
       return;
     }
 

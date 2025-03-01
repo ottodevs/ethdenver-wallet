@@ -1,5 +1,6 @@
 "use client";
 
+import { useAuth } from "@/contexts/auth-context";
 import { getAccount, useOkto } from "@okto_web3/react-sdk";
 import { useEffect, useState } from "react";
 
@@ -11,42 +12,17 @@ interface OktoAccount {
 
 export function useOktoAccount() {
   const oktoClient = useOkto();
+  const { isAuthenticated, isLoading: authLoading } = useAuth();
   const [accounts, setAccounts] = useState<OktoAccount[]>([]);
   const [selectedAccount, setSelectedAccount] = useState<OktoAccount | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-
-  // Check authentication status
-  useEffect(() => {
-    if (!oktoClient) return;
-    
-    const checkAuthStatus = async () => {
-      try {
-        // Check if user is authenticated
-        const authStatus = oktoClient.isLoggedIn();
-        console.log("Okto authentication status:", authStatus);
-        setIsAuthenticated(authStatus);
-      } catch (err) {
-        console.error("Failed to check authentication status:", err);
-        setIsAuthenticated(false);
-      }
-    };
-    
-    // Check immediately and then periodically
-    checkAuthStatus();
-    const interval = setInterval(checkAuthStatus, 5000); // Check every 5 seconds
-    
-    return () => clearInterval(interval);
-  }, [oktoClient]);
 
   // Fetch accounts only when authenticated
   useEffect(() => {
     async function fetchAccounts() {
       if (!oktoClient || !isAuthenticated) {
-        if (!isAuthenticated) {
-          console.log("Not authenticated, skipping account fetch");
-        }
+        setIsLoading(false);
         return;
       }
       
@@ -56,7 +32,6 @@ export function useOktoAccount() {
         
         console.log("Fetching accounts...");
         const accountsResponse = await getAccount(oktoClient);
-        console.log("Accounts response:", accountsResponse);
         
         if (accountsResponse && accountsResponse.length > 0) {
           const formattedAccounts = accountsResponse.map(account => ({
@@ -67,9 +42,6 @@ export function useOktoAccount() {
           
           setAccounts(formattedAccounts);
           setSelectedAccount(formattedAccounts[0]); // Default to first account
-          console.log("Accounts loaded successfully");
-        } else {
-          console.log("No accounts found in response");
         }
       } catch (err) {
         console.error("Failed to fetch accounts:", err);
@@ -93,7 +65,7 @@ export function useOktoAccount() {
     accounts,
     selectedAccount,
     selectAccount,
-    isLoading,
+    isLoading: isLoading || authLoading,
     error,
     isAuthenticated
   };
