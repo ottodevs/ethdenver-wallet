@@ -1,5 +1,6 @@
 "use client";
 
+import { useAuth } from "@/contexts/auth-context";
 import { useOktoTransactions } from "@/hooks/use-okto-transactions";
 import { tokenTransfer, useOkto } from "@okto_web3/react-sdk";
 import { useEffect, useState } from "react";
@@ -15,6 +16,7 @@ interface DelegatedTokenTransferParams {
 
 export function useDelegatedTransferService() {
   const oktoClient = useOkto();
+  const { /*isAuthenticated,*/ checkAuthStatus } = useAuth();
   const { addPendingTransaction, updatePendingTransaction } = useOktoTransactions();
   const [sessionKey, setSessionKey] = useState<string | null>(null);
   const [delegationEnabled, setDelegationEnabled] = useState(false);
@@ -36,6 +38,12 @@ export function useDelegatedTransferService() {
   const sendTokenDelegated = async (params: DelegatedTokenTransferParams) => {
     if (!oktoClient) {
       throw new Error("Okto client not initialized");
+    }
+    
+    // Verificar autenticación antes de continuar
+    const isAuth = await checkAuthStatus();
+    if (!isAuth) {
+      throw new Error("Authentication required");
     }
     
     // Create a pending transaction for optimistic UI

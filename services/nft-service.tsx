@@ -1,5 +1,6 @@
 "use client";
 
+import { useAuth } from "@/contexts/auth-context";
 import { useOktoAccount } from "@/hooks/use-okto-account";
 import { getPortfolioNFT, nftTransfer, useOkto, UserOp } from "@okto_web3/react-sdk";
 import { useEffect, useState } from "react";
@@ -18,6 +19,7 @@ export interface NFT {
 export function useNftService() {
   const oktoClient = useOkto();
   const { selectedAccount } = useOktoAccount();
+  const { isAuthenticated } = useAuth();
   const [nfts, setNfts] = useState<NFT[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -27,7 +29,7 @@ export function useNftService() {
     let isMounted = true;
     
     async function fetchNFTs() {
-      if (!oktoClient || !selectedAccount) {
+      if (!oktoClient || !selectedAccount || !isAuthenticated) {
         if (isMounted) {
           setIsLoading(false);
           setHasInitialized(true);
@@ -134,7 +136,7 @@ export function useNftService() {
     return () => {
       isMounted = false;
     };
-  }, [oktoClient, selectedAccount, hasInitialized]);
+  }, [oktoClient, selectedAccount, isAuthenticated, hasInitialized]);
 
   const transferNFT = async (nft: NFT, recipientAddress: string) => {
     if (!oktoClient) {

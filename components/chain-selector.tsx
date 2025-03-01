@@ -1,11 +1,11 @@
 "use client";
 
-import { useState } from "react";
-import { useOkto } from "@okto_web3/react-sdk";
-import { getChains } from "@okto_web3/react-sdk";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useEffect } from "react";
+import { useAuth } from "@/contexts/auth-context";
+import { getChains, useOkto } from "@okto_web3/react-sdk";
 import Image from "next/image";
+import { useEffect, useState } from "react";
+
 interface Chain {
   id: string;
   name: string;
@@ -14,12 +14,15 @@ interface Chain {
 
 export function ChainSelector() {
   const oktoClient = useOkto();
+  const { isAuthenticated } = useAuth();
   const [chains, setChains] = useState<Chain[]>([]);
   const [selectedChain, setSelectedChain] = useState("");
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     async function fetchChains() {
+      if (!oktoClient || !isAuthenticated) return;
+      
       try {
         setIsLoading(true);
         const chainsData = await getChains(oktoClient);
@@ -44,10 +47,8 @@ export function ChainSelector() {
       }
     }
 
-    if (oktoClient) {
-      fetchChains();
-    }
-  }, [oktoClient]);
+    fetchChains();
+  }, [oktoClient, isAuthenticated]);
 
   const handleChainChange = (value: string) => {
     setSelectedChain(value);

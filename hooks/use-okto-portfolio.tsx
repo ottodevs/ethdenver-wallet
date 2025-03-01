@@ -1,5 +1,6 @@
 "use client";
 
+import { useAuth } from "@/contexts/auth-context";
 import { useOktoAccount } from "@/hooks/use-okto-account";
 import { getPortfolio, useOkto } from "@okto_web3/react-sdk";
 import { useEffect, useState } from "react";
@@ -19,6 +20,7 @@ export interface TokenBalance {
 export function useOktoPortfolio() {
   const oktoClient = useOkto();
   const { selectedAccount } = useOktoAccount();
+  const { isAuthenticated } = useAuth();
   const [tokens, setTokens] = useState<TokenBalance[]>([]);
   const [totalBalanceUsd, setTotalBalanceUsd] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
@@ -26,7 +28,7 @@ export function useOktoPortfolio() {
 
   useEffect(() => {
     async function fetchPortfolio() {
-      if (!oktoClient || !selectedAccount) return;
+      if (!oktoClient || !selectedAccount || !isAuthenticated) return;
       
       try {
         setIsLoading(true);
@@ -60,7 +62,7 @@ export function useOktoPortfolio() {
     }
 
     fetchPortfolio();
-  }, [oktoClient, selectedAccount]);
+  }, [oktoClient, selectedAccount, isAuthenticated]);
 
   return {
     tokens,

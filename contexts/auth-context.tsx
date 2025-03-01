@@ -5,12 +5,16 @@ import { useOkto } from "@okto_web3/react-sdk";
 import { useSession } from "next-auth/react";
 import { createContext, ReactNode, useContext, useEffect, useMemo, useState } from "react";
 
+// Constante para el intervalo de verificación (5 minutos en ms)
+const AUTH_CHECK_INTERVAL = 5 * 60 * 1000;
+
 interface AuthContextType {
   isAuthenticated: boolean;
   isLoading: boolean;
   error: string | null;
   authStatus: string;
   handleAuthenticate: () => Promise<unknown>;
+  checkAuthStatus: () => Promise<boolean>; // Método para verificar bajo demanda
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -18,7 +22,8 @@ const AuthContext = createContext<AuthContextType>({
   isLoading: true,
   error: null,
   authStatus: "",
-  handleAuthenticate: async () => ({ result: false })
+  handleAuthenticate: async () => ({ result: false }),
+  checkAuthStatus: async () => false
 });
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -29,6 +34,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [error, setError] = useState<string | null>(null);
   const [authStatus, setAuthStatus] = useState<string>("");
   const [isAuthenticating, setIsAuthenticating] = useState(false);
+  const [lastChecked, setLastChecked] = useState(0);
 
   // Extract ID token from session
   const idToken = useMemo(() => {
@@ -36,34 +42,54 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return session ? session.id_token : null;
   }, [session]);
 
-  // Check authentication status with Okto
-  useEffect(() => {
-    if (!oktoClient) return;
+  // Función para verificar el estado de autenticación
+  const checkAuthStatus = async (): Promise<boolean> => {
+    if (!oktoClient) return false;
     
-    const checkAuth = async () => {
-      try {
-        const authStatus = oktoClient.isLoggedIn();
-        console.log("Okto auth status check:", authStatus);
+    try {
+      const now = Date.now();
+      // Solo verificar si han pasado más de 30 segundos desde la última verificación
+      if (now - lastChecked < 30000) {
+        return isAuthenticated;
+      }
+      
+      setLastChecked(now);
+      const authStatus = oktoClient.isLoggedIn();
+      console.log("Okto auth status check:", authStatus);
+      
+      if (authStatus !== isAuthenticated) {
         setIsAuthenticated(authStatus);
         
         if (authStatus) {
           setAuthStatus("Authenticated with Okto");
         }
-      } catch (err) {
-        console.error("Auth check failed:", err);
-        setError("Failed to verify authentication");
-        setIsAuthenticated(false);
-      } finally {
-        setIsLoading(false);
       }
-    };
+      
+      return authStatus;
+    } catch (err) {
+      console.error("Auth check failed:", err);
+      setError("Failed to verify authentication");
+      setIsAuthenticated(false);
+      return false;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Verificación inicial y periódica con intervalo más largo
+  useEffect(() => {
+    if (!oktoClient) return;
     
-    checkAuth();
+    // Verificación inicial
+    checkAuthStatus();
     
-    // Periodically check auth status
-    const interval = setInterval(checkAuth, 10000);
+    // Verificación periódica con intervalo más largo (5 minutos)
+    const interval = setInterval(() => {
+      checkAuthStatus();
+    }, AUTH_CHECK_INTERVAL);
+    
     return () => clearInterval(interval);
-  }, [oktoClient]);
+  }, [oktoClient]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Handle authentication with Okto
   const handleAuthenticate = async (): Promise<unknown> => {
@@ -85,6 +111,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         console.log("Already authenticated with Okto");
         setAuthStatus("Already authenticated");
         setIsAuthenticated(true);
+        setLastChecked(Date.now()); // Actualizar timestamp de última verificación
         return { result: true };
       }
       
@@ -107,6 +134,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setAuthStatus("Authentication successful");
       setIsAuthenticated(true);
       setError(null);
+      setLastChecked(Date.now()); // Actualizar timestamp de última verificación
       return { result: true, user: JSON.stringify(user) };
     } catch (error) {
       console.error("Authentication attempt failed:", error);
@@ -145,7 +173,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       isLoading, 
       error, 
       authStatus,
-      handleAuthenticate 
+      handleAuthenticate,
+      checkAuthStatus
     }}>
       {children}
     </AuthContext.Provider>
