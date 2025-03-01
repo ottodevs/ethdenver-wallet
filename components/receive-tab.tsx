@@ -1,28 +1,77 @@
 "use client";
 
-import { NetworkSheet } from "@/components/network-sheet";
 import { useOktoAccount } from "@/hooks/use-okto-account";
 import { useTokenList } from "@/hooks/use-token-list";
-import { Copy, Share2 } from "lucide-react";
+import { ChevronDown, Copy, Share2 } from "lucide-react";
 import Image from "next/image";
 import QRCode from "qrcode";
 import { useEffect, useState } from "react";
 
 export function ReceiveTab() {
   const { selectedAccount } = useOktoAccount();
-  const { chains, selectedChain, selectedToken, selectedTokenData } =
-    useTokenList();
+  const {
+    chains,
+    selectedChain,
+    setSelectedChain,
+    selectedToken,
+    setSelectedToken,
+    selectedTokenData,
+    availableTokens,
+    amount,
+    setAmount,
+  } = useTokenList();
 
   const [copied, setCopied] = useState(false);
   const [qrCodeDataUrl, setQrCodeDataUrl] = useState<string>("");
-  const [amount, setAmount] = useState("200");
-  const [networkSheetOpen, setNetworkSheetOpen] = useState(false);
   const [addressCopied, setAddressCopied] = useState(false);
+  const [showNetworkDropdown, setShowNetworkDropdown] = useState(false);
+  const [showTokenDropdown, setShowTokenDropdown] = useState(false);
 
   const walletAddress = selectedAccount?.address || "";
   const shortAddress = walletAddress
     ? `${walletAddress.slice(0, 10)}...${walletAddress.slice(-7)}`
     : "";
+
+  // Set default chain (Optimism) if none selected
+  useEffect(() => {
+    if (!selectedChain && chains && chains.length > 0) {
+      // Find Optimism chain
+      const optimismChain = chains.find(
+        (chain) => chain.name.toLowerCase() === "optimism"
+      );
+
+      if (optimismChain) {
+        setSelectedChain(optimismChain.id);
+      } else if (chains.length > 0) {
+        // Fallback to first chain if Optimism not available
+        setSelectedChain(chains[0].id);
+      }
+    }
+  }, [chains, selectedChain, setSelectedChain]);
+
+  // Close dropdowns when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      if (
+        !target.closest(".network-dropdown") &&
+        !target.closest(".network-selector")
+      ) {
+        setShowNetworkDropdown(false);
+      }
+      if (
+        !target.closest(".token-dropdown") &&
+        !target.closest(".token-selector")
+      ) {
+        setShowTokenDropdown(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
   // Generate QR code data URL when wallet address or parameters change
   useEffect(() => {
@@ -71,6 +120,8 @@ export function ReceiveTab() {
         }
       }
     }
+
+    console.log("Generated QR data:", qrData); // For debugging
 
     // Generate QR code with error correction level Q (25%)
     QRCode.toDataURL(qrData, {
@@ -135,43 +186,57 @@ export function ReceiveTab() {
     }
   };
 
+  // Get current network name from selected chain
+  const getSelectedNetwork = () => {
+    if (!selectedChain) return "Select Network";
+    const chain = chains.find((c) => c.id === selectedChain);
+    return chain ? chain.name : "Select Network";
+  };
+
+  // Get display text for selected token
+  const getSelectedTokenDisplay = () => {
+    if (!selectedToken && !selectedTokenData) {
+      return selectedChain ? "Select Token" : "Select Network First";
+    }
+    return selectedTokenData ? `${selectedTokenData.symbol}` : "Select Token";
+  };
+
   return (
     <div className="space-y-3 font-outfit">
       {/* Network Selector */}
-      <div
-        className="flex justify-between items-center pb-4 border-b border-[#373747] cursor-pointer"
-        onClick={() => setNetworkSheetOpen(true)}
-      >
-        <span className="text-[#9493ac]">Network:</span>
-        <div className="flex items-center gap-2 text-white">
-          <div className="h-6 w-6 bg-red-500 rounded-full flex items-center justify-center text-xs">
-            OP
+      <div className="relative">
+        <div
+          className="flex justify-between items-center pb-4 border-b border-[#373747] cursor-pointer network-selector"
+          onClick={() => setShowNetworkDropdown(!showNetworkDropdown)}
+        >
+          <span className="text-[#9493ac]">Network:</span>
+          <div className="flex items-center gap-2 text-white">
+            <span>{getSelectedNetwork()}</span>
+            <ChevronDown className="h-4 w-4 ml-1" />
           </div>
-          <span>Optimism</span>
-          <svg
-            width="16"
-            height="16"
-            viewBox="0 0 24 24"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-            className="ml-1"
-          >
-            <path
-              d="M6 9l6 6 6-6"
-              stroke="white"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
         </div>
-      </div>
 
-      {/* Network Sheet */}
-      <NetworkSheet
-        open={networkSheetOpen}
-        onOpenChange={setNetworkSheetOpen}
-      />
+        {/* Network Dropdown */}
+        {showNetworkDropdown && (
+          <div className="absolute z-50 mt-1 w-full bg-[#1B1A27] border border-[#373747] rounded-lg shadow-lg max-h-[300px] overflow-y-auto network-dropdown">
+            {chains.map((chain) => (
+              <div
+                key={chain.id}
+                className="px-4 py-3 hover:bg-[#252531] cursor-pointer text-white flex items-center justify-between"
+                onClick={() => {
+                  setSelectedChain(chain.id);
+                  setShowNetworkDropdown(false);
+                }}
+              >
+                <span>{chain.name}</span>
+                {selectedChain === chain.id && (
+                  <div className="h-2.5 w-2.5 bg-white rounded-full"></div>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
 
       {/* QR Code Area */}
       <div className="flex flex-col items-center rounded-2xl border border-[#373747] p-3 pt-6 pb-6 bg-[#1B1A27]/50">
@@ -204,16 +269,73 @@ export function ReceiveTab() {
         </div>
       </div>
 
-      {/* Amount Input */}
+      {/* Amount Input and Token Selection */}
       <div className="w-full h-20 relative bg-gradient-to-b from-[#252531] to-[#181826] rounded-2xl border border-[#373747] backdrop-blur-[20px]">
-        <div className="w-full h-12 px-4 pt-4">
-          <div className="text-[#9493ac] text-sm font-normal font-outfit leading-tight">
-            Select Amount
-          </div>
-          <div className="w-full h-5 mt-1">
-            <div className="text-white text-base font-normal font-outfit leading-tight">
-              USDC/OP
+        <div className="w-full h-12 px-4 pt-4 flex justify-between items-start">
+          <div className="relative">
+            <div className="text-[#9493ac] text-sm font-normal font-outfit leading-tight">
+              Select Amount
             </div>
+            <div
+              className="flex items-center gap-1 mt-1 cursor-pointer token-selector"
+              onClick={() => setShowTokenDropdown(!showTokenDropdown)}
+            >
+              <div className="text-white text-base font-normal font-outfit leading-tight">
+                {getSelectedTokenDisplay()}
+              </div>
+              <ChevronDown className="h-3 w-3 text-white" />
+            </div>
+
+            {/* Token Dropdown */}
+            {showTokenDropdown && (
+              <div className="absolute z-50 bottom-full mb-2 w-[220px] bg-[#1B1A27] border border-[#373747] rounded-lg shadow-lg max-h-[300px] overflow-y-auto token-dropdown">
+                {selectedChain ? (
+                  availableTokens.length > 0 ? (
+                    availableTokens.map((token) => (
+                      <div
+                        key={token.id}
+                        className="px-4 py-3 hover:bg-[#252531] cursor-pointer text-white flex items-center justify-between"
+                        onClick={() => {
+                          setSelectedToken(token.id);
+                          setShowTokenDropdown(false);
+                        }}
+                      >
+                        <div className="flex items-center gap-2">
+                          {token.logoURI ? (
+                            <Image
+                              src={token.logoURI}
+                              alt={token.symbol}
+                              className="h-5 w-5 rounded-full"
+                              width={20}
+                              height={20}
+                              unoptimized={true}
+                            />
+                          ) : (
+                            <div className="h-5 w-5 rounded-full bg-gray-700 flex items-center justify-center">
+                              <span className="text-[10px] text-white">
+                                {token.symbol.substring(0, 1)}
+                              </span>
+                            </div>
+                          )}
+                          <span>{token.symbol}</span>
+                        </div>
+                        {selectedToken === token.id && (
+                          <div className="h-2.5 w-2.5 bg-white rounded-full"></div>
+                        )}
+                      </div>
+                    ))
+                  ) : (
+                    <div className="px-4 py-3 text-[#9493ac]">
+                      No tokens available for this network
+                    </div>
+                  )
+                ) : (
+                  <div className="px-4 py-3 text-[#9493ac]">
+                    Please select a network first
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </div>
         <div className="absolute right-[17px] top-[17px] w-[110px] p-2.5 rounded-2xl border border-[#373a46] flex justify-center items-center">
@@ -221,7 +343,7 @@ export function ReceiveTab() {
             type="text"
             value={amount}
             onChange={(e) => setAmount(e.target.value)}
-            className="text-right text-white text-xl font-medium font-outfit bg-transparent w-full outline-none"
+            className="text-center text-white text-xl font-medium font-outfit bg-transparent w-full outline-none"
           />
         </div>
       </div>

@@ -11,7 +11,7 @@ export default function Dashboard() {
       className="flex min-h-screen flex-col items-center"
       style={{ background: "#11101C" }}
     >
-      <div className="container max-w-md p-4 min-h-screen">
+      <div className="container max-w-md px-4 min-h-screen">
         {authError && <p className="text-sm text-red-500 mb-4">{authError}</p>}
         <Wallet />
       </div>

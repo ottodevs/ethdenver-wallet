@@ -72,7 +72,7 @@ export function Wallet() {
 
   return (
     <>
-      <div className="pt-0 pb-4 font-outfit">
+      <div className="pt-3 pb-4 font-outfit">
         <div className="flex justify-between items-center mb-4">
           <OptionsDropdown />
           <div className="w-8"></div> {/* Empty space to maintain layout */}
@@ -90,7 +90,7 @@ export function Wallet() {
         <DelegationBanner />
 
         {/* Centered Total Balance Section */}
-        <div className="flex flex-col items-center mb-10 mt-16">
+        <div className="flex flex-col items-center mb-10 mt-14">
           <div className="flex items-center gap-2">
             <div className="text-[16px] text-gray-400 font-outfit">
               TOTAL BALANCE
@@ -170,7 +170,7 @@ export function Wallet() {
               onClick={() => setActiveTab("assets")}
               className={`flex-1 h-full rounded-[20px] flex justify-center items-center cursor-pointer ${
                 activeTab === "assets"
-                  ? "bg-[#343445] border border-[#373747] shadow-sm"
+                  ? "bg-gradient-to-br from-[#353545] to-[rgba(43,43,63,0.55)] border border-[#383A46] shadow-sm"
                   : ""
               }`}
             >
@@ -180,7 +180,7 @@ export function Wallet() {
               onClick={() => setActiveTab("activity")}
               className={`flex-1 h-full rounded-[20px] flex justify-center items-center cursor-pointer ${
                 activeTab === "activity"
-                  ? "bg-[#343445] border border-[#373747] shadow-sm"
+                  ? "bg-gradient-to-br from-[#353545] to-[rgba(43,43,63,0.55)] border border-[#383A46] shadow-sm"
                   : ""
               }`}
             >
@@ -195,7 +195,7 @@ export function Wallet() {
               onClick={() => setActiveTab("nfts")}
               className={`flex-1 h-full rounded-[20px] flex justify-center items-center cursor-pointer ${
                 activeTab === "nfts"
-                  ? "bg-[#343445] border border-[#373747] shadow-sm"
+                  ? "bg-gradient-to-br from-[#353545] to-[rgba(43,43,63,0.55)] border border-[#383A46] shadow-sm"
                   : ""
               }`}
             >
@@ -204,27 +204,30 @@ export function Wallet() {
           </div>
         </div>
 
-        {/* Content based on active tab */}
-        <div
-          className={
-            activeTab === "assets" && isLoadingPortfolio
-              ? "min-h-[200px] flex items-center justify-center"
-              : ""
-          }
-        >
-          {activeTab === "assets" && isAuthenticated && selectedAccount ? (
-            <TokenList />
-          ) : activeTab === "activity" ? (
-            <TransactionHistory />
-          ) : activeTab === "nfts" ? (
-            <div className="text-center text-gray-400 py-8">
-              NFTs coming soon
-            </div>
-          ) : (
-            <div className="text-center text-gray-400 py-8">
-              No account selected
-            </div>
-          )}
+        {/* Gradient Background Container with Rounded Top Corners */}
+        <div className="w-screen -mx-4 rounded-t-2xl bg-gradient-to-br from-[#252531] to-[#13121E] min-h-[calc(100vh-300px)]">
+          {/* Content based on active tab */}
+          <div
+            className={
+              activeTab === "assets" && isLoadingPortfolio
+                ? "min-h-[200px] flex items-center justify-center py-4"
+                : "py-4"
+            }
+          >
+            {activeTab === "assets" && isAuthenticated && selectedAccount ? (
+              <TokenList />
+            ) : activeTab === "activity" ? (
+              <TransactionHistory />
+            ) : activeTab === "nfts" ? (
+              <div className="text-center text-gray-400 py-8">
+                NFTs coming soon
+              </div>
+            ) : (
+              <div className="text-center text-gray-400 py-8">
+                No account selected
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
