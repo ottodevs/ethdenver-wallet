@@ -3,10 +3,12 @@
 
 import { useOkto } from "@okto_web3/react-sdk";
 import { useSession } from "next-auth/react";
-import { createContext, ReactNode, useContext, useEffect, useMemo, useState } from "react";
+import { createContext, ReactNode, useCallback, useContext, useEffect, useMemo, useState } from "react";
 
 // Constante para el intervalo de verificación (5 minutos en ms)
 const AUTH_CHECK_INTERVAL = 5 * 60 * 1000;
+// Minimum time between manual auth checks (30 seconds)
+const MIN_CHECK_INTERVAL = 30 * 1000;
 
 interface AuthContextType {
   isAuthenticated: boolean;
@@ -14,7 +16,7 @@ interface AuthContextType {
   error: string | null;
   authStatus: string;
   handleAuthenticate: () => Promise<unknown>;
-  checkAuthStatus: () => Promise<boolean>; // Método para verificar bajo demanda
+  checkAuthStatus: () => Promise<boolean>;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -25,6 +27,10 @@ const AuthContext = createContext<AuthContextType>({
   handleAuthenticate: async () => ({ result: false }),
   checkAuthStatus: async () => false
 });
+
+export function useAuth() {
+  return useContext(AuthContext);
+}
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const { data: session } = useSession();
@@ -42,20 +48,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return session ? session.id_token : null;
   }, [session]);
 
-  // Función para verificar el estado de autenticación
-  const checkAuthStatus = async (): Promise<boolean> => {
+  // Memoize checkAuthStatus to prevent recreation on each render
+  const checkAuthStatus = useCallback(async (): Promise<boolean> => {
     if (!oktoClient) return false;
     
     try {
       const now = Date.now();
-      // Solo verificar si han pasado más de 30 segundos desde la última verificación
-      if (now - lastChecked < 30000) {
+      // Only check if more than MIN_CHECK_INTERVAL has passed since last check
+      if (now - lastChecked < MIN_CHECK_INTERVAL) {
         return isAuthenticated;
       }
       
       setLastChecked(now);
       const authStatus = oktoClient.isLoggedIn();
-      console.log("Okto auth status check:", authStatus);
       
       if (authStatus !== isAuthenticated) {
         setIsAuthenticated(authStatus);
@@ -74,25 +79,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } finally {
       setIsLoading(false);
     }
-  };
-
-  // Verificación inicial y periódica con intervalo más largo
-  useEffect(() => {
-    if (!oktoClient) return;
-    
-    // Verificación inicial
-    checkAuthStatus();
-    
-    // Verificación periódica con intervalo más largo (5 minutos)
-    const interval = setInterval(() => {
-      checkAuthStatus();
-    }, AUTH_CHECK_INTERVAL);
-    
-    return () => clearInterval(interval);
-  }, [oktoClient]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [oktoClient, lastChecked, isAuthenticated]);
 
   // Handle authentication with Okto
-  const handleAuthenticate = async (): Promise<unknown> => {
+  const handleAuthenticate = useCallback(async (): Promise<unknown> => {
     if (!idToken || !oktoClient) {
       setError("Missing requirements for authentication");
       return { result: false, error: "Missing requirements for authentication" };
@@ -111,30 +101,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         console.log("Already authenticated with Okto");
         setAuthStatus("Already authenticated");
         setIsAuthenticated(true);
-        setLastChecked(Date.now()); // Actualizar timestamp de última verificación
+        setLastChecked(Date.now());
         return { result: true };
       }
-      
-      console.log("Attempting OAuth login with token length:", idToken.length);
       
       // Store the session key in secure storage
       const user = await oktoClient.loginUsingOAuth({
         idToken: idToken,
         provider: 'google',
       }, (sessionKey) => {
-        console.log("Session key received, length:", sessionKey.sessionPubKey.length);
-        
         // Store the session private key securely
-        // For development, we'll use localStorage, but in production
-        // consider more secure options like secure HTTP-only cookies
         localStorage.setItem('okto_session_key', sessionKey.sessionPrivKey);
       });
       
-      console.log("Authentication Success", user);
       setAuthStatus("Authentication successful");
       setIsAuthenticated(true);
       setError(null);
-      setLastChecked(Date.now()); // Actualizar timestamp de última verificación
+      setLastChecked(Date.now());
       return { result: true, user: JSON.stringify(user) };
     } catch (error) {
       console.error("Authentication attempt failed:", error);
@@ -143,7 +126,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       try {
         const isLoggedIn = oktoClient.isLoggedIn();
         if (isLoggedIn) {
-          console.log("Already authenticated despite error");
           setAuthStatus("Authentication successful");
           setIsAuthenticated(true);
           return { result: true };
@@ -158,27 +140,42 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } finally {
       setIsAuthenticating(false);
     }
-  };
+  }, [idToken, oktoClient, isAuthenticating]);
+
+  // Initial auth check when client and session are available
+  useEffect(() => {
+    if (oktoClient) {
+      checkAuthStatus();
+      
+      // Periodic check with longer interval
+      const interval = setInterval(() => {
+        checkAuthStatus();
+      }, AUTH_CHECK_INTERVAL);
+      
+      return () => clearInterval(interval);
+    }
+  }, [oktoClient, checkAuthStatus]);
 
   // Attempt authentication when session and client are available
   useEffect(() => {
     if (idToken && oktoClient && !isAuthenticated && !isAuthenticating) {
       handleAuthenticate();
     }
-  }, [idToken, oktoClient, isAuthenticated, isAuthenticating]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [idToken, oktoClient, isAuthenticated, isAuthenticating, handleAuthenticate]);
+
+  // Memoize context value to prevent unnecessary re-renders
+  const contextValue = useMemo(() => ({
+    isAuthenticated,
+    isLoading,
+    error,
+    authStatus,
+    handleAuthenticate,
+    checkAuthStatus
+  }), [isAuthenticated, isLoading, error, authStatus, handleAuthenticate, checkAuthStatus]);
 
   return (
-    <AuthContext.Provider value={{ 
-      isAuthenticated, 
-      isLoading, 
-      error, 
-      authStatus,
-      handleAuthenticate,
-      checkAuthStatus
-    }}>
+    <AuthContext.Provider value={contextValue}>
       {children}
     </AuthContext.Provider>
   );
 }
-
-export const useAuth = () => useContext(AuthContext);

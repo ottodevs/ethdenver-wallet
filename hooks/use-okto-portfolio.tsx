@@ -3,7 +3,7 @@
 import { useAuth } from "@/contexts/auth-context";
 import { useOktoAccount } from "@/hooks/use-okto-account";
 import { getPortfolio, useOkto } from "@okto_web3/react-sdk";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 export interface TokenBalance {
   id: string;
@@ -17,6 +17,22 @@ export interface TokenBalance {
   isNative?: boolean;
 }
 
+// Define the cache structure with proper types
+interface PortfolioCache {
+  data: {
+    tokens: TokenBalance[];
+    totalBalanceUsd: number;
+  } | null;
+  timestamp: number;
+}
+
+// Add a simple cache mechanism
+const CACHE_DURATION = 60 * 1000; // 1 minute cache
+let portfolioCache: PortfolioCache = {
+  data: null,
+  timestamp: 0
+};
+
 export function useOktoPortfolio() {
   const oktoClient = useOkto();
   const { selectedAccount } = useOktoAccount();
@@ -26,9 +42,26 @@ export function useOktoPortfolio() {
   const [isLoading, setIsLoading] = useState(true);
   const [hasInitialized, setHasInitialized] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [lastFetchTime, setLastFetchTime] = useState(0);
 
-  const fetchPortfolio = useCallback(async () => {
-    if (!oktoClient || !selectedAccount || !isAuthenticated) return;
+  const fetchPortfolio = useCallback(async (forceRefresh = false) => {
+    if (!oktoClient || !selectedAccount || !isAuthenticated) {
+      setIsLoading(false);
+      return;
+    }
+    
+    const now = Date.now();
+    
+    // Use cached data if available and not forcing refresh
+    if (!forceRefresh && 
+        portfolioCache.data && 
+        now - portfolioCache.timestamp < CACHE_DURATION) {
+      const cachedData = portfolioCache.data;
+      setTokens(cachedData.tokens);
+      setTotalBalanceUsd(cachedData.totalBalanceUsd);
+      setIsLoading(false);
+      return;
+    }
     
     try {
       setIsLoading(true);
@@ -36,7 +69,7 @@ export function useOktoPortfolio() {
       
       const portfolio = await getPortfolio(oktoClient);
       
-      // Transform portfolio data to match your Token interface
+      // Transform portfolio data
       const formattedTokens: TokenBalance[] = portfolio.groupTokens.map(group => ({
         id: group.id,
         name: group.name,
@@ -49,13 +82,23 @@ export function useOktoPortfolio() {
         isNative: !group.tokenAddress || group.tokenAddress === ""
       }));
       
+      const totalUsd = parseFloat(portfolio.aggregatedData.totalHoldingPriceUsdt);
+      
+      // Update cache
+      portfolioCache = {
+        data: {
+          tokens: formattedTokens,
+          totalBalanceUsd: totalUsd
+        },
+        timestamp: now
+      };
+      
       setTokens(formattedTokens);
-      setTotalBalanceUsd(parseFloat(portfolio.aggregatedData.totalHoldingPriceUsdt));
+      setTotalBalanceUsd(totalUsd);
+      setLastFetchTime(now);
     } catch (err) {
       console.error("Failed to fetch portfolio:", err);
       setError("Failed to load portfolio data");
-      
-      // Fallback to empty state
       setTokens([]);
       setTotalBalanceUsd(0);
     } finally {
@@ -64,20 +107,21 @@ export function useOktoPortfolio() {
     }
   }, [oktoClient, selectedAccount, isAuthenticated]);
 
+  // Initial fetch
   useEffect(() => {
     fetchPortfolio();
   }, [fetchPortfolio]);
 
-  const refetch = useCallback(() => {
-    return fetchPortfolio();
-  }, [fetchPortfolio]);
-
-  return {
+  // Memoize the return value to prevent unnecessary re-renders
+  const returnValue = useMemo(() => ({
     tokens,
     totalBalanceUsd,
     isLoading,
     hasInitialized,
     error,
-    refetch
-  };
+    refetch: () => fetchPortfolio(true),
+    lastFetchTime
+  }), [tokens, totalBalanceUsd, isLoading, error, fetchPortfolio, lastFetchTime]);
+
+  return returnValue;
 } 
