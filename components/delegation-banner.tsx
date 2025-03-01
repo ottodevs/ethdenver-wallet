@@ -9,16 +9,26 @@ export function DelegationBanner() {
   const [visible, setVisible] = useState(false);
   const [delegatedApprovalOpen, setDelegatedApprovalOpen] = useState(false);
 
-  // Check if delegation is already enabled at initialization
+  // Check if delegation is already enabled or banner was dismissed
   useEffect(() => {
     if (typeof window !== "undefined") {
       const isDelegationEnabled = localStorage.getItem(
         "okto_delegation_enabled"
       );
-      // Only show the banner if delegation is NOT enabled
-      setVisible(!isDelegationEnabled);
+      const isBannerDismissed = localStorage.getItem(
+        "okto_delegation_banner_dismissed"
+      );
+      
+      // Only show the banner if delegation is NOT enabled AND banner is NOT dismissed
+      setVisible(!isDelegationEnabled && !isBannerDismissed);
     }
   }, []);
+
+  const handleDismiss = () => {
+    // Store the dismissal in localStorage
+    localStorage.setItem("okto_delegation_banner_dismissed", "true");
+    setVisible(false);
+  };
 
   if (!visible) return null;
 
@@ -35,7 +45,7 @@ export function DelegationBanner() {
               size="sm"
               variant="ghost"
               className="h-8 w-8 p-0 rounded-full text-white hover:bg-[#373747]/50"
-              onClick={() => setVisible(false)}
+              onClick={handleDismiss}
             >
               <X className="h-4 w-4" />
             </Button>
