@@ -1,16 +1,24 @@
 "use client";
 
+import { Skeleton as TransactionSkeleton } from "@/components/ui/skeleton";
 import { useOktoTransactions } from "@/hooks/use-okto-transactions";
 import { formatDistanceToNow } from "date-fns";
 import { motion } from "framer-motion";
-import { ArrowDownLeft, ArrowUpRight, Clock } from "lucide-react";
+import { ArrowDownLeft, ArrowUpRight, Clock, RefreshCw } from "lucide-react";
+import { useEffect, useState } from "react";
 
-export function TransactionHistory({
-  animated = true,
-}: {
-  animated?: boolean;
-}) {
-  const { transactions, isLoading, error } = useOktoTransactions();
+export function TransactionHistory({ animated = true }: { animated?: boolean }) {
+  const { transactions, isLoading, hasInitialized, error, refetch } = useOktoTransactions()
+  const [showRefreshButton, setShowRefreshButton] = useState(false)
+
+  // Show refresh button if there's an error or no transactions after initialization
+  useEffect(() => {
+    if ((error || (hasInitialized && (!transactions || transactions.length === 0))) && !isLoading) {
+      setShowRefreshButton(true)
+    } else {
+      setShowRefreshButton(false)
+    }
+  }, [error, hasInitialized, transactions, isLoading])
 
   // Animation variants for Framer Motion
   const container = {
@@ -28,27 +36,50 @@ export function TransactionHistory({
     show: { opacity: 1, y: 0 },
   };
 
-  if (isLoading) {
+  // Show skeletons during initial loading
+  if (isLoading && !hasInitialized) {
     return (
-      <div className="flex justify-center items-center h-[300px]">
-        <p className="text-sm text-muted-foreground">Loading transactions...</p>
+      <div className="space-y-2">
+        {Array(3).fill(0).map((_, i) => (
+          <TransactionSkeleton key={`skeleton-${i}`} />
+        ))}
       </div>
     );
   }
 
+  // Show error state
   if (error) {
     return (
-      <div className="flex justify-center items-center h-[300px]">
-        <p className="text-sm text-red-500">{error}</p>
+      <div className="flex flex-col justify-center items-center h-[300px]">
+        <p className="text-sm text-red-500 mb-3">{error}</p>
+        {showRefreshButton && (
+          <button 
+            onClick={() => refetch()} 
+            className="flex items-center gap-2 px-4 py-2 bg-primary/80 text-primary-foreground rounded-md hover:bg-primary"
+          >
+            <RefreshCw className="h-4 w-4" />
+            Retry
+          </button>
+        )}
       </div>
     );
   }
 
-  if (!transactions || transactions.length === 0) {
+  // Show empty state after loading is complete
+  if ((!transactions || transactions.length === 0) && hasInitialized) {
     return (
       <div className="flex flex-col justify-center items-center h-[300px]">
         <Clock className="h-8 w-8 text-muted-foreground mb-2" />
-        <p className="text-sm text-muted-foreground">No transactions found</p>
+        <p className="text-sm text-muted-foreground mb-3">No transactions found</p>
+        {showRefreshButton && (
+          <button 
+            onClick={() => refetch()} 
+            className="flex items-center gap-2 px-4 py-2 bg-primary/80 text-primary-foreground rounded-md hover:bg-primary"
+          >
+            <RefreshCw className="h-4 w-4" />
+            Refresh
+          </button>
+        )}
       </div>
     );
   }
@@ -103,38 +134,23 @@ export function TransactionHistory({
   // Helper function to format USD value
   const formatUsdValue = (
     value: string | number | null,
-    symbol: string
   ): string => {
-    if (value === undefined || value === null) {
-      // Try to find the token in the transaction list to get its value
-      const matchingTx = transactions.find((tx) => tx.symbol === symbol);
-      if (
-        matchingTx &&
-        matchingTx.valueUsd &&
-        typeof matchingTx.valueUsd === "number"
-      ) {
-        return `$${matchingTx.valueUsd.toFixed(2)}`;
-      }
-      return "$0.00";
-    }
+    if (value === null || value === undefined) return "";
 
-    // Handle numeric values
-    if (typeof value === "number") {
-      if (value === 0 || isNaN(value)) return "$0.00";
-      return `$${value.toFixed(2)}`;
-    }
-
-    // Handle string values that can be parsed as numbers
+    let numValue: number;
     if (typeof value === "string") {
-      const num = parseFloat(value);
-      if (!isNaN(num)) {
-        if (num === 0) return "$0.00";
-        return `$${num.toFixed(2)}`;
-      }
+      numValue = parseFloat(value);
+      if (isNaN(numValue)) return "";
+    } else if (typeof value === "number") {
+      numValue = value;
+    } else {
+      return "";
     }
 
-    // Return default for values we can't format properly
-    return "$0.00";
+    // Don't show USD value if it's zero or very small
+    if (numValue === 0 || Math.abs(numValue) < 0.01) return "";
+
+    return `$${numValue.toFixed(2)}`;
   };
 
   // Helper function to format timestamp
@@ -214,7 +230,7 @@ export function TransactionHistory({
     >
       {transactions.map((tx) => {
         // Format USD value if available - try multiple properties
-        const usdValue = formatUsdValue(tx.valueUsd || 0, tx.symbol || "");
+        const usdValue = formatUsdValue(tx.valueUsd || 0);
         const formattedAmount = formatAmount(tx.amount);
         const isOutgoing =
           (tx.type || "").toLowerCase() === "send" ||
@@ -276,6 +292,13 @@ export function TransactionHistory({
           </TransactionComponent>
         );
       })}
+      
+      {/* Show loading indicator for subsequent loads */}
+      {isLoading && hasInitialized && (
+        <div className="p-2 text-center">
+          <div className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-solid border-current border-r-transparent"></div>
+        </div>
+      )}
     </ListComponent>
   );
 }

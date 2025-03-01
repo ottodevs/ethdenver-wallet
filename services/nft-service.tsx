@@ -16,9 +16,15 @@ export interface NFT {
   caip2Id: string;
 }
 
+// Define the cache structure with proper types
+interface NFTCache {
+  data: NFT[] | null;
+  timestamp: number;
+}
+
 // NFT cache with timeout
 const NFT_CACHE_DURATION = 2 * 60 * 1000; // 2 minutes
-let nftCache = {
+let nftCache: NFTCache = {
   data: null,
   timestamp: 0
 };
@@ -29,13 +35,14 @@ export function useNftService() {
   const { isAuthenticated } = useAuth();
   const [nfts, setNfts] = useState<NFT[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [hasInitialized, setHasInitialized] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const fetchNFTs = useCallback(async (forceRefresh = false) => {
     if (!oktoClient || !selectedAccount || !isAuthenticated) {
-      setIsLoading(false);
-      setHasInitialized(true);
+      if (hasInitialized) {
+        setIsLoading(false);
+      }
       return;
     }
     
@@ -51,12 +58,13 @@ export function useNftService() {
       return;
     }
     
-    // Only set loading to true on first load or when dependencies change
-    if (!hasInitialized) {
+    // Only set loading to true on first load or when forcing refresh
+    if (!hasInitialized || forceRefresh) {
       setIsLoading(true);
     }
     
     try {
+      setError(null);
       const response = await getPortfolioNFT(oktoClient);
       
       // Handle different response formats
@@ -92,7 +100,11 @@ export function useNftService() {
       } else {
         // If nftData is not an array or is empty, set empty array (no error)
         console.log("No NFTs found for this user");
-        setNfts([]);
+        
+        // Don't clear NFTs if we already have data
+        if (nfts.length === 0) {
+          setNfts([]);
+        }
       }
     } catch (err) {
       console.error("Failed to fetch NFTs:", err);
@@ -100,13 +112,12 @@ export function useNftService() {
       // Handle specific error cases
       if (err && typeof err === 'object' && 'response' in err && 
           err.response && typeof err.response === 'object' && 'data' in err.response) {
-        
         const errorData = err.response.data;
-        // Check for the specific "No Active Collections Found" error
+        
         if (errorData && 
-            typeof errorData === 'object' &&
-            'status' in errorData &&
+            typeof errorData === 'object' && 
             'error' in errorData &&
+            'status' in errorData &&
             errorData.status === "error" &&
             errorData.error &&
             typeof errorData.error === 'object' &&
@@ -116,7 +127,11 @@ export function useNftService() {
              errorData.error.errorCode === "ER-TECH-0001")) {
           
           console.log("No active NFT collections found - treating as empty state");
-          setNfts([]);
+          
+          // Don't clear NFTs if we already have data
+          if (nfts.length === 0) {
+            setNfts([]);
+          }
           setError(null);
           return;
         }
@@ -129,7 +144,11 @@ export function useNftService() {
            err.message.includes("empty") ||
            err.message.includes("No Active Collections"))) {
         // For "No NFTs found" or similar messages, just set empty array without error
-        setNfts([]);
+        
+        // Don't clear NFTs if we already have data
+        if (nfts.length === 0) {
+          setNfts([]);
+        }
         setError(null);
       } else {
         // For other errors, show the error message
@@ -139,7 +158,7 @@ export function useNftService() {
       setIsLoading(false);
       setHasInitialized(true);
     }
-  }, [oktoClient, selectedAccount, isAuthenticated, hasInitialized]);
+  }, [oktoClient, selectedAccount, isAuthenticated, hasInitialized, nfts.length]);
 
   // Initial fetch
   useEffect(() => {
@@ -191,9 +210,10 @@ export function useNftService() {
     nfts,
     transferNFT,
     isLoading,
+    hasInitialized,
     error,
     refetch: () => fetchNFTs(true)
-  }), [nfts, transferNFT, isLoading, error, fetchNFTs]);
+  }), [nfts, transferNFT, isLoading, hasInitialized, error, fetchNFTs]);
 
   return returnValue;
 } 
