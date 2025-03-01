@@ -1,6 +1,5 @@
 "use client";
 
-import { AIChatbox } from "@/components/ai-chatbox";
 import { OptionsDropdown } from "@/components/options-dropdown";
 import { ReceiveModal } from "@/components/receive-modal";
 import { SwapInterface } from "@/components/swap-interface";
@@ -13,11 +12,13 @@ import { useWallet } from "@/hooks/use-wallet";
 import { AnimatePresence } from "framer-motion";
 import { ArrowDownUp, QrCode } from "lucide-react";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { LoginButton } from "./login-button";
 import { TransactionHistory } from "./transaction-history";
 
 export function Wallet() {
+  const router = useRouter();
   const { privacyMode } = useWallet();
   const { isLoading, error, isAuthenticated } = useOktoAccount();
   const { totalBalanceUsd } = useOktoPortfolio();
@@ -132,7 +133,10 @@ export function Wallet() {
               </div>
               <span className="text-[12px] text-gray-400 mt-2">SWAP</span>
             </div>
-            <div className="flex flex-col items-center">
+            <div
+              className="flex flex-col items-center cursor-pointer transition-opacity hover:opacity-80 active:opacity-70"
+              onClick={() => router.push("/ask")}
+            >
               <div className="w-[48px] h-[48px] flex items-center justify-center">
                 <Image src="/ask.svg" alt="Ask" width={48} height={48} />
               </div>
@@ -209,8 +213,6 @@ export function Wallet() {
           />
         )}
       </AnimatePresence>
-
-      <AIChatbox />
     </>
   );
 }
