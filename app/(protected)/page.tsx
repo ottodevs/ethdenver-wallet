@@ -1,13 +1,8 @@
 "use client"
 
-import ClientPage from "@/components/client-page";
-import { Suspense } from "react";
+import { redirect } from "next/navigation";
 
-export default function Home() {
-  return (
-    <Suspense fallback={<div>Loading...</div>}>
-      <ClientPage />
-    </Suspense>
-  );
+export default function ProtectedPage() {
+  redirect("/dashboard");
 }
 

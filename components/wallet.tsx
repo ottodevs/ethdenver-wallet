@@ -15,7 +15,6 @@ import { Eye, EyeOff, QrCode } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { LoginButton } from "./login-button";
 import { NFTGallery } from "./nft-gallery";
 import { TransactionHistory } from "./transaction-history";
 
@@ -35,6 +34,7 @@ export function Wallet() {
   const [sendModalOpen, setSendModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("assets");
   const [loadingTimeout, setLoadingTimeout] = useState(false);
+  const [authTimeout, setAuthTimeout] = useState(false);
 
   // Mejorado para depuración
   useEffect(() => {
@@ -75,6 +75,23 @@ export function Wallet() {
     };
   }, [accountLoading, isAuthenticated, isLoadingPortfolio, hasInitialized]);
 
+  // Nuevo: Timeout para autenticación
+  useEffect(() => {
+    let authTimer: NodeJS.Timeout;
+    
+    if (accountLoading && !isAuthenticated) {
+      authTimer = setTimeout(() => {
+        console.log("Authentication timeout reached - redirecting to login");
+        setAuthTimeout(true);
+        router.push("/auth/signin");
+      }, 15000); // 15 segundos de timeout para autenticación
+    }
+    
+    return () => {
+      if (authTimer) clearTimeout(authTimer);
+    };
+  }, [accountLoading, isAuthenticated, router]);
+
   // Mejorado el mecanismo de reintento
   useEffect(() => {
     let retryTimer: NodeJS.Timeout;
@@ -109,7 +126,7 @@ export function Wallet() {
     window.location.reload();
   };
 
-  // Mostrar pantalla de carga con botón de reintentar si toma demasiado tiempo
+  // Mostrar pantalla de carga mientras se autentica o se carga el portfolio
   if (accountLoading || (isAuthenticated && isLoadingPortfolio && !hasInitialized)) {
     return (
       <div className="fixed inset-0 flex flex-col items-center justify-center bg-background/95 backdrop-blur-sm z-50">
@@ -131,18 +148,26 @@ export function Wallet() {
           </div>
           
           <h2 className="text-2xl font-bold mb-4 text-white animate-pulse">
-            Loading Your Wallet
+            {accountLoading && !isAuthenticated 
+              ? "Verificando autenticación..." 
+              : "Loading Your Wallet"}
           </h2>
           
           <div className="space-y-3 mb-6">
             <p className="text-gray-300 font-outfit animate-fade-in-1">
-              Connecting to the blockchain...
+              {accountLoading && !isAuthenticated 
+                ? "Conectando con su cuenta..." 
+                : "Connecting to the blockchain..."}
             </p>
             <p className="text-gray-400 font-outfit animate-fade-in-2">
-              Fetching your latest assets...
+              {accountLoading && !isAuthenticated 
+                ? "Verificando credenciales..." 
+                : "Fetching your latest assets..."}
             </p>
             <p className="text-gray-500 font-outfit animate-fade-in-3">
-              Retrieving transaction history...
+              {accountLoading && !isAuthenticated 
+                ? "Preparando su wallet..." 
+                : "Retrieving transaction history..."}
             </p>
           </div>
           
@@ -163,6 +188,21 @@ export function Wallet() {
                 className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
               >
                 Reintentar
+              </button>
+            </div>
+          )}
+          
+          {/* Mostrar botón de login si la autenticación toma demasiado tiempo */}
+          {authTimeout && (
+            <div className="mt-6">
+              <p className="text-yellow-400 mb-2">
+                No se pudo verificar la autenticación.
+              </p>
+              <button 
+                onClick={() => router.push("/auth/signin")}
+                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+              >
+                Ir a Login
               </button>
             </div>
           )}
@@ -188,17 +228,9 @@ export function Wallet() {
     );
   }
 
-  // Verificar autenticación
+  // Si no está autenticado, no mostrar nada mientras se redirige
   if (!isAuthenticated) {
-    return (
-      <div className="pt-6 pb-4">
-        <h2 className="text-xl font-bold mb-2 text-white">Wallet</h2>
-        <p className="text-sm text-gray-400 mb-4 font-outfit">
-          Please log in to access your wallet
-        </p>
-        <LoginButton />
-      </div>
-    );
+    return null;
   }
 
   return (

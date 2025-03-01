@@ -73,7 +73,7 @@ export function useOktoTransactions() {
           return {
             id: tx?.id || `tx-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
             type: tx?.transferType?.toLowerCase() || "unknown",
-            status: tx?.status?.toLowerCase() || "unknown",
+            status: typeof tx?.status === 'string' ? tx?.status.toLowerCase() : "unknown",
             timestamp: typeof tx?.timestamp === 'number' ? 
               (tx.timestamp < 10000000000 ? tx.timestamp * 1000 : tx.timestamp) : 
               Date.now(),
