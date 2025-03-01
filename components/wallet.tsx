@@ -2,7 +2,6 @@
 
 import { DelegationBanner } from "@/components/delegation-banner";
 import { OptionsDropdown } from "@/components/options-dropdown";
-import { ReceivePayModal } from "@/components/receive-pay-modal";
 import { SwapInterface } from "@/components/swap-interface";
 import { TokenList } from "@/components/token-list";
 import { Button } from "@/components/ui/button";
@@ -25,7 +24,6 @@ export function Wallet() {
   const { isLoading, error, isAuthenticated, selectedAccount } = useOktoAccount();
   const { totalBalanceUsd, isLoading: isLoadingPortfolio } = useOktoPortfolio();
   const { pendingTransactions } = useOktoTransactions();
-  const [receivePayModalOpen, setReceivePayModalOpen] = useState(false);
   const [swapInterfaceOpen, setSwapInterfaceOpen] = useState(false);
   
   const hasPendingTransactions = pendingTransactions.length > 0;
@@ -77,7 +75,12 @@ export function Wallet() {
         <div className="flex justify-between items-center mb-4">
           <OptionsDropdown />
           <div className="w-8"></div> {/* Empty space to maintain layout */}
-          <Button variant="ghost" size="icon" className="h-8 w-8 text-white" onClick={() => setReceivePayModalOpen(true)}>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8 text-white"
+            onClick={() => router.push("/receive")}
+          >
             <QrCode className="h-5 w-5" />
           </Button>
         </div>
@@ -157,7 +160,7 @@ export function Wallet() {
           <Button
             variant="outline"
             className="flex items-center justify-center gap-2 bg-black/30 border-gray-700 text-white hover:bg-black/50 hover:text-white"
-            onClick={() => setReceivePayModalOpen(true)}
+            onClick={() => router.push("/receive")}
           >
             <QrCode className="h-4 w-4" />
             Receive
@@ -203,11 +206,6 @@ export function Wallet() {
           </TabsContent>
         </Tabs>
       </div>
-
-      <ReceivePayModal
-        open={receivePayModalOpen}
-        onOpenChange={setReceivePayModalOpen}
-      />
 
       <SwapInterface
         open={swapInterfaceOpen}

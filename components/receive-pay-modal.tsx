@@ -1,50 +1,68 @@
-"use client"
+"use client";
 
-import { PayTab } from "@/components/pay-tab"
-import { ReceiveTab } from "@/components/receive-tab"
-import { ResponsiveDialog } from "@/components/ui/responsive-dialog"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { QrCode, Scan } from "lucide-react"
-import { useState } from "react"
+import { PayTab } from "@/components/pay-tab";
+import { ReceiveTab } from "@/components/receive-tab";
+import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
+import { useState } from "react";
 
 interface ReceivePayModalProps {
-  open: boolean
-  onOpenChange: (open: boolean) => void
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
 }
 
 export function ReceivePayModal({ open, onOpenChange }: ReceivePayModalProps) {
-  const [activeTab, setActiveTab] = useState("receive")
+  const [activeTab, setActiveTab] = useState("receive");
 
   return (
     <ResponsiveDialog
       open={open}
       onOpenChange={onOpenChange}
-      title="Receive & Pay"
-      description="Receive funds or scan to pay"
-      contentClassName="max-w-md"
+      title="RECEIVE"
+      description=""
+      contentClassName="max-w-md bg-gradient-to-br from-[#252531] to-[#13121E] rounded-t-2xl"
+      hideCloseButton={true}
     >
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid grid-cols-2 w-full">
-          <TabsTrigger value="receive" className="flex items-center gap-2">
-            <QrCode className="h-4 w-4" />
-            Receive
-          </TabsTrigger>
-          <TabsTrigger value="pay" className="flex items-center gap-2">
-            <Scan className="h-4 w-4" />
-            Pay
-          </TabsTrigger>
-        </TabsList>
-        
-        <div className="mt-4">
-          <TabsContent value="receive" className="m-0">
-            <ReceiveTab />
-          </TabsContent>
-          
-          <TabsContent value="pay" className="m-0">
-            <PayTab onOpenChange={onOpenChange} active={activeTab === "pay" && open} />
-          </TabsContent>
+      <div className="w-full px-4 pt-4 pb-16">
+        <div className="w-full h-[42px] p-1 bg-[#181723] rounded-[80px] border border-[#373a46] justify-start items-start gap-px inline-flex mb-8">
+          <div
+            onClick={() => setActiveTab("receive")}
+            className={`grow shrink basis-0 h-[34px] px-[41px] py-3 rounded-[80px] flex-col justify-center items-center gap-2.5 inline-flex cursor-pointer ${
+              activeTab === "receive"
+                ? "bg-gradient-to-br from-[#343445] to-[#2a2a3e] border border-[#373a46]"
+                : ""
+            }`}
+          >
+            <div className="justify-start items-center gap-4 inline-flex">
+              <div className="text-white text-base font-medium font-['Outfit'] leading-tight">
+                Receive
+              </div>
+            </div>
+          </div>
+          <div
+            onClick={() => setActiveTab("pay")}
+            className={`grow shrink basis-0 h-[33px] px-10 py-3 rounded-[80px] flex-col justify-center items-center gap-2.5 inline-flex cursor-pointer ${
+              activeTab === "pay"
+                ? "bg-gradient-to-br from-[#343445] to-[#2a2a3e] border border-[#373a46]"
+                : ""
+            }`}
+          >
+            <div className="justify-start items-center gap-4 inline-flex">
+              <div className="text-white text-base font-medium font-['Outfit'] leading-tight">
+                Pay
+              </div>
+            </div>
+          </div>
         </div>
-      </Tabs>
+
+        {activeTab === "receive" ? (
+          <ReceiveTab />
+        ) : (
+          <PayTab
+            onOpenChange={onOpenChange}
+            active={activeTab === "pay" && open}
+          />
+        )}
+      </div>
     </ResponsiveDialog>
-  )
-} 
+  );
+}
