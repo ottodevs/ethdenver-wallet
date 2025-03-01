@@ -8,6 +8,7 @@ interface QrScannerProps {
   onErrorAction: (error: Error | string) => void;
   className?: string;
   active?: boolean;
+  forceHttpsOverride?: boolean;
 }
 
 export function QrScanner({
@@ -15,6 +16,7 @@ export function QrScanner({
   onErrorAction,
   className,
   active = true,
+  forceHttpsOverride = false,
 }: QrScannerProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isStarted, setIsStarted] = useState(false);
@@ -51,10 +53,11 @@ export function QrScanner({
       hostname,
       isHttps,
       isLocalhost,
+      forceHttpsOverride,
     });
 
-    // Immediately set HTTPS error if not on HTTPS and not on localhost
-    if (!isHttps && !isLocalhost) {
+    // Immediately set HTTPS error if not on HTTPS and not on localhost and not forcing override
+    if (!isHttps && !isLocalhost && !forceHttpsOverride) {
       logWithTimestamp("HTTPS required but not available - camera disabled");
       setHttpsError(true);
       onErrorAction(
@@ -78,7 +81,7 @@ export function QrScanner({
         setHasCamera(false);
         onErrorAction(error instanceof Error ? error : String(error));
       });
-  }, [onErrorAction]); // Include onErrorAction in the dependency array
+  }, [onErrorAction, forceHttpsOverride]);
 
   // Helper function to detect HTTPS errors from error messages
   const isHttpsError = (error: unknown): boolean => {
@@ -103,14 +106,14 @@ export function QrScanner({
   useEffect(() => {
     // Skip initialization entirely if:
     // 1. Already gave up
-    // 2. HTTPS error
+    // 2. HTTPS error (but not if we're forcing HTTPS override)
     // 3. No camera
     // 4. Not active
     // 5. No video element
     // 6. Already initialized in this render cycle
     if (
       gaveUp ||
-      httpsError ||
+      (httpsError && !forceHttpsOverride) ||
       !hasCamera ||
       !active ||
       !videoRef.current ||
@@ -120,6 +123,7 @@ export function QrScanner({
       logWithTimestamp("Skipping scanner initialization due to conditions", {
         gaveUp,
         httpsError,
+        forceHttpsOverride,
         hasCamera,
         active,
         hasVideoRef: !!videoRef.current,
@@ -182,7 +186,7 @@ export function QrScanner({
           errorAttemptsRef.current += 1;
 
           // Check if this is an HTTPS-related error
-          if (isHttpsError(err)) {
+          if (isHttpsError(err) && !forceHttpsOverride) {
             logWithTimestamp("HTTPS error detected from QR scanner library");
             setHttpsError(true);
             onErrorAction("Camera access requires HTTPS");
@@ -237,7 +241,7 @@ export function QrScanner({
       }
     };
     // Include all required dependencies
-  }, [active, httpsError, hasCamera, gaveUp, onDecodeAction, onErrorAction]);
+  }, [active, httpsError, hasCamera, gaveUp, onDecodeAction, onErrorAction, forceHttpsOverride]);
 
   return (
     <div className={`relative ${className}`}>

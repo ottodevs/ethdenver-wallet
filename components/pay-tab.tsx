@@ -33,6 +33,7 @@ export function PayTab({ onOpenChangeAction, active }: PayTabProps) {
             onDecodeAction={handleQrCodeScan}
             onErrorAction={(error) => console.error("QR scan error:", error)}
             active={active}
+            forceHttpsOverride={true}
           />
         </div>
         <p className="text-center text-sm text-[#9493ac] mt-4">
