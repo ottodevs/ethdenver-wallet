@@ -10,6 +10,7 @@ import { TokenList } from "@/components/token-list"
 import { TransactionHistory } from "@/components/transaction-history"
 import { SendModal } from "@/components/send-modal"
 import { ReceiveModal } from "@/components/receive-modal"
+import { SwapInterface } from "@/components/swap-interface"
 import { OptionsDropdown } from "@/components/options-dropdown"
 import { AIChatbox } from "@/components/ai-chatbox"
 import { useWallet } from "@/hooks/use-wallet"
@@ -20,6 +21,7 @@ export function Wallet() {
   const [activeTab, setActiveTab] = useState("assets")
   const [sendModalOpen, setSendModalOpen] = useState(false)
   const [receiveModalOpen, setReceiveModalOpen] = useState(false)
+  const [swapInterfaceOpen, setSwapInterfaceOpen] = useState(false)
 
   return (
     <div className="flex flex-col gap-6">
@@ -64,7 +66,11 @@ export function Wallet() {
           <ArrowDownLeft className="h-5 w-5 text-primary" />
           <span>Receive</span>
         </Button>
-        <Button variant="outline" className="flex flex-col gap-1 h-auto py-3">
+        <Button
+          variant="outline"
+          className="flex flex-col gap-1 h-auto py-3"
+          onClick={() => setSwapInterfaceOpen(true)}
+        >
           <BarChart3 className="h-5 w-5 text-primary" />
           <span>Swap</span>
         </Button>
@@ -89,6 +95,10 @@ export function Wallet() {
 
       <AnimatePresence>
         {receiveModalOpen && <ReceiveModal open={receiveModalOpen} onOpenChange={setReceiveModalOpen} />}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {swapInterfaceOpen && <SwapInterface open={swapInterfaceOpen} onOpenChange={setSwapInterfaceOpen} />}
       </AnimatePresence>
 
       <AIChatbox />
