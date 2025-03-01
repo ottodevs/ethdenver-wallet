@@ -240,7 +240,7 @@ export function Wallet() {
           <div
             className={
               activeTab === "assets" && isLoadingPortfolio
-                ? "min-h-[200px] flex items-center justify-center py-4"
+                ? "min-h-[200px] flex items-center justify-center py-4 w-full"
                 : "py-4"
             }
           >
