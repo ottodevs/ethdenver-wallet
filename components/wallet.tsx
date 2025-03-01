@@ -11,7 +11,7 @@ import { useOktoPortfolio } from "@/hooks/use-okto-portfolio";
 import { useOktoTransactions } from "@/hooks/use-okto-transactions";
 import { useWallet } from "@/hooks/use-wallet";
 import { AnimatePresence } from "framer-motion";
-import { QrCode } from "lucide-react";
+import { Eye, EyeOff, QrCode } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -20,7 +20,7 @@ import { TransactionHistory } from "./transaction-history";
 
 export function Wallet() {
   const router = useRouter();
-  const { privacyMode } = useWallet();
+  const { privacyMode, togglePrivacyMode } = useWallet();
   const { isLoading, error, isAuthenticated, selectedAccount } =
     useOktoAccount();
   const { totalBalanceUsd, isLoading: isLoadingPortfolio } = useOktoPortfolio();
@@ -97,28 +97,15 @@ export function Wallet() {
             <div className="text-[16px] text-gray-400 font-outfit">
               TOTAL BALANCE
             </div>
-            <svg
-              width="20"
-              height="20"
-              viewBox="0 0 24 24"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
+            <button 
+              onClick={togglePrivacyMode} 
+              className="flex items-center justify-center h-5 w-5"
             >
-              <path
-                d="M12 5C8.24261 5 5.43602 7.4404 3.76737 9.43934C2.51055 10.9394 2.51055 13.0606 3.76737 14.5607C5.43602 16.5596 8.24261 19 12 19C15.7574 19 18.564 16.5596 20.2326 14.5607C21.4894 13.0606 21.4894 10.9394 20.2326 9.43934C18.564 7.4404 15.7574 5 12 5Z"
-                stroke="rgba(255,255,255,0.6)"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-              <path
-                d="M12 15C13.6569 15 15 13.6569 15 12C15 10.3431 13.6569 9 12 9C10.3431 9 9 10.3431 9 12C9 13.6569 10.3431 15 12 15Z"
-                stroke="rgba(255,255,255,0.6)"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
+              {privacyMode ? 
+                <EyeOff className="h-4 w-4 text-white/60" /> : 
+                <Eye className="h-4 w-4 text-white/60" />
+              }
+            </button>
           </div>
           <div className="text-[42px] font-medium text-white mt-2">
             {privacyMode ? (
