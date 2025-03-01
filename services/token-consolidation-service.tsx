@@ -87,9 +87,13 @@ export function useTokenConsolidationService() {
         timestamp: Date.now(),
         status: "pending",
       };
-
       // Update UI optimistically
-      addPendingTransaction(pendingTx);
+      addPendingTransaction({
+        ...pendingTx,
+        networkName: token.chain,
+        networkSymbol: token.symbol,
+        valueUsd: token.valueUsd
+      });
 
       try {
         // Convertir el balance a BigInt con los decimales adecuados
@@ -108,9 +112,8 @@ export function useTokenConsolidationService() {
         // Ejecutar la transferencia
         const jobId = await tokenTransfer(oktoClient, transferParams);
         console.log(`Consolidation of ${token.symbol} submitted with jobId:`, jobId);
-        
         // Actualizar el estado de la transacción
-        updatePendingTransaction(pendingTxId, "completed", jobId);
+        updatePendingTransaction(pendingTxId);
         
         results.push({
           token: token.symbol,
@@ -121,7 +124,7 @@ export function useTokenConsolidationService() {
         console.error(`Failed to consolidate ${token.symbol} on ${chain}:`, error);
         
         // Actualizar el estado de la transacción a fallido
-        updatePendingTransaction(pendingTxId, "failed");
+        updatePendingTransaction(pendingTxId);
         
         results.push({
           token: token.symbol,

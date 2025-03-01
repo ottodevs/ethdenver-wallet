@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/drawer";
 import { useTokenList } from "@/hooks/use-token-list";
 import { X } from "lucide-react";
-
+import Image from "next/image";
 interface TokenSelectionSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -33,7 +33,7 @@ export function TokenSelectionSheet({
       onOpenChange={onOpenChange}
       shouldScaleBackground
       snapPoints={[0.8]}
-      defaultSnapPoint="0.8"
+      // defaultSnapPoint="0.8"
     >
       <DrawerContent className="bg-gradient-to-br from-[#252531] to-[#13121E] border-t border-[#373747] max-h-[80vh]">
         <div className="absolute right-4 top-4 z-50">
@@ -83,7 +83,7 @@ export function TokenSelectionSheet({
                       >
                         <div className="flex items-center gap-3">
                           {token.logoURI ? (
-                            <img
+                            <Image
                               src={token.logoURI}
                               alt={token.symbol}
                               className="h-8 w-8 rounded-full"

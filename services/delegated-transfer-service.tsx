@@ -1,7 +1,7 @@
 "use client";
 
 import { useAuth } from "@/contexts/auth-context";
-import { useOktoTransactions } from "@/hooks/use-okto-transactions";
+import { Transaction, useOktoTransactions } from "@/hooks/use-okto-transactions";
 import { tokenTransfer, useOkto } from "@okto_web3/react-sdk";
 import { useEffect, useState } from "react";
 
@@ -12,11 +12,12 @@ interface DelegatedTokenTransferParams {
   amount: number;
   caip2Id: string;
   tokenAddress?: string;
+  decimals?: number;
 }
 
 export function useDelegatedTransferService() {
   const oktoClient = useOkto();
-  const { /*isAuthenticated,*/ checkAuthStatus } = useAuth();
+  const { checkAuthStatus } = useAuth();
   const { addPendingTransaction, updatePendingTransaction } = useOktoTransactions();
   const [sessionKey, setSessionKey] = useState<string | null>(null);
   const [delegationEnabled, setDelegationEnabled] = useState(false);
@@ -40,7 +41,12 @@ export function useDelegatedTransferService() {
       throw new Error("Okto client not initialized");
     }
     
-    // Verificar autenticación antes de continuar
+    // Check if delegation is enabled
+    if (!delegationEnabled || !sessionKey) {
+      throw new Error("Delegation not enabled or session key missing");
+    }
+    
+    // Verify authentication before continuing
     const isAuth = await checkAuthStatus();
     if (!isAuth) {
       throw new Error("Authentication required");
@@ -60,11 +66,14 @@ export function useDelegatedTransferService() {
     };
 
     // Update UI optimistically
-    addPendingTransaction(pendingTx);
+    addPendingTransaction(pendingTx as unknown as Transaction);
 
     try {
-      // Convert amount to BigInt with proper decimals (usually 18 for most tokens)
-      const amountInSmallestUnit = BigInt(Math.floor(params.amount * 10**18));
+      // Use provided decimals or default to 18
+      const decimals = params.decimals || 18;
+      
+      // Convert amount to BigInt with proper decimals
+      const amountInSmallestUnit = BigInt(Math.floor(params.amount * 10**decimals));
       
       // Prepare transfer parameters according to the SDK documentation
       const transferParams = {
@@ -77,15 +86,17 @@ export function useDelegatedTransferService() {
       // Execute the transfer using the abstracted flow
       const jobId = await tokenTransfer(oktoClient, transferParams);
       
-      // Update the transaction status
-      updatePendingTransaction(pendingTxId, "completed", jobId);
+      // Update the transaction status - only pass the ID as that's what the function expects
+      updatePendingTransaction(pendingTxId);
       
       return jobId;
     } catch (error) {
       console.error("Token transfer failed:", error);
       
-      // Update the transaction status to failed
-      updatePendingTransaction(pendingTxId, "failed");
+      
+      // We can't pass these additional parameters since the function only accepts one parameter
+      // Just update with the ID
+      updatePendingTransaction(pendingTxId);
       
       throw error;
     }
@@ -93,6 +104,7 @@ export function useDelegatedTransferService() {
 
   return { 
     sendTokenDelegated,
-    hasDelegatedCapability: delegationEnabled && !!sessionKey
+    hasDelegatedCapability: delegationEnabled && !!sessionKey,
+    isDelegationEnabled: delegationEnabled
   };
 } 

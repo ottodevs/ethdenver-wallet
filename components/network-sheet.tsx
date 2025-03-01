@@ -63,7 +63,7 @@ export function NetworkSheet({
         onOpenChange={onOpenChange}
         shouldScaleBackground
         snapPoints={[0.8]}
-        defaultSnapPoint="0.8"
+        // defaultSnapPoint="0.8"
       >
         <DrawerContent className="bg-gradient-to-br from-[#252531] to-[#13121E] border-t border-[#373747] max-h-[80vh]">
           <div className="absolute right-4 top-4 z-50">
@@ -117,11 +117,15 @@ export function NetworkSheet({
                             {chain.name}
                           </div>
                           <div className="text-[#9493ac] text-xs">
-                            {chain.testnet
-                              ? "Testnet"
-                              : chain.layer === 2
-                              ? "Layer 2 • Fast & Low Fees"
-                              : "Mainnet • High Security"}
+                            {chain.caip2Id.includes("eip155:1")
+                              ? "Mainnet"
+                              : chain.caip2Id.includes("eip155:42161")
+                              ? "Arbitrum"
+                              : chain.caip2Id.includes("eip155:137")
+                              ? "Polygon"
+                              : chain.caip2Id.includes("eip155:8453")
+                              ? "Base"
+                              : "Testnet"}
                           </div>
                         </div>
                       </div>

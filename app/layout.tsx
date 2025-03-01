@@ -6,7 +6,7 @@ import type { Metadata } from "next";
 import { getServerSession, Session } from "next-auth";
 import { Inter, Outfit } from "next/font/google";
 import type React from "react";
-import { authOptions } from "./api/auth/[...nextauth]/route";
+import { authOptions } from "./api/auth/[...nextauth]/options";
 
 const inter = Inter({ subsets: ["latin"] });
 const outfit = Outfit({

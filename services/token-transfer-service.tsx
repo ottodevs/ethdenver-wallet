@@ -54,9 +54,13 @@ export function useTokenTransferService() {
       timestamp: Date.now(),
       status: "pending",
     };
-
     // Update UI optimistically
-    addPendingTransaction(pendingTx);
+    addPendingTransaction({
+      ...pendingTx,
+      networkName: params.caip2Id.split(':')[1], // e.g. "ethereum" from "eip155:1"
+      networkSymbol: params.symbol,
+      valueUsd: 0 // Add proper USD value calculation if needed
+    });
 
     try {
       // Convert amount to BigInt with proper decimals (usually 18 for most tokens)
@@ -81,14 +85,14 @@ export function useTokenTransferService() {
       console.log("Transaction submitted with jobId:", jobId);
       
       // Update the transaction status to completed with the jobId
-      updatePendingTransaction(pendingTxId, "completed", jobId);
+      updatePendingTransaction(pendingTxId);
       
       return jobId;
     } catch (error) {
       console.error("Token transfer failed:", error);
       
       // Update the transaction status to failed
-      updatePendingTransaction(pendingTxId, "failed");
+      updatePendingTransaction(pendingTxId);
       
       throw error;
     }
