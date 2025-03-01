@@ -49,23 +49,17 @@ export function Wallet() {
         <div className="flex flex-col items-center justify-center p-8 max-w-md text-center">
           <div className="relative w-24 h-24 mb-6">
             {/* Outer spinning ring */}
-            <div className="absolute inset-0 rounded-full border-t-2 border-b-2 border-primary animate-spin"></div>
+            <div className="absolute inset-0 rounded-full border-t-2 border-b-2 border-blue-500 animate-spin"></div>
             
             {/* Middle pulsing ring */}
-            <div className="absolute inset-2 rounded-full border-r-2 border-l-2 border-primary/60 animate-pulse"></div>
+            <div className="absolute inset-2 rounded-full border-r-2 border-l-2 border-blue-500/60 animate-pulse"></div>
             
             {/* Inner spinning ring (opposite direction) */}
-            <div className="absolute inset-4 rounded-full border-t-2 border-b-2 border-primary/40 animate-spin animate-reverse"></div>
+            <div className="absolute inset-4 rounded-full border-t-2 border-b-2 border-blue-500/40 animate-spin animate-reverse"></div>
             
-            {/* Center logo */}
+            {/* Center wallet icon */}
             <div className="absolute inset-0 flex items-center justify-center">
-              <Image 
-                src="/logo.svg" 
-                alt="Loading" 
-                width={32} 
-                height={32}
-                className="animate-bounce"
-              />
+              <span className="text-2xl animate-bounce">💼</span>
             </div>
           </div>
           
@@ -86,9 +80,9 @@ export function Wallet() {
           </div>
           
           <div className="flex space-x-1 mt-2">
-            <div className="w-2 h-2 rounded-full bg-primary animate-bounce" style={{ animationDelay: "0ms" }}></div>
-            <div className="w-2 h-2 rounded-full bg-primary animate-bounce" style={{ animationDelay: "150ms" }}></div>
-            <div className="w-2 h-2 rounded-full bg-primary animate-bounce" style={{ animationDelay: "300ms" }}></div>
+            <div className="w-2 h-2 rounded-full bg-blue-500 animate-bounce" style={{ animationDelay: "0ms" }}></div>
+            <div className="w-2 h-2 rounded-full bg-blue-500 animate-bounce" style={{ animationDelay: "150ms" }}></div>
+            <div className="w-2 h-2 rounded-full bg-blue-500 animate-bounce" style={{ animationDelay: "300ms" }}></div>
           </div>
         </div>
       </div>
