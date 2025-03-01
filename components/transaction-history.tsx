@@ -1,12 +1,24 @@
 "use client"
 
+import { TransactionSkeleton } from "@/components/ui/skeleton"
 import { useOktoTransactions } from "@/hooks/use-okto-transactions"
 import { formatDistanceToNow } from "date-fns"
 import { motion } from "framer-motion"
-import { ArrowDownLeft, ArrowUpRight, Clock } from "lucide-react"
+import { ArrowDownLeft, ArrowUpRight, Clock, RefreshCw } from "lucide-react"
+import { useEffect, useState } from "react"
 
 export function TransactionHistory({ animated = true }: { animated?: boolean }) {
-  const { transactions, isLoading, error } = useOktoTransactions()
+  const { transactions, isLoading, hasInitialized, error, refetch } = useOktoTransactions()
+  const [showRefreshButton, setShowRefreshButton] = useState(false)
+
+  // Show refresh button if there's an error or no transactions after initialization
+  useEffect(() => {
+    if ((error || (hasInitialized && (!transactions || transactions.length === 0))) && !isLoading) {
+      setShowRefreshButton(true)
+    } else {
+      setShowRefreshButton(false)
+    }
+  }, [error, hasInitialized, transactions, isLoading])
 
   // Animation variants for Framer Motion
   const container = {
@@ -24,27 +36,50 @@ export function TransactionHistory({ animated = true }: { animated?: boolean }) 
     show: { opacity: 1, y: 0 },
   }
 
-  if (isLoading) {
+  // Show skeletons during initial loading
+  if (isLoading && !hasInitialized) {
     return (
-      <div className="flex justify-center items-center h-[300px]">
-        <p className="text-sm text-muted-foreground">Loading transactions...</p>
+      <div className="space-y-2">
+        {Array(3).fill(0).map((_, i) => (
+          <TransactionSkeleton key={`skeleton-${i}`} />
+        ))}
       </div>
     )
   }
 
+  // Show error state
   if (error) {
     return (
-      <div className="flex justify-center items-center h-[300px]">
-        <p className="text-sm text-red-500">{error}</p>
+      <div className="flex flex-col justify-center items-center h-[300px]">
+        <p className="text-sm text-red-500 mb-3">{error}</p>
+        {showRefreshButton && (
+          <button 
+            onClick={() => refetch()} 
+            className="flex items-center gap-2 px-4 py-2 bg-primary/80 text-primary-foreground rounded-md hover:bg-primary"
+          >
+            <RefreshCw className="h-4 w-4" />
+            Retry
+          </button>
+        )}
       </div>
     )
   }
 
-  if (!transactions || transactions.length === 0) {
+  // Show empty state after loading is complete
+  if ((!transactions || transactions.length === 0) && hasInitialized) {
     return (
       <div className="flex flex-col justify-center items-center h-[300px]">
         <Clock className="h-8 w-8 text-muted-foreground mb-2" />
-        <p className="text-sm text-muted-foreground">No transactions found</p>
+        <p className="text-sm text-muted-foreground mb-3">No transactions found</p>
+        {showRefreshButton && (
+          <button 
+            onClick={() => refetch()} 
+            className="flex items-center gap-2 px-4 py-2 bg-primary/80 text-primary-foreground rounded-md hover:bg-primary"
+          >
+            <RefreshCw className="h-4 w-4" />
+            Refresh
+          </button>
+        )}
       </div>
     )
   }
@@ -243,6 +278,13 @@ export function TransactionHistory({ animated = true }: { animated?: boolean }) 
           </TransactionComponent>
         );
       })}
+      
+      {/* Show loading indicator for subsequent loads */}
+      {isLoading && hasInitialized && (
+        <div className="p-2 text-center">
+          <div className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-solid border-current border-r-transparent"></div>
+        </div>
+      )}
     </ListComponent>
   )
 }

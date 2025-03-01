@@ -40,12 +40,15 @@ export function useOktoPortfolio() {
   const [tokens, setTokens] = useState<TokenBalance[]>([]);
   const [totalBalanceUsd, setTotalBalanceUsd] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
+  const [hasInitialized, setHasInitialized] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [lastFetchTime, setLastFetchTime] = useState(0);
 
   const fetchPortfolio = useCallback(async (forceRefresh = false) => {
     if (!oktoClient || !selectedAccount || !isAuthenticated) {
-      setIsLoading(false);
+      if (hasInitialized) {
+        setIsLoading(false);
+      }
       return;
     }
     
@@ -59,11 +62,16 @@ export function useOktoPortfolio() {
       setTokens(cachedData.tokens);
       setTotalBalanceUsd(cachedData.totalBalanceUsd);
       setIsLoading(false);
+      setHasInitialized(true);
       return;
     }
     
-    try {
+    // Only set loading to true on first load or when forcing refresh
+    if (!hasInitialized || forceRefresh) {
       setIsLoading(true);
+    }
+    
+    try {
       setError(null);
       
       const portfolio = await getPortfolio(oktoClient);
@@ -98,12 +106,17 @@ export function useOktoPortfolio() {
     } catch (err) {
       console.error("Failed to fetch portfolio:", err);
       setError("Failed to load portfolio data");
-      setTokens([]);
-      setTotalBalanceUsd(0);
+      
+      // Don't clear tokens if we already have data - keep showing stale data
+      if (tokens.length === 0) {
+        setTokens([]);
+        setTotalBalanceUsd(0);
+      }
     } finally {
       setIsLoading(false);
+      setHasInitialized(true);
     }
-  }, [oktoClient, selectedAccount, isAuthenticated]);
+  }, [oktoClient, selectedAccount, isAuthenticated, hasInitialized, tokens.length]);
 
   // Initial fetch
   useEffect(() => {
@@ -115,10 +128,11 @@ export function useOktoPortfolio() {
     tokens,
     totalBalanceUsd,
     isLoading,
+    hasInitialized,
     error,
     refetch: () => fetchPortfolio(true),
     lastFetchTime
-  }), [tokens, totalBalanceUsd, isLoading, error, fetchPortfolio, lastFetchTime]);
+  }), [tokens, totalBalanceUsd, isLoading, hasInitialized, error, fetchPortfolio, lastFetchTime]);
 
   return returnValue;
 } 

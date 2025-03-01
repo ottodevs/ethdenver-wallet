@@ -65,11 +65,14 @@ export function useOktoTransactions() {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [pendingTransactions, setPendingTransactions] = useState<Transaction[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [hasInitialized, setHasInitialized] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const fetchTransactions = useCallback(async (forceRefresh = false) => {
     if (!oktoClient || !selectedAccount || !isAuthenticated) {
-      setIsLoading(false);
+      if (hasInitialized) {
+        setIsLoading(false);
+      }
       return;
     }
     
@@ -81,11 +84,16 @@ export function useOktoTransactions() {
         now - transactionCache.timestamp < TX_CACHE_DURATION) {
       setTransactions(transactionCache.data);
       setIsLoading(false);
+      setHasInitialized(true);
       return;
     }
 
-    try {
+    // Only set loading to true on first load or when forcing refresh
+    if (!hasInitialized || forceRefresh) {
       setIsLoading(true);
+    }
+
+    try {
       setError(null);
 
       // Fetch transactions from Okto
@@ -94,7 +102,10 @@ export function useOktoTransactions() {
       // Handle the case when response is null or undefined
       if (!response) {
         console.log("No transaction data returned from API");
-        setTransactions([]);
+        // Don't clear transactions if we already have data
+        if (transactions.length === 0) {
+          setTransactions([]);
+        }
         return;
       }
 
@@ -184,11 +195,16 @@ export function useOktoTransactions() {
     } catch (err) {
       console.error("Failed to fetch transactions:", err);
       setError(err instanceof Error ? err.message : "Failed to load transaction history");
-      setTransactions([]);
+      
+      // Don't clear transactions if we already have data
+      if (transactions.length === 0) {
+        setTransactions([]);
+      }
     } finally {
       setIsLoading(false);
+      setHasInitialized(true);
     }
-  }, [oktoClient, selectedAccount, isAuthenticated]);
+  }, [oktoClient, selectedAccount, isAuthenticated, hasInitialized, transactions.length]);
 
   // Initial fetch
   useEffect(() => {
@@ -238,6 +254,7 @@ export function useOktoTransactions() {
     addPendingTransaction,
     updatePendingTransaction,
     isLoading,
+    hasInitialized,
     error,
     refetch: () => fetchTransactions(true)
   }), [
@@ -245,7 +262,8 @@ export function useOktoTransactions() {
     pendingTransactions, 
     addPendingTransaction, 
     updatePendingTransaction, 
-    isLoading, 
+    isLoading,
+    hasInitialized,
     error,
     fetchTransactions
   ]);

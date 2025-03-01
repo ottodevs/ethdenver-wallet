@@ -4,21 +4,23 @@ import { ConsolidateConfirmationModal } from "@/components/consolidate-confirmat
 import { TokenDetail } from "@/components/token-detail"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
+import { TokenSkeleton } from "@/components/ui/skeleton"
 import { useOktoPortfolio } from "@/hooks/use-okto-portfolio"
 import { useWallet } from "@/hooks/use-wallet"
 import { useTokenConsolidationService } from "@/services/token-consolidation-service"
 import { motion } from "framer-motion"
-import { Coins, Eye, EyeOff, Share2 } from "lucide-react"
-import { useState } from "react"
+import { Eye, EyeOff, Share2 } from "lucide-react"
+import { useEffect, useState } from "react"
 import { toast } from "sonner"
 
 export function TokenList({ animated = true }: { animated?: boolean }) {
   const { privacyMode, togglePrivacyMode } = useWallet()
-  const { tokens, isLoading, error, refetch } = useOktoPortfolio()
+  const { tokens, isLoading, hasInitialized, error, refetch } = useOktoPortfolio()
   const [showTokenDetail, setShowTokenDetail] = useState<string | null>(null)
   const { consolidateToEth } = useTokenConsolidationService()
   const [isConsolidating, setIsConsolidating] = useState(false)
   const [showConsolidateModal, setShowConsolidateModal] = useState(false)
+  const [showRefreshButton, setShowRefreshButton] = useState(false)
 
   const smallValueTokens = tokens.filter((token) => token.valueUsd < 10 && !token.isNative)
   const totalSmallTokensValue = smallValueTokens.reduce((sum, t) => sum + t.valueUsd, 0)
@@ -72,27 +74,53 @@ export function TokenList({ animated = true }: { animated?: boolean }) {
     }
   }
 
-  if (isLoading) {
+  // Show refresh button if there's an error or no tokens after initialization
+  useEffect(() => {
+    if ((error || (hasInitialized && tokens.length === 0)) && !isLoading) {
+      setShowRefreshButton(true)
+    } else {
+      setShowRefreshButton(false)
+    }
+  }, [error, hasInitialized, tokens.length, isLoading])
+
+  if (isLoading && !hasInitialized) {
     return (
-      <div className="flex justify-center items-center h-[300px]">
-        <p className="text-sm text-muted-foreground">Loading tokens...</p>
+      <div className="space-y-1">
+        {Array(3).fill(0).map((_, i) => (
+          <TokenSkeleton key={`skeleton-${i}`} />
+        ))}
       </div>
     )
   }
 
   if (error) {
     return (
-      <div className="flex justify-center items-center h-[300px]">
-        <p className="text-sm text-red-500">{error}</p>
+      <div className="p-4 text-center">
+        <p className="text-red-400 mb-2">{error}</p>
+        {showRefreshButton && (
+          <button 
+            onClick={() => refetch()} 
+            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+          >
+            Retry
+          </button>
+        )}
       </div>
     )
   }
 
-  if (!tokens || tokens.length === 0) {
+  if (tokens.length === 0 && hasInitialized) {
     return (
-      <div className="flex flex-col justify-center items-center h-[300px]">
-        <Coins className="h-8 w-8 text-muted-foreground mb-2" />
-        <p className="text-sm text-muted-foreground">No tokens found in your wallet</p>
+      <div className="p-4 text-center">
+        <p className="text-gray-400 mb-2">No tokens found in your wallet</p>
+        {showRefreshButton && (
+          <button 
+            onClick={() => refetch()} 
+            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+          >
+            Refresh
+          </button>
+        )}
       </div>
     )
   }
