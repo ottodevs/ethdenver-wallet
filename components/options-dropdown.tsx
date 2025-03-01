@@ -1,5 +1,4 @@
-"use client"
-
+// components/options-dropdown.tsx
 import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
@@ -10,9 +9,11 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { useToast } from "@/components/ui/toast-context"
+import { useCopyToClipboard } from "@/hooks/use-copy-to-clipboard"
+import { useOktoAccount } from "@/hooks/use-okto-account"
 import { useWallet } from "@/hooks/use-wallet"
 import { openExplorer } from "@/lib/explorer"
-import { Copy, ExternalLink, LogOut, Moon, MoreVertical, Settings, Shield, Sun } from "lucide-react"
+import { Check, Copy, ExternalLink, LogOut, Moon, MoreVertical, Settings, Shield, Sun } from "lucide-react"
 import { signOut } from "next-auth/react"
 import { useTheme } from "next-themes"
 import { useRouter } from "next/navigation"
@@ -21,22 +22,22 @@ import { DelegatedApproval } from "./delegated-approval"
 
 export function OptionsDropdown() {
   const { setTheme, theme } = useTheme()
-  const { walletAddress, disconnect } = useWallet()
+  const { disconnect } = useWallet()
+  const { selectedAccount } = useOktoAccount()
+  const walletAddress = selectedAccount?.address || ""
   const [delegatedApprovalOpen, setDelegatedApprovalOpen] = useState(false)
   const router = useRouter()
   const { addToast } = useToast()
+  const { copyToClipboard, copying } = useCopyToClipboard()
 
   const handleCopyAddress = () => {
-    if (!walletAddress) return
+    if (!walletAddress) {
+      console.log("No wallet address available");
+      return;
+    }
     
-    navigator.clipboard.writeText(walletAddress)
-    
-    // Show toast notification
-    addToast({
-      title: "Address Copied",
-      description: `${walletAddress.substring(0, 6)}...${walletAddress.substring(walletAddress.length - 4)}`,
-      variant: "success"
-    })
+    console.log("Copying address in options dropdown:", walletAddress);
+    copyToClipboard(walletAddress, "Address");
   }
 
   const handleViewOnExplorer = () => {
@@ -82,8 +83,8 @@ export function OptionsDropdown() {
         <DropdownMenuContent align="end">
           <DropdownMenuLabel>My Wallet</DropdownMenuLabel>
           <DropdownMenuItem onClick={handleCopyAddress}>
-            <Copy className="mr-2 h-4 w-4" />
-            Copy Address
+            {copying ? <Check className="mr-2 h-4 w-4" /> : <Copy className="mr-2 h-4 w-4" />}
+            {copying ? "Copied!" : "Copy Address"}
           </DropdownMenuItem>
           <DropdownMenuItem onClick={handleViewOnExplorer}>
             <ExternalLink className="mr-2 h-4 w-4" />
@@ -126,4 +127,3 @@ export function OptionsDropdown() {
     </>
   )
 }
-
