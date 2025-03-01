@@ -30,14 +30,17 @@
     "next-auth": "^4.24.11",
     "next-themes": "^0.4.4",
     "qr-scanner": "^1.4.2",
+    "qrcode": "^1.5.4",
     "react": "^18",
     "react-dom": "^18",
     "tailwind-merge": "^3.0.2",
-    "tailwindcss-animate": "^1.0.7"
+    "tailwindcss-animate": "^1.0.7",
+    "vaul": "^1.1.2"
   },
   "devDependencies": {
     "@okto_web3/typescript-config": "link:../../../../Library/pnpm/global/5/node_modules/@okto-hq/typescript-config",
     "@types/node": "^20",
+    "@types/qrcode": "^1.5.5",
     "@types/react": "^18",
     "@types/react-dom": "^18",
     "eslint": "^8",
