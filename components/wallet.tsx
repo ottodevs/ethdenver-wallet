@@ -1,7 +1,7 @@
 "use client";
 
 import { OptionsDropdown } from "@/components/options-dropdown";
-import { ReceiveModal } from "@/components/receive-modal";
+import { ReceivePayModal } from "@/components/receive-pay-modal";
 import { SwapInterface } from "@/components/swap-interface";
 import { TokenList } from "@/components/token-list";
 import { Button } from "@/components/ui/button";
@@ -22,7 +22,7 @@ export function Wallet() {
   const { privacyMode } = useWallet();
   const { isLoading, error, isAuthenticated } = useOktoAccount();
   const { totalBalanceUsd } = useOktoPortfolio();
-  const [receiveModalOpen, setReceiveModalOpen] = useState(false);
+  const [receivePayModalOpen, setReceivePayModalOpen] = useState(false);
   const [swapInterfaceOpen, setSwapInterfaceOpen] = useState(false);
 
   if (!isAuthenticated) {
@@ -72,7 +72,7 @@ export function Wallet() {
         <div className="flex justify-between items-center mb-4">
           <OptionsDropdown />
           <div className="w-8"></div> {/* Empty space to maintain layout */}
-          <Button variant="ghost" size="icon" className="h-8 w-8 text-white">
+          <Button variant="ghost" size="icon" className="h-8 w-8 text-white" onClick={() => setReceivePayModalOpen(true)}>
             <QrCode className="h-5 w-5" />
           </Button>
         </div>
@@ -149,7 +149,7 @@ export function Wallet() {
           <Button
             variant="outline"
             className="flex items-center justify-center gap-2 bg-black/30 border-gray-700 text-white hover:bg-black/50 hover:text-white"
-            onClick={() => setReceiveModalOpen(true)}
+            onClick={() => setReceivePayModalOpen(true)}
           >
             <QrCode className="h-4 w-4" />
             Receive
@@ -177,41 +177,28 @@ export function Wallet() {
             >
               Activity
             </TabsTrigger>
-            <TabsTrigger
-              value="nfts"
-              className="flex-1 text-white data-[state=active]:bg-black/50"
-            >
-              NFTs
-            </TabsTrigger>
           </TabsList>
-          <TabsContent value="assets" className="min-h-[300px]">
+          <TabsContent value="assets">
             <TokenList />
           </TabsContent>
-          <TabsContent value="activity" className="min-h-[300px]">
+          <TabsContent value="activity">
             <TransactionHistory />
-          </TabsContent>
-          <TabsContent value="nfts" className="min-h-[300px]">
-            {/* <NFTGallery /> */}
           </TabsContent>
         </Tabs>
       </div>
 
-      <AnimatePresence>
-        {receiveModalOpen && (
-          <ReceiveModal
-            open={receiveModalOpen}
-            onOpenChange={setReceiveModalOpen}
-          />
-        )}
-      </AnimatePresence>
+      <ReceivePayModal
+        open={receivePayModalOpen}
+        onOpenChange={setReceivePayModalOpen}
+      />
+
+      <SwapInterface
+        open={swapInterfaceOpen}
+        onOpenChange={setSwapInterfaceOpen}
+      />
 
       <AnimatePresence>
-        {swapInterfaceOpen && (
-          <SwapInterface
-            open={swapInterfaceOpen}
-            onOpenChange={setSwapInterfaceOpen}
-          />
-        )}
+        {/* AI Chatbox can be added here if needed */}
       </AnimatePresence>
     </>
   );
