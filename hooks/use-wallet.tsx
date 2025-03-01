@@ -139,6 +139,9 @@ const mockTransactions: Transaction[] = [
 // Context
 const WalletContext = createContext<WalletContextType | undefined>(undefined)
 
+// Add this at the beginning of the file, after imports
+const PRIVACY_MODE_KEY = 'wallet_privacy_mode';
+
 export function WalletProvider({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(true)
   const [tokens, setTokens] = useState<Token[]>([])
@@ -146,7 +149,16 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
   const [pendingTransactions, setPendingTransactions] = useState<Transaction[]>([])
   const [totalBalanceUsd, setTotalBalanceUsd] = useState(0)
   const [walletAddress/*, setWalletAddress*/] = useState<string>("")
-  const [privacyMode, setPrivacyMode] = useState(false)
+  
+  // Initialize privacy mode from localStorage if available
+  const [privacyMode, setPrivacyMode] = useState(() => {
+    // Check if we're in a browser environment
+    if (typeof window !== 'undefined') {
+      const savedMode = localStorage.getItem(PRIVACY_MODE_KEY);
+      return savedMode === 'true';
+    }
+    return false;
+  })
 
   // Simulate loading data
   useEffect(() => {
@@ -163,9 +175,16 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
     loadData()
   }, [])
 
-  // Toggle privacy mode
+  // Toggle privacy mode and save to localStorage
   const togglePrivacyMode = () => {
-    setPrivacyMode((prev) => !prev)
+    setPrivacyMode((prev) => {
+      const newValue = !prev;
+      // Save to localStorage
+      if (typeof window !== 'undefined') {
+        localStorage.setItem(PRIVACY_MODE_KEY, String(newValue));
+      }
+      return newValue;
+    })
   }
 
   // Get token distribution across chains

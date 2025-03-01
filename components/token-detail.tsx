@@ -1,14 +1,14 @@
 "use client"
 
-import { useState } from "react"
-import { useWallet } from "@/hooks/use-wallet"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
-import { Card, CardContent } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Copy, Check } from "lucide-react"
-import Image from "next/image"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent } from "@/components/ui/card"
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { useWallet } from "@/hooks/use-wallet"
 import { cn } from "@/lib/utils"
+import { Check, Copy } from "lucide-react"
+import Image from "next/image"
+import { useState } from "react"
 
 interface TokenDetailProps {
   tokenId: string
@@ -16,7 +16,7 @@ interface TokenDetailProps {
 }
 
 export function TokenDetail({ tokenId, onClose }: TokenDetailProps) {
-  const { tokens, getTokenDistribution } = useWallet()
+  const { tokens, getTokenDistribution, privacyMode } = useWallet()
   const token = tokens.find((t) => t.id === tokenId)
   const [copied, setCopied] = useState(false)
 
@@ -63,15 +63,15 @@ export function TokenDetail({ tokenId, onClose }: TokenDetailProps) {
                     <div className="flex items-center gap-2">
                       <Badge variant="outline">{item.chain}</Badge>
                       <span className="text-sm font-medium">
-                        {item.amount.toLocaleString()} {token.symbol}
+                        {privacyMode ? "••••••" : `${item.amount.toLocaleString()} ${token.symbol}`}
                       </span>
                     </div>
                     <div className="text-right">
                       <span className="text-sm text-muted-foreground">
-                        ${((item.amount * token.valueUsd) / token.balance).toFixed(2)}
+                        {privacyMode ? "••••••" : `$${((item.amount * token.valueUsd) / token.balance).toFixed(2)}`}
                       </span>
                       <span className="text-xs text-muted-foreground ml-2">
-                        ({((item.amount / token.balance) * 100).toFixed(1)}%)
+                        {privacyMode ? "••%" : `(${((item.amount / token.balance) * 100).toFixed(1)}%)`}
                       </span>
                     </div>
                   </div>
@@ -87,14 +87,16 @@ export function TokenDetail({ tokenId, onClose }: TokenDetailProps) {
                 variant="ghost"
                 size="sm"
                 className="h-8 gap-1 text-xs"
-                onClick={() => handleCopy(token.contractAddress || "")}
+                onClick={() => handleCopy(token.id || "")}
               >
                 {copied ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
                 {copied ? "Copied!" : "Copy"}
               </Button>
             </div>
             <p className="text-xs font-mono text-muted-foreground mt-1 break-all">
-              {token.contractAddress || "0x1234...5678"}
+              {privacyMode 
+                ? "••••••••••••••••••••••••••••••••••••••••••" 
+                : (token.id || "0x1234...5678")}
             </p>
           </div>
         </div>

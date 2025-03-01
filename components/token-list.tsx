@@ -91,14 +91,14 @@ export function TokenList({ animated = true }: { animated?: boolean }) {
             <div>
               <div className="font-medium">{token.name}</div>
               <div className="text-xs text-muted-foreground">
-                {token.balance} {token.symbol}
+                {privacyMode ? "••••••" : `${token.balance} ${token.symbol}`}
               </div>
             </div>
           </div>
           <div className="text-right">
-            <div className="font-medium">${token.valueUsd.toFixed(2)}</div>
+            <div className="font-medium">{privacyMode ? "••••••" : `$${token.valueUsd.toFixed(2)}`}</div>
             <div className="text-xs text-muted-foreground">
-              ${(token.valueUsd / token.balance).toFixed(2)}
+              {privacyMode ? "••••••" : `$${(token.valueUsd / token.balance).toFixed(2)}`}
             </div>
           </div>
         </TokenComponent>
@@ -115,7 +115,7 @@ export function TokenList({ animated = true }: { animated?: boolean }) {
                 <div>
                   <h3 className="text-sm font-medium">{smallValueTokens.length} tokens under $10</h3>
                   <p className="text-xs text-muted-foreground">
-                    Total: ${smallValueTokens.reduce((sum, t) => sum + t.valueUsd, 0).toFixed(2)}
+                    Total: {privacyMode ? "••••••" : `$${smallValueTokens.reduce((sum, t) => sum + t.valueUsd, 0).toFixed(2)}`}
                   </p>
                 </div>
               </div>
