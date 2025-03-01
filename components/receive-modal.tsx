@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { ResponsiveDialog } from "@/components/ui/responsive-dialog"
+import { useCopyToClipboard } from "@/hooks/use-copy-to-clipboard"
 import { useOktoAccount } from "@/hooks/use-okto-account"
 import { Chain, useChainService } from "@/services/chain-service"
 import { Copy, Minus, Plus } from "lucide-react"
@@ -63,13 +64,13 @@ interface ReceiveModalProps {
 export function ReceiveModal({ open, onOpenChange }: ReceiveModalProps) {
   const { selectedAccount } = useOktoAccount()
   const { chains } = useChainService()
-  const [copied, setCopied] = useState(false)
   const [qrCodeDataUrl, setQrCodeDataUrl] = useState<string>("")
   const [showAdvancedOptions, setShowAdvancedOptions] = useState(false)
   const [amount, setAmount] = useState("")
   const [selectedToken, setSelectedToken] = useState("")
   const [selectedChain, setSelectedChain] = useState("")
   const [availableTokens, setAvailableTokens] = useState<Array<{id: string, symbol: string, name: string, contractAddress?: string, decimals: number, logoURI?: string}>>([])
+  const { copyToClipboard, copying } = useCopyToClipboard()
   
   // Fetch token list
   const { data: tokenList, error: tokenListError } = useSWR<TokenList>(
@@ -215,9 +216,7 @@ export function ReceiveModal({ open, onOpenChange }: ReceiveModalProps) {
 
   const handleCopy = () => {
     if (walletAddress) {
-      navigator.clipboard.writeText(walletAddress)
-      setCopied(true)
-      setTimeout(() => setCopied(false), 2000)
+      copyToClipboard(walletAddress, "Address")
     }
   }
 
@@ -246,7 +245,7 @@ export function ReceiveModal({ open, onOpenChange }: ReceiveModalProps) {
             <p className="truncate">{walletAddress}</p>
           </div>
           <Button size="icon" variant="outline" onClick={handleCopy}>
-            {copied ? (
+            {copying ? (
               <span className="text-green-600 text-xs">Copied!</span>
             ) : (
               <Copy className="h-4 w-4" />

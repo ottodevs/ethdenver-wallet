@@ -24,10 +24,12 @@ export function ToastContextProvider({ children }: { children: React.ReactNode }
 
   const addToast = (toast: Omit<ToastType, "id">) => {
     const id = Math.random().toString(36).substring(2, 9)
+    console.log("Adding toast:", { id, ...toast })
     setToasts((prev) => [...prev, { id, ...toast }])
     
     // Auto-dismiss after 5 seconds
     setTimeout(() => {
+      console.log("Removing toast:", id)
       removeToast(id)
     }, 5000)
   }
