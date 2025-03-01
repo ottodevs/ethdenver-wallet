@@ -1,12 +1,9 @@
 import "@/app/globals.css";
-import AppProvider from "@/components/providers";
 import { ThemeProvider } from "@/components/theme-provider";
 import { ToastContextProvider } from "@/components/ui/toast-context";
 import type { Metadata } from "next";
-import { getServerSession, Session } from "next-auth";
 import { Inter, Outfit } from "next/font/google";
 import type React from "react";
-import { authOptions } from "./api/auth/[...nextauth]/options";
 
 const inter = Inter({ subsets: ["latin"] });
 const outfit = Outfit({
@@ -21,13 +18,11 @@ export const metadata: Metadata = {
     "A modern blockchain wallet with optimistic UI and chain abstraction",
 };
 
-export default async function RootLayout({
+export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const session = await getServerSession(authOptions);
-  
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`${inter.className} ${outfit.variable}`}>
@@ -38,9 +33,7 @@ export default async function RootLayout({
           disableTransitionOnChange
         >
           <ToastContextProvider>
-            <AppProvider session={session as Session}>
-              {children}
-            </AppProvider>
+            {children}
           </ToastContextProvider>
         </ThemeProvider>
       </body>

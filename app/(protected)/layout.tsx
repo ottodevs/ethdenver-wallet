@@ -1,9 +1,7 @@
-import AppProvider from "@/components/providers"
-import { AuthProvider } from "@/contexts/auth-context"
-import { WalletProvider } from "@/hooks/use-wallet"
-import { getServerSession } from "next-auth"
-import { redirect } from "next/navigation"
-import { authOptions } from "../api/auth/[...nextauth]/options"
+import ProtectedClientLayout from "@/components/protected-client-layout";
+import { getServerSession } from "next-auth";
+import { redirect } from "next/navigation";
+import { authOptions } from "../api/auth/[...nextauth]/options";
 
 export default async function ProtectedLayout({
   children,
@@ -16,13 +14,5 @@ export default async function ProtectedLayout({
     redirect("/auth/signin");
   }
 
-  return (
-    <AppProvider session={session}>
-      <AuthProvider>
-        <WalletProvider>
-          {children}
-        </WalletProvider>
-      </AuthProvider>
-    </AppProvider>
-  );
+  return <ProtectedClientLayout session={session}>{children}</ProtectedClientLayout>;
 } 

@@ -3,8 +3,9 @@
 import { signIn } from "next-auth/react";
 import Image from "next/image";
 import { useSearchParams } from "next/navigation";
+import { Suspense } from "react";
 
-export default function SignIn() {
+function SignInContent() {
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get("callbackUrl") || "/";
   const error = searchParams.get("error");
@@ -50,11 +51,11 @@ export default function SignIn() {
         </div>
       )}
 
-      {/* Sign in button positioned 24px from bottom */}
-      <div className="fixed bottom-6 left-0 right-0 z-10 w-full px-4 sm:px-6 md:px-8 max-w-md mx-auto">
+      {/* Sign in button */}
+      <div className="z-10 mb-6 w-full max-w-md px-4">
         <button
-          className="flex w-full items-center justify-center gap-2 rounded-full bg-white py-3 px-4 text-black font-medium shadow-md transition-colors hover:bg-gray-100"
           onClick={handleGoogleSignIn}
+          className="flex w-full items-center justify-center gap-2 rounded-lg bg-white py-3 px-4 text-sm font-medium text-black shadow-sm hover:bg-gray-100"
         >
           <Image
             src="/google-logo.svg"
@@ -67,5 +68,13 @@ export default function SignIn() {
         </button>
       </div>
     </div>
+  );
+}
+
+export default function SignIn() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-[#141419]"></div>}>
+      <SignInContent />
+    </Suspense>
   );
 }

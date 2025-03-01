@@ -84,8 +84,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Handle authentication with Okto
   const handleAuthenticate = useCallback(async (): Promise<unknown> => {
     if (!idToken || !oktoClient) {
-      setError("Missing requirements for authentication");
-      return { result: false, error: "Missing requirements for authentication" };
+      console.error("Okto client not available");
+      setError("Okto client not available");
+      return { result: false, error: "Okto client not available" };
     }
     
     // Prevent multiple authentication attempts
