@@ -11,7 +11,8 @@ import { useOktoAccount } from "@/hooks/use-okto-account";
 import { useOktoPortfolio } from "@/hooks/use-okto-portfolio";
 import { useWallet } from "@/hooks/use-wallet";
 import { AnimatePresence } from "framer-motion";
-import { ArrowDownUp, QrCode } from "lucide-react";
+import { ArrowDownUp, Eye, QrCode } from "lucide-react";
+import Image from "next/image";
 import { useState } from "react";
 import { LoginButton } from "./login-button";
 import { TransactionHistory } from "./transaction-history";
@@ -28,7 +29,7 @@ export function Wallet() {
     return (
       <div className="pt-6 pb-4">
         <h2 className="text-xl font-bold mb-2 text-white">Wallet</h2>
-        <p className="text-sm text-gray-400 mb-4">
+        <p className="text-sm text-gray-400 mb-4 font-outfit">
           Please log in to access your wallet
         </p>
         <LoginButton />
@@ -40,7 +41,9 @@ export function Wallet() {
     return (
       <div className="pt-6 pb-4">
         <h2 className="text-xl font-bold mb-2 text-white">Wallet</h2>
-        <p className="text-gray-400">Loading wallet information...</p>
+        <p className="text-gray-400 font-outfit">
+          Loading wallet information...
+        </p>
       </div>
     );
   }
@@ -49,7 +52,7 @@ export function Wallet() {
     return (
       <div className="pt-6 pb-4">
         <h2 className="text-xl font-bold mb-2 text-white">Wallet</h2>
-        <p className="text-red-500">{error}</p>
+        <p className="text-red-500 font-outfit">{error}</p>
       </div>
     );
   }
@@ -64,22 +67,61 @@ export function Wallet() {
 
   return (
     <>
-      <div className="pt-6 pb-4">
+      <div className="pt-6 pb-4 font-outfit">
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-bold text-white">Wallet</h2>
           <OptionsDropdown />
+          <h2 className="text-xl font-bold text-white">Wallet</h2>
+          <Button variant="ghost" size="icon" className="h-8 w-8 text-white">
+            <QrCode className="h-5 w-5" />
+          </Button>
         </div>
-        <div className="mb-2 text-sm text-gray-400">
+        <div className="mb-2 text-sm text-gray-400 text-center">
           {privacyMode
             ? "••••••••••••••••"
             : walletAddress.slice(0, 6) + "..." + walletAddress.slice(-4)}
         </div>
-        <div className="mb-6">
-          <div className="text-sm text-gray-400">Total Balance</div>
-          <div className="text-3xl font-bold text-white">
-            {privacyMode ? "••••••" : formattedBalance}
+
+        {/* Centered Total Balance Section */}
+        <div className="flex flex-col items-center mb-10 mt-8">
+          <div className="text-[16px] text-gray-400 font-outfit">
+            TOTAL BALANCE
+          </div>
+          <div className="flex items-center">
+            <div className="text-[24px] font-medium text-white">
+              {privacyMode ? "••••••" : formattedBalance}
+            </div>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 text-white ml-2"
+            >
+              <Eye className="h-5 w-5" />
+            </Button>
           </div>
         </div>
+
+        {/* New Buy, Swap, Ask Buttons */}
+        <div className="flex justify-between items-center mb-8">
+          <div className="flex flex-col items-center">
+            <div className="rounded-full bg-blue-600 p-4 mb-2">
+              <Image src="/buy.svg" alt="Buy" width={32} height={32} />
+            </div>
+            <span className="text-[12px] text-white mt-2">BUY</span>
+          </div>
+          <div className="flex flex-col items-center">
+            <div className="rounded-full bg-blue-600 p-4 mb-2">
+              <Image src="/swap.svg" alt="Swap" width={32} height={32} />
+            </div>
+            <span className="text-[12px] text-white mt-2">SWAP</span>
+          </div>
+          <div className="flex flex-col items-center">
+            <div className="rounded-full bg-blue-600 p-4 mb-2">
+              <Image src="/ask.svg" alt="Ask" width={32} height={32} />
+            </div>
+            <span className="text-[12px] text-white mt-2">ASK</span>
+          </div>
+        </div>
+
         <div className="grid grid-cols-2 gap-3 mb-6">
           <Button
             variant="outline"

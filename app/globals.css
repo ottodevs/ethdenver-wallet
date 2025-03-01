@@ -53,8 +53,13 @@
   * {
     @apply border-border;
   }
+
   body {
     @apply bg-background text-foreground;
   }
 }
 
+/* Outfit font */
+.font-outfit {
+  font-family: var(--font-outfit), sans-serif;
+}
