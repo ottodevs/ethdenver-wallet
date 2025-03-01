@@ -1,5 +1,6 @@
 "use client";
 
+import { DelegationBanner } from "@/components/delegation-banner";
 import { OptionsDropdown } from "@/components/options-dropdown";
 import { SwapInterface } from "@/components/swap-interface";
 import { TokenList } from "@/components/token-list";
@@ -7,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useOktoAccount } from "@/hooks/use-okto-account";
 import { useOktoPortfolio } from "@/hooks/use-okto-portfolio";
+import { useOktoTransactions } from "@/hooks/use-okto-transactions";
 import { useWallet } from "@/hooks/use-wallet";
 import { AnimatePresence } from "framer-motion";
 import { ArrowDownUp, QrCode } from "lucide-react";
@@ -19,9 +21,12 @@ import { TransactionHistory } from "./transaction-history";
 export function Wallet() {
   const router = useRouter();
   const { privacyMode } = useWallet();
-  const { isLoading, error, isAuthenticated } = useOktoAccount();
-  const { totalBalanceUsd } = useOktoPortfolio();
+  const { isLoading, error, isAuthenticated, selectedAccount } = useOktoAccount();
+  const { totalBalanceUsd, isLoading: isLoadingPortfolio } = useOktoPortfolio();
+  const { pendingTransactions } = useOktoTransactions();
   const [swapInterfaceOpen, setSwapInterfaceOpen] = useState(false);
+  
+  const hasPendingTransactions = pendingTransactions.length > 0;
 
   if (!isAuthenticated) {
     return (
@@ -79,6 +84,9 @@ export function Wallet() {
             <QrCode className="h-5 w-5" />
           </Button>
         </div>
+
+        {/* Banner de delegación justo después de la barra superior */}
+        <DelegationBanner />
 
         {/* Centered Total Balance Section */}
         <div className="flex flex-col items-center mb-10 mt-16">
@@ -179,10 +187,19 @@ export function Wallet() {
               className="flex-1 text-white data-[state=active]:bg-black/50"
             >
               Activity
+              {hasPendingTransactions && (
+                <span className="ml-1 h-2 w-2 bg-primary rounded-full inline-block" />
+              )}
             </TabsTrigger>
           </TabsList>
-          <TabsContent value="assets">
-            <TokenList />
+          <TabsContent value="assets" className={isLoadingPortfolio ? "min-h-[200px] flex items-center justify-center" : ""}>
+            {isAuthenticated && selectedAccount ? (
+              <TokenList />
+            ) : (
+              <div className="text-center text-gray-400 py-8">
+                No account selected
+              </div>
+            )}
           </TabsContent>
           <TabsContent value="activity">
             <TransactionHistory />

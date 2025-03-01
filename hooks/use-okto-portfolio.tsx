@@ -1,9 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useOkto } from "@okto_web3/react-sdk";
-import { getPortfolio } from "@okto_web3/react-sdk";
 import { useOktoAccount } from "@/hooks/use-okto-account";
+import { getPortfolio, useOkto } from "@okto_web3/react-sdk";
+import { useEffect, useState } from "react";
 
 export interface TokenBalance {
   id: string;
@@ -13,6 +12,8 @@ export interface TokenBalance {
   chain: string;
   balance: number;
   valueUsd: number;
+  contractAddress?: string;
+  isNative?: boolean;
 }
 
 export function useOktoPortfolio() {
