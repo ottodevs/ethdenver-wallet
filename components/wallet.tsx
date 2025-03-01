@@ -238,7 +238,7 @@ export function Wallet() {
         <div
           className={
             activeTab === "assets" && isLoadingPortfolio
-              ? "min-h-[200px] flex items-center justify-center"
+              ? "min-h-[200px] w-full"
               : ""
           }
         >
