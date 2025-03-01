@@ -5,13 +5,12 @@ import { OptionsDropdown } from "@/components/options-dropdown";
 import { SwapInterface } from "@/components/swap-interface";
 import { TokenList } from "@/components/token-list";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useOktoAccount } from "@/hooks/use-okto-account";
 import { useOktoPortfolio } from "@/hooks/use-okto-portfolio";
 import { useOktoTransactions } from "@/hooks/use-okto-transactions";
 import { useWallet } from "@/hooks/use-wallet";
 import { AnimatePresence } from "framer-motion";
-import { ArrowDownUp, QrCode } from "lucide-react";
+import { QrCode } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -21,11 +20,13 @@ import { TransactionHistory } from "./transaction-history";
 export function Wallet() {
   const router = useRouter();
   const { privacyMode } = useWallet();
-  const { isLoading, error, isAuthenticated, selectedAccount } = useOktoAccount();
+  const { isLoading, error, isAuthenticated, selectedAccount } =
+    useOktoAccount();
   const { totalBalanceUsd, isLoading: isLoadingPortfolio } = useOktoPortfolio();
   const { pendingTransactions } = useOktoTransactions();
   const [swapInterfaceOpen, setSwapInterfaceOpen] = useState(false);
-  
+  const [activeTab, setActiveTab] = useState("assets");
+
   const hasPendingTransactions = pendingTransactions.length > 0;
 
   if (!isAuthenticated) {
@@ -129,82 +130,102 @@ export function Wallet() {
           </div>
         </div>
 
-        {/* New Buy, Swap, Ask Buttons with correct spacing */}
-        <div className="flex justify-center items-center mb-16">
-          <div className="flex justify-around w-[300px]">
+        {/* Action Buttons */}
+        <div className="flex justify-center items-center mb-6">
+          <div className="flex justify-around w-full max-w-[400px]">
             <div className="flex flex-col items-center">
-              <div className="w-[48px] h-[48px] flex items-center justify-center">
+              <div className="w-[48px] h-[48px] bg-[#4364F9] rounded-full flex items-center justify-center">
                 <Image src="/buy.svg" alt="Buy" width={48} height={48} />
               </div>
-              <span className="text-[12px] text-gray-400 mt-2">BUY</span>
+              <span className="text-[14px] text-gray-400 mt-2">BUY</span>
             </div>
             <div className="flex flex-col items-center">
-              <div className="w-[48px] h-[48px] flex items-center justify-center">
+              <div className="w-[48px] h-[48px] bg-[#4364F9] rounded-full flex items-center justify-center">
                 <Image src="/swap.svg" alt="Swap" width={48} height={48} />
               </div>
-              <span className="text-[12px] text-gray-400 mt-2">SWAP</span>
+              <span className="text-[14px] text-gray-400 mt-2">SWAP</span>
+            </div>
+            <div className="flex flex-col items-center">
+              <div className="w-[48px] h-[48px] bg-[#4364F9] rounded-full flex items-center justify-center">
+                <Image src="/send.svg" alt="Send" width={48} height={48} />
+              </div>
+              <span className="text-[14px] text-gray-400 mt-2">SEND</span>
             </div>
             <div
-              className="flex flex-col items-center cursor-pointer transition-opacity hover:opacity-80 active:opacity-70"
+              className="flex flex-col items-center cursor-pointer"
               onClick={() => router.push("/ask")}
             >
-              <div className="w-[48px] h-[48px] flex items-center justify-center">
+              <div className="w-[48px] h-[48px] bg-[#4364F9] rounded-full flex items-center justify-center">
                 <Image src="/ask.svg" alt="Ask" width={48} height={48} />
               </div>
-              <span className="text-[12px] text-gray-400 mt-2">ASK</span>
+              <span className="text-[14px] text-gray-400 mt-2">ASK</span>
             </div>
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-3 mb-6">
-          <Button
-            variant="outline"
-            className="flex items-center justify-center gap-2 bg-black/30 border-gray-700 text-white hover:bg-black/50 hover:text-white"
-            onClick={() => router.push("/receive")}
-          >
-            <QrCode className="h-4 w-4" />
-            Receive
-          </Button>
-          <Button
-            variant="outline"
-            className="flex items-center justify-center gap-2 bg-black/30 border-gray-700 text-white hover:bg-black/50 hover:text-white"
-            onClick={() => setSwapInterfaceOpen(true)}
-          >
-            <ArrowDownUp className="h-4 w-4" />
-            Swap
-          </Button>
-        </div>
-        <Tabs defaultValue="assets" className="w-full">
-          <TabsList className="w-full mb-4 bg-black/30">
-            <TabsTrigger
-              value="assets"
-              className="flex-1 text-white data-[state=active]:bg-black/50"
+        {/* Updated Tab Navigation */}
+        <div className="mx-auto max-w-md">
+          <div className="w-full h-[44px] p-1 bg-[#11101C] rounded-[24px] border border-[#373747] flex mb-6">
+            <div
+              onClick={() => setActiveTab("assets")}
+              className={`flex-1 h-full rounded-[20px] flex justify-center items-center cursor-pointer ${
+                activeTab === "assets"
+                  ? "bg-[#343445] border border-[#373747] shadow-sm"
+                  : ""
+              }`}
             >
-              Assets
-            </TabsTrigger>
-            <TabsTrigger
-              value="activity"
-              className="flex-1 text-white data-[state=active]:bg-black/50"
+              <div className="text-white text-base font-medium">Assets</div>
+            </div>
+            <div
+              onClick={() => setActiveTab("activity")}
+              className={`flex-1 h-full rounded-[20px] flex justify-center items-center cursor-pointer ${
+                activeTab === "activity"
+                  ? "bg-[#343445] border border-[#373747] shadow-sm"
+                  : ""
+              }`}
             >
-              Activity
-              {hasPendingTransactions && (
-                <span className="ml-1 h-2 w-2 bg-primary rounded-full inline-block" />
-              )}
-            </TabsTrigger>
-          </TabsList>
-          <TabsContent value="assets" className={isLoadingPortfolio ? "min-h-[200px] flex items-center justify-center" : ""}>
-            {isAuthenticated && selectedAccount ? (
-              <TokenList />
-            ) : (
-              <div className="text-center text-gray-400 py-8">
-                No account selected
+              <div className="text-white text-base font-medium relative">
+                Activity
+                {hasPendingTransactions && (
+                  <span className="absolute -top-1 -right-3 h-2 w-2 bg-primary rounded-full inline-block" />
+                )}
               </div>
-            )}
-          </TabsContent>
-          <TabsContent value="activity">
+            </div>
+            <div
+              onClick={() => setActiveTab("nfts")}
+              className={`flex-1 h-full rounded-[20px] flex justify-center items-center cursor-pointer ${
+                activeTab === "nfts"
+                  ? "bg-[#343445] border border-[#373747] shadow-sm"
+                  : ""
+              }`}
+            >
+              <div className="text-white text-base font-medium">NFTs</div>
+            </div>
+          </div>
+        </div>
+
+        {/* Content based on active tab */}
+        <div
+          className={
+            activeTab === "assets" && isLoadingPortfolio
+              ? "min-h-[200px] flex items-center justify-center"
+              : ""
+          }
+        >
+          {activeTab === "assets" && isAuthenticated && selectedAccount ? (
+            <TokenList />
+          ) : activeTab === "activity" ? (
             <TransactionHistory />
-          </TabsContent>
-        </Tabs>
+          ) : activeTab === "nfts" ? (
+            <div className="text-center text-gray-400 py-8">
+              NFTs coming soon
+            </div>
+          ) : (
+            <div className="text-center text-gray-400 py-8">
+              No account selected
+            </div>
+          )}
+        </div>
       </div>
 
       <SwapInterface
