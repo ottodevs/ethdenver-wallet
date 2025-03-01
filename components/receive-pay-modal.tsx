@@ -58,7 +58,7 @@ export function ReceivePayModal({ open, onOpenChange }: ReceivePayModalProps) {
           <ReceiveTab />
         ) : (
           <PayTab
-            onOpenChange={onOpenChange}
+            onOpenChangeAction={(open: boolean) => onOpenChange(open)}
             active={activeTab === "pay" && open}
           />
         )}

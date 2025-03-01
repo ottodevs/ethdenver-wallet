@@ -1,6 +1,5 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -54,14 +53,12 @@ export function ResponsiveDialog({
       <Dialog open={open} onOpenChange={onOpenChange}>
         {trigger && <DialogTrigger asChild>{trigger}</DialogTrigger>}
         <DialogContent className={cn("sm:max-w-md", contentClassName)}>
-          {(title || description) && (
-            <DialogHeader>
-              {title && <DialogTitle>{title}</DialogTitle>}
-              {description && (
-                <DialogDescription>{description}</DialogDescription>
-              )}
-            </DialogHeader>
-          )}
+          <DialogHeader>
+            {title && <DialogTitle>{title}</DialogTitle>}
+            {description && (
+              <DialogDescription>{description}</DialogDescription>
+            )}
+          </DialogHeader>
           <div className={className}>{children}</div>
         </DialogContent>
       </Dialog>
@@ -77,32 +74,23 @@ export function ResponsiveDialog({
     >
       {trigger && <DrawerTrigger asChild>{trigger}</DrawerTrigger>}
       <DrawerContent className={cn(contentClassName)}>
-        <div className="absolute right-4 top-4 z-50">
-          <DrawerClose asChild>
-            <button className="rounded-full p-1.5 bg-[#373747] text-white hover:bg-[#444458] focus:outline-none">
-              <X className="h-4 w-4" />
-            </button>
-          </DrawerClose>
-        </div>
-
-        {(title || description) && (
-          <DrawerHeader className="cursor-grab active:cursor-grabbing">
-            {title && <DrawerTitle>{title}</DrawerTitle>}
-            {description && (
-              <DrawerDescription>{description}</DrawerDescription>
-            )}
-          </DrawerHeader>
-        )}
-        <div className={cn("px-4", className)}>{children}</div>
         {!hideCloseButton && (
-          <DrawerFooter>
+          <div className="absolute right-4 top-4 z-50">
             <DrawerClose asChild>
-              <Button variant="outline" className="w-full">
-                Close
-              </Button>
+              <button className="rounded-full p-1.5 bg-[#373747] text-white hover:bg-[#444458] focus:outline-none">
+                <X className="h-4 w-4" />
+              </button>
             </DrawerClose>
-          </DrawerFooter>
+          </div>
         )}
+        <DrawerHeader>
+          {title && <DrawerTitle>{title}</DrawerTitle>}
+          {description && (
+            <DrawerDescription>{description}</DrawerDescription>
+          )}
+        </DrawerHeader>
+        <div className={cn("px-4", className)}>{children}</div>
+        <DrawerFooter></DrawerFooter>
       </DrawerContent>
     </Drawer>
   );
