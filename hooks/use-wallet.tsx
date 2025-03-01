@@ -145,7 +145,7 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
   const [transactions, setTransactions] = useState<Transaction[]>([])
   const [pendingTransactions, setPendingTransactions] = useState<Transaction[]>([])
   const [totalBalanceUsd, setTotalBalanceUsd] = useState(0)
-  const walletAddress = "0x71C7656EC7ab88b098defB751B7401B5f6d8976F"
+  const [walletAddress/*, setWalletAddress*/] = useState<string>("")
   const [privacyMode, setPrivacyMode] = useState(false)
 
   // Simulate loading data

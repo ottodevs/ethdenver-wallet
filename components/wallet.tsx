@@ -1,97 +1,87 @@
 "use client"
 
-import { useState } from "react"
-import { AnimatePresence, motion } from "framer-motion"
-import { Avatar } from "@/components/ui/avatar"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { TokenList } from "@/components/token-list"
-import { TransactionHistory } from "@/components/transaction-history"
-import { SendModal } from "@/components/send-modal"
+import { AIChatbox } from "@/components/ai-chatbox"
+import { NFTGallery } from "@/components/nft-gallery"
+import { OptionsDropdown } from "@/components/options-dropdown"
 import { ReceiveModal } from "@/components/receive-modal"
 import { SwapInterface } from "@/components/swap-interface"
-import { OptionsDropdown } from "@/components/options-dropdown"
-import { AIChatbox } from "@/components/ai-chatbox"
+import { TokenList } from "@/components/token-list"
+import { Button } from "@/components/ui/button"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { useOktoAccount } from "@/hooks/use-okto-account"
+import { useOktoPortfolio } from "@/hooks/use-okto-portfolio"
 import { useWallet } from "@/hooks/use-wallet"
-import { ArrowDownLeft, ArrowUpRight, BarChart3, WalletIcon } from "lucide-react"
+import { AnimatePresence } from "framer-motion"
+import { ArrowDownUp, QrCode } from "lucide-react"
+import { useState } from "react"
+import { TransactionHistory } from "./transaction-history"
 
 export function Wallet() {
-  const { totalBalanceUsd, isLoading } = useWallet()
-  const [activeTab, setActiveTab] = useState("assets")
-  const [sendModalOpen, setSendModalOpen] = useState(false)
-  const [receiveModalOpen, setReceiveModalOpen] = useState(false)
-  const [swapInterfaceOpen, setSwapInterfaceOpen] = useState(false)
+  const { privacyMode } = useWallet();
+  const { selectedAccount } = useOktoAccount();
+  const { totalBalanceUsd, isLoading } = useOktoPortfolio();
+  const [receiveModalOpen, setReceiveModalOpen] = useState(false);
+  const [swapInterfaceOpen, setSwapInterfaceOpen] = useState(false);
+
+  const walletAddress = selectedAccount?.address || "";
 
   return (
-    <div className="flex flex-col gap-6">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <Avatar className="h-10 w-10 bg-primary/10">
-            <WalletIcon className="h-5 w-5 text-primary" />
-          </Avatar>
-          <h1 className="text-xl font-bold">Multi-Chain Wallet</h1>
-        </div>
-        <OptionsDropdown />
-      </div>
-
-      <Card className="overflow-hidden border-none bg-gradient-to-br from-primary/80 to-primary shadow-lg">
-        <CardContent className="p-6">
-          <div className="flex flex-col gap-1 text-primary-foreground">
-            <span className="text-sm font-medium opacity-80">Total Balance</span>
-            <div className="flex items-baseline gap-2">
-              {isLoading ? (
-                <div className="h-10 w-40 animate-pulse rounded-md bg-primary-foreground/20" />
-              ) : (
-                <motion.h2
-                  className="text-3xl font-bold"
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.3 }}
-                >
-                  ${totalBalanceUsd.toLocaleString()}
-                </motion.h2>
-              )}
-            </div>
+    <div className="rounded-xl border bg-card text-card-foreground shadow">
+      <div className="p-6 flex flex-col space-y-4">
+        <div className="flex justify-between items-center">
+          <div>
+            <h2 className="text-2xl font-bold tracking-tight">Wallet</h2>
+            <p className="text-sm text-muted-foreground">
+              {walletAddress ? `${walletAddress.slice(0, 6)}...${walletAddress.slice(-4)}` : "Connect wallet"}
+            </p>
           </div>
-        </CardContent>
-      </Card>
+          <OptionsDropdown />
+        </div>
 
-      <div className="grid grid-cols-3 gap-3">
-        <Button variant="outline" className="flex flex-col gap-1 h-auto py-3" onClick={() => setSendModalOpen(true)}>
-          <ArrowUpRight className="h-5 w-5 text-primary" />
-          <span>Send</span>
-        </Button>
-        <Button variant="outline" className="flex flex-col gap-1 h-auto py-3" onClick={() => setReceiveModalOpen(true)}>
-          <ArrowDownLeft className="h-5 w-5 text-primary" />
-          <span>Receive</span>
-        </Button>
-        <Button
-          variant="outline"
-          className="flex flex-col gap-1 h-auto py-3"
-          onClick={() => setSwapInterfaceOpen(true)}
-        >
-          <BarChart3 className="h-5 w-5 text-primary" />
-          <span>Swap</span>
-        </Button>
+        <div className="flex flex-col space-y-1">
+          <p className="text-sm text-muted-foreground">Total Balance</p>
+          <h1 className="text-3xl font-bold">
+            {isLoading ? (
+              <div className="h-8 w-32 bg-muted animate-pulse rounded"></div>
+            ) : privacyMode ? (
+              "••••••"
+            ) : (
+              `$${totalBalanceUsd.toLocaleString("en-US", {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+              })}`
+            )}
+          </h1>
+        </div>
+
+        <div className="flex space-x-2">
+          <Button onClick={() => setReceiveModalOpen(true)} className="flex-1" variant="outline">
+            <QrCode className="mr-2 h-4 w-4" />
+            Receive
+          </Button>
+          <Button onClick={() => setSwapInterfaceOpen(true)} className="flex-1" variant="outline">
+            <ArrowDownUp className="mr-2 h-4 w-4" />
+            Swap
+          </Button>
+        </div>
+
+        <Tabs defaultValue="assets" className="w-full">
+          <TabsList className="grid w-full grid-cols-3">
+            <TabsTrigger value="assets">Assets</TabsTrigger>
+            <TabsTrigger value="activity">Activity</TabsTrigger>
+            <TabsTrigger value="nfts">NFTs</TabsTrigger>
+          </TabsList>
+          <TabsContent value="assets" className="space-y-4">
+            <TokenList />
+          </TabsContent>
+          <TabsContent value="activity">
+            <TransactionHistory />
+          </TabsContent>
+          <TabsContent value="nfts">
+            <NFTGallery />
+          </TabsContent>
+        </Tabs>
       </div>
-
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="assets">Assets</TabsTrigger>
-          <TabsTrigger value="activity">Activity</TabsTrigger>
-        </TabsList>
-        <TabsContent value="assets" className="mt-4">
-          <TokenList />
-        </TabsContent>
-        <TabsContent value="activity" className="mt-4">
-          <TransactionHistory />
-        </TabsContent>
-      </Tabs>
-
-      <AnimatePresence>
-        {sendModalOpen && <SendModal open={sendModalOpen} onOpenChange={setSendModalOpen} />}
-      </AnimatePresence>
 
       <AnimatePresence>
         {receiveModalOpen && <ReceiveModal open={receiveModalOpen} onOpenChange={setReceiveModalOpen} />}

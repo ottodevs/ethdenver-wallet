@@ -1,15 +1,11 @@
 "use client"
 
-import { useState } from "react"
-import Image from "next/image"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { useWallet } from "@/hooks/use-wallet"
-import { Check, Copy } from "lucide-react"
-import { Switch } from "@/components/ui/switch"
+import { useOktoAccount } from "@/hooks/use-okto-account"
+import { motion } from "framer-motion"
+import { Copy } from "lucide-react"
+import QrScanner from "qr-scanner"
+import { useEffect, useRef, useState } from "react"
 
 interface ReceiveModalProps {
   open: boolean
@@ -17,122 +13,126 @@ interface ReceiveModalProps {
 }
 
 export function ReceiveModal({ open, onOpenChange }: ReceiveModalProps) {
-  const { tokens, walletAddress } = useWallet()
-  const [selectedChain, setSelectedChain] = useState("ethereum")
-  const [selectedToken, setSelectedToken] = useState("")
-  const [amount, setAmount] = useState("")
-  const [showAmountOptions, setShowAmountOptions] = useState(false)
+  const { selectedAccount } = useOktoAccount()
   const [copied, setCopied] = useState(false)
+  const [scannedResult, setScannedResult] = useState<string | null>(null)
+  const [/*isScanning*/, setIsScanning] = useState(false)
+  const videoRef = useRef<HTMLVideoElement | null>(null)
+  const scannerRef = useRef<QrScanner | null>(null)
+
+  const walletAddress = selectedAccount?.address || ""
 
   const handleCopy = () => {
-    navigator.clipboard.writeText(walletAddress)
-    setCopied(true)
-    setTimeout(() => setCopied(false), 2000)
+    if (walletAddress) {
+      navigator.clipboard.writeText(walletAddress)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    }
   }
 
-  const getQrData = () => {
-    let data = walletAddress
+  const handleClose = () => {
+    onOpenChange(false)
+  }
 
-    if (showAmountOptions && selectedToken && amount) {
-      data = `${selectedChain}:${walletAddress}?amount=${amount}&token=${selectedToken}`
+  useEffect(() => {
+    const startScanner = async () => {
+      if (!videoRef.current || scannerRef.current) return
+
+      try {
+        const scanner = new QrScanner(
+          videoRef.current,
+          (result) => {
+            setScannedResult(result.data)
+          },
+          {
+            returnDetailedScanResult: true,
+            highlightScanRegion: true,
+            highlightCodeOutline: true,
+          }
+        )
+
+        await scanner.start()
+        scannerRef.current = scanner
+        setIsScanning(true)
+      } catch (error) {
+        console.error('Error starting scanner:', error)
+      }
     }
 
-    return data
-  }
+    if (open) {
+      startScanner()
+    }
+
+    return () => {
+      if (scannerRef.current) {
+        scannerRef.current.stop()
+        scannerRef.current.destroy()
+        scannerRef.current = null
+        setIsScanning(false)
+      }
+    }
+  }, [open])
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>Receive Assets</DialogTitle>
-          <DialogDescription>Share your address to receive tokens.</DialogDescription>
-        </DialogHeader>
-        <div className="grid gap-6 py-4">
-          <div className="grid gap-2">
-            <Label>Select Network</Label>
-            <Select value={selectedChain} onValueChange={setSelectedChain}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select network" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="ethereum">Ethereum</SelectItem>
-                <SelectItem value="polygon">Polygon</SelectItem>
-                <SelectItem value="arbitrum">Arbitrum</SelectItem>
-                <SelectItem value="optimism">Optimism</SelectItem>
-                <SelectItem value="base">Base</SelectItem>
-              </SelectContent>
-            </Select>
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm"
+      onClick={handleClose}
+    >
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: 20 }}
+        className="fixed left-[50%] top-[50%] z-50 w-full max-w-md translate-x-[-50%] translate-y-[-50%] rounded-lg border bg-card p-6 shadow-lg"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <h2 className="text-2xl font-bold">Scan QR Code</h2>
+            <p className="text-sm text-muted-foreground">
+              Scan a QR code to receive funds
+            </p>
           </div>
 
-          <div className="flex items-center justify-between">
-            <h4 className="text-sm font-medium">Specify Amount</h4>
-            <Switch checked={showAmountOptions} onCheckedChange={setShowAmountOptions} />
+          <div className="flex justify-center py-4">
+            <div className="rounded-lg overflow-hidden relative" style={{ width: 250, height: 250 }}>
+              <video ref={videoRef} style={{ width: '100%', height: '100%' }}></video>
+            </div>
           </div>
 
-          {showAmountOptions && (
-            <div className="grid gap-4">
-              <div className="grid gap-2">
-                <Label>Select Token</Label>
-                <Select value={selectedToken} onValueChange={setSelectedToken}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select token" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {tokens
-                      .filter((token) => token.chain === selectedChain)
-                      .map((token) => (
-                        <SelectItem key={token.id} value={token.symbol}>
-                          {token.name} ({token.symbol})
-                        </SelectItem>
-                      ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="grid gap-2">
-                <Label>Amount</Label>
-                <Input type="number" placeholder="0.0" value={amount} onChange={(e) => setAmount(e.target.value)} />
+          {scannedResult && (
+            <div className="space-y-2">
+              <p className="text-sm font-medium">Scanned Result</p>
+              <div className="bg-muted p-2 rounded-md text-sm">
+                <p className="break-all">{scannedResult}</p>
               </div>
             </div>
           )}
 
-          <div className="flex justify-center">
-            <div className="bg-white p-2 rounded-lg">
-              <Image
-                src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(getQrData())}`}
-                alt="QR Code"
-                width={200}
-                height={200}
-                className="rounded"
-              />
-            </div>
-          </div>
-
-          <div className="grid gap-2">
-            <Label>Wallet Address</Label>
-            <div className="flex items-center gap-2">
-              <Input readOnly value={walletAddress} className="font-mono text-sm" />
-              <Button variant="outline" size="icon" onClick={handleCopy} className="relative">
-                {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-                {copied && (
-                  <span className="absolute -top-8 right-0 bg-background border rounded-md px-2 py-1 text-xs whitespace-nowrap">
-                    Copied!
-                  </span>
+          <div className="space-y-2">
+            <p className="text-sm font-medium">Your Wallet Address</p>
+            <div className="flex items-center space-x-2">
+              <div className="bg-muted p-2 rounded-md text-sm flex-1 overflow-hidden">
+                <p className="truncate">{walletAddress}</p>
+              </div>
+              <Button size="icon" variant="outline" onClick={handleCopy}>
+                {copied ? (
+                  <span className="text-green-600 text-xs">Copied!</span>
+                ) : (
+                  <Copy className="h-4 w-4" />
                 )}
               </Button>
             </div>
-            <p className="text-xs text-muted-foreground mt-1">
-              Only send {selectedChain.charAt(0).toUpperCase() + selectedChain.slice(1)} assets to this address.
-              {showAmountOptions && selectedToken && amount && (
-                <span className="block mt-1 font-medium">
-                  Requesting: {amount} {selectedToken}
-                </span>
-              )}
-            </p>
           </div>
+
+          <Button onClick={handleClose} className="w-full">
+            Close
+          </Button>
         </div>
-      </DialogContent>
-    </Dialog>
+      </motion.div>
+    </motion.div>
   )
 }
 

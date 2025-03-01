@@ -1,150 +1,218 @@
 "use client"
 
-import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { useWallet } from "@/hooks/use-wallet"
-import { ArrowUpRight, Loader2 } from "lucide-react"
+import { useOktoPortfolio } from "@/hooks/use-okto-portfolio"
+import { useChainService } from "@/services/chain-service"
+import { useTokenTransferService } from "@/services/token-transfer-service"
+import { motion } from "framer-motion"
+import { Check, Loader2 } from "lucide-react"
+import { useState } from "react"
 
 interface SendModalProps {
   open: boolean
   onOpenChange: (open: boolean) => void
 }
 
-export function SendModal({ open, onOpenChange }: SendModalProps) {
-  const { tokens, sendTransaction } = useWallet()
-  const [selectedToken, setSelectedToken] = useState("")
+export function SendModal({ onOpenChange }: SendModalProps) {
+  const { tokens } = useOktoPortfolio()
+  const { sendToken } = useTokenTransferService()
+  const { chains } = useChainService()
+  
   const [recipient, setRecipient] = useState("")
   const [amount, setAmount] = useState("")
-  const [isSending, setIsSending] = useState(false)
+  const [selectedToken, setSelectedToken] = useState("")
+  const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle")
+  const [errorMessage, setErrorMessage] = useState("")
+  const [txHash, setTxHash] = useState("")
 
-  const selectedTokenData = tokens.find((t) => t.id === selectedToken)
-
+  const selectedTokenData = tokens.find(t => t.id === selectedToken)
+  
   const handleSend = async () => {
-    if (!selectedToken || !recipient || !amount) return
-
-    setIsSending(true)
+    if (!selectedTokenData || !recipient || !amount) return
+    
+    setStatus("loading")
+    setErrorMessage("")
+    
     try {
-      await sendTransaction({
-        type: "send",
-        tokenId: selectedToken,
+      // Find the chain for the selected token
+      const tokenChain = selectedTokenData.chain
+      const chainData = chains.find(c => c.name.toLowerCase() === tokenChain)
+      
+      if (!chainData) {
+        throw new Error("Chain not found for selected token")
+      }
+      
+      const result = await sendToken({
+        tokenId: selectedTokenData.id,
+        tokenSymbol: selectedTokenData.symbol,
         recipient,
-        amount: Number.parseFloat(amount),
+        amount: parseFloat(amount),
+        caip2Id: chainData.caip2Id
       })
-      onOpenChange(false)
+      
+      setTxHash(result)
+      setStatus("success")
     } catch (error) {
-      console.error("Failed to send transaction:", error)
-    } finally {
-      setIsSending(false)
+      console.error("Send transaction failed:", error)
+      setStatus("error")
+      setErrorMessage(error instanceof Error ? error.message : "Transaction failed")
+    }
+  }
+
+  const handleClose = () => {
+    if (status !== "loading") {
+      onOpenChange(false)
+      // Reset form after animation completes
+      setTimeout(() => {
+        setRecipient("")
+        setAmount("")
+        setSelectedToken("")
+        setStatus("idle")
+        setErrorMessage("")
+        setTxHash("")
+      }, 300)
     }
   }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>Send Assets</DialogTitle>
-          <DialogDescription>Send tokens to another wallet address.</DialogDescription>
-        </DialogHeader>
-        <div className="grid gap-4 py-4">
-          <div className="grid gap-2">
-            <Label htmlFor="token">Select Token</Label>
-            <Select value={selectedToken} onValueChange={setSelectedToken}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select token" />
-              </SelectTrigger>
-              <SelectContent>
-                {tokens.map((token) => (
-                  <SelectItem key={token.id} value={token.id}>
-                    <div className="flex items-center gap-2">
-                      <span>{token.name}</span>
-                      <span className="text-muted-foreground">
-                        ({token.balance} {token.symbol})
-                      </span>
-                    </div>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm"
+      onClick={handleClose}
+    >
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: 20 }}
+        className="fixed left-[50%] top-[50%] z-50 w-full max-w-md translate-x-[-50%] translate-y-[-50%] rounded-lg border bg-card p-6 shadow-lg"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <h2 className="text-2xl font-bold">Send</h2>
+            <p className="text-sm text-muted-foreground">
+              Send tokens to another wallet address
+            </p>
           </div>
 
-          <div className="grid gap-2">
-            <Label htmlFor="recipient">Recipient Address</Label>
-            <Input
-              id="recipient"
-              placeholder="0x..."
-              value={recipient}
-              onChange={(e) => setRecipient(e.target.value)}
-            />
-          </div>
+          {status === "idle" && (
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="token">Token</Label>
+                <select
+                  id="token"
+                  className="w-full rounded-md border border-input bg-background px-3 py-2"
+                  value={selectedToken}
+                  onChange={(e) => setSelectedToken(e.target.value)}
+                >
+                  <option value="">Select a token</option>
+                  {tokens.map((token) => (
+                    <option key={token.id} value={token.id}>
+                      {token.symbol} - {token.balance.toFixed(4)}
+                    </option>
+                  ))}
+                </select>
+              </div>
 
-          <div className="grid gap-2">
-            <div className="flex items-center justify-between">
-              <Label htmlFor="amount">Amount</Label>
-              {selectedTokenData && (
-                <span className="text-xs text-muted-foreground">
-                  Available: {selectedTokenData.balance} {selectedTokenData.symbol}
-                </span>
-              )}
+              <div className="space-y-2">
+                <Label htmlFor="recipient">Recipient Address</Label>
+                <Input
+                  id="recipient"
+                  placeholder="0x..."
+                  value={recipient}
+                  onChange={(e) => setRecipient(e.target.value)}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="amount">Amount</Label>
+                <Input
+                  id="amount"
+                  type="number"
+                  placeholder="0.0"
+                  value={amount}
+                  onChange={(e) => setAmount(e.target.value)}
+                />
+                {selectedTokenData && (
+                  <p className="text-xs text-muted-foreground">
+                    Available: {selectedTokenData.balance.toFixed(4)} {selectedTokenData.symbol}
+                  </p>
+                )}
+              </div>
+
+              <div className="flex space-x-2">
+                <Button
+                  variant="outline"
+                  className="flex-1"
+                  onClick={handleClose}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  className="flex-1"
+                  onClick={handleSend}
+                  disabled={!selectedToken || !recipient || !amount}
+                >
+                  Send
+                </Button>
+              </div>
             </div>
-            <div className="flex items-center gap-2">
-              <Input
-                id="amount"
-                type="number"
-                placeholder="0.0"
-                value={amount}
-                onChange={(e) => setAmount(e.target.value)}
-              />
-              <Button
-                variant="outline"
-                size="sm"
-                className="whitespace-nowrap"
-                onClick={() => selectedTokenData && setAmount(selectedTokenData.balance.toString())}
-              >
-                Max
-              </Button>
-            </div>
-            {selectedTokenData && amount && (
-              <p className="text-xs text-muted-foreground">
-                ≈ ${((Number.parseFloat(amount) * selectedTokenData.valueUsd) / selectedTokenData.balance).toFixed(2)}
+          )}
+
+          {status === "loading" && (
+            <div className="flex flex-col items-center justify-center py-8 space-y-4">
+              <Loader2 className="h-12 w-12 animate-spin text-primary" />
+              <p className="text-center font-medium">
+                Processing your transaction...
               </p>
-            )}
-          </div>
+              <p className="text-center text-sm text-muted-foreground">
+                Please wait while we process your transaction. This may take a moment.
+              </p>
+            </div>
+          )}
+
+          {status === "success" && (
+            <div className="flex flex-col items-center justify-center py-8 space-y-4">
+              <div className="h-12 w-12 rounded-full bg-green-100 flex items-center justify-center">
+                <Check className="h-6 w-6 text-green-600" />
+              </div>
+              <p className="text-center font-medium">Transaction Successful!</p>
+              <p className="text-center text-sm text-muted-foreground">
+                Your transaction has been successfully processed.
+              </p>
+              {txHash && (
+                <p className="text-xs text-center break-all">
+                  Transaction Hash: {txHash}
+                </p>
+              )}
+              <Button onClick={handleClose}>Close</Button>
+            </div>
+          )}
+
+          {status === "error" && (
+            <div className="flex flex-col items-center justify-center py-8 space-y-4">
+              <div className="h-12 w-12 rounded-full bg-red-100 flex items-center justify-center">
+                <span className="text-red-600 text-xl font-bold">!</span>
+              </div>
+              <p className="text-center font-medium">Transaction Failed</p>
+              <p className="text-center text-sm text-muted-foreground">
+                {errorMessage || "There was an error processing your transaction."}
+              </p>
+              <div className="flex space-x-2">
+                <Button variant="outline" onClick={handleClose}>
+                  Close
+                </Button>
+                <Button onClick={() => setStatus("idle")}>Try Again</Button>
+              </div>
+            </div>
+          )}
         </div>
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Cancel
-          </Button>
-          <Button
-            onClick={handleSend}
-            disabled={!selectedToken || !recipient || !amount || isSending}
-            className="gap-2"
-          >
-            {isSending ? (
-              <>
-                <Loader2 className="h-4 w-4 animate-spin" />
-                Sending...
-              </>
-            ) : (
-              <>
-                <ArrowUpRight className="h-4 w-4" />
-                Send
-              </>
-            )}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+      </motion.div>
+    </motion.div>
   )
 }
 
