@@ -109,3 +109,13 @@
 .animate-fade-in-3 {
   animation: fade-in-3 4s ease-out forwards;
 }
+
+/* Update the existing animations to use blue colors */
+@keyframes pulse-blue {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
+}
+
+.animate-pulse-blue {
+  animation: pulse-blue 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}

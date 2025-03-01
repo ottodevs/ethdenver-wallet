@@ -1,9 +1,13 @@
 import "@/app/globals.css";
+import AppProvider from "@/components/providers";
 import { ThemeProvider } from "@/components/theme-provider";
 import { ToastContextProvider } from "@/components/ui/toast-context";
+import { DataPreloadProvider } from "@/contexts/data-preload-context";
 import type { Metadata } from "next";
+import { getServerSession, Session } from "next-auth";
 import { Inter, Outfit } from "next/font/google";
 import type React from "react";
+import { authOptions } from "./api/auth/[...nextauth]/route";
 
 const inter = Inter({ subsets: ["latin"] });
 const outfit = Outfit({
@@ -23,6 +27,8 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const session = await getServerSession(authOptions);
+  
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`${inter.className} ${outfit.variable}`}>
@@ -32,7 +38,13 @@ export default async function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <ToastContextProvider>{children}</ToastContextProvider>
+          <ToastContextProvider>
+            <AppProvider session={session as Session}>
+              <DataPreloadProvider>
+                {children}
+              </DataPreloadProvider>
+            </AppProvider>
+          </ToastContextProvider>
         </ThemeProvider>
       </body>
     </html>

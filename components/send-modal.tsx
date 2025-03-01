@@ -7,7 +7,7 @@ import { ResponsiveDialog } from "@/components/ui/responsive-dialog"
 import { useOktoPortfolio } from "@/hooks/use-okto-portfolio"
 import { useChainService } from "@/services/chain-service"
 import { useTokenTransferService } from "@/services/token-transfer-service"
-import { Check, Loader2 } from "lucide-react"
+import { Check } from "lucide-react"
 import { useState } from "react"
 
 interface SendModalProps {
@@ -151,7 +151,22 @@ export function SendModal({ open, onOpenChange }: SendModalProps) {
 
         {status === "loading" && (
           <div className="flex flex-col items-center justify-center py-8 space-y-4">
-            <Loader2 className="h-12 w-12 animate-spin text-primary" />
+            <div className="relative w-16 h-16 mb-2">
+              {/* Outer spinning ring */}
+              <div className="absolute inset-0 rounded-full border-t-2 border-b-2 border-blue-500 animate-spin"></div>
+              
+              {/* Middle pulsing ring */}
+              <div className="absolute inset-2 rounded-full border-r-2 border-l-2 border-blue-500/60 animate-pulse"></div>
+              
+              {/* Inner spinning ring (opposite direction) */}
+              <div className="absolute inset-4 rounded-full border-t-2 border-b-2 border-blue-500/40 animate-spin animate-reverse"></div>
+              
+              {/* Center icon */}
+              <div className="absolute inset-0 flex items-center justify-center">
+                <span className="text-xl animate-bounce">💸</span>
+              </div>
+            </div>
+            
             <p className="text-center font-medium">
               Processing your transaction...
             </p>
@@ -163,8 +178,8 @@ export function SendModal({ open, onOpenChange }: SendModalProps) {
 
         {status === "success" && (
           <div className="flex flex-col items-center justify-center py-8 space-y-4">
-            <div className="h-12 w-12 rounded-full bg-green-100 flex items-center justify-center">
-              <Check className="h-6 w-6 text-green-600" />
+            <div className="h-16 w-16 rounded-full bg-green-100 flex items-center justify-center">
+              <Check className="h-8 w-8 text-green-600" />
             </div>
             <p className="text-center font-medium">Transaction Successful!</p>
             <p className="text-center text-sm text-muted-foreground">
@@ -181,8 +196,8 @@ export function SendModal({ open, onOpenChange }: SendModalProps) {
 
         {status === "error" && (
           <div className="flex flex-col items-center justify-center py-8 space-y-4">
-            <div className="h-12 w-12 rounded-full bg-red-100 flex items-center justify-center">
-              <span className="text-red-600 text-xl font-bold">!</span>
+            <div className="h-16 w-16 rounded-full bg-red-100 flex items-center justify-center">
+              <span className="text-red-600 text-2xl font-bold">!</span>
             </div>
             <p className="text-center font-medium">Transaction Failed</p>
             <p className="text-center text-sm text-muted-foreground">
