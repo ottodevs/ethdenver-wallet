@@ -14,36 +14,60 @@ import { AnimatePresence } from "framer-motion";
 import { Eye, EyeOff, QrCode } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { LoginButton } from "./login-button";
+import { NFTGallery } from "./nft-gallery";
 import { TransactionHistory } from "./transaction-history";
 
 export function Wallet() {
   const router = useRouter();
   const { privacyMode, togglePrivacyMode } = useWallet();
-  const { isLoading, error, isAuthenticated, selectedAccount } =
-    useOktoAccount();
-  const { totalBalanceUsd, isLoading: isLoadingPortfolio } = useOktoPortfolio();
+  const { isLoading: accountLoading, error, isAuthenticated } = useOktoAccount();
+  const { totalBalanceUsd, isLoading: isLoadingPortfolio, hasInitialized, refetch } = useOktoPortfolio();
   const { pendingTransactions } = useOktoTransactions();
   const [swapInterfaceOpen, setSwapInterfaceOpen] = useState(false);
   const [sendModalOpen, setSendModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("assets");
 
+  // For debugging
+  useEffect(() => {
+    console.log("Portfolio data:", { 
+      totalBalanceUsd, 
+      isLoadingPortfolio,
+      isAuthenticated
+    });
+  }, [totalBalanceUsd, isLoadingPortfolio, isAuthenticated]);
+
+  // Add a useEffect to retry loading if needed
+  useEffect(() => {
+    let retryTimer: NodeJS.Timeout;
+    
+    if (isAuthenticated && isLoadingPortfolio && !hasInitialized) {
+      // If we're authenticated but still loading after 5 seconds, try to force refresh
+      retryTimer = setTimeout(() => {
+        console.log("Portfolio still loading after timeout, forcing refresh");
+        refetch(true);
+      }, 5000);
+    }
+    
+    return () => {
+      if (retryTimer) clearTimeout(retryTimer);
+    };
+  }, [isAuthenticated, isLoadingPortfolio, hasInitialized, refetch]);
+
   const hasPendingTransactions = pendingTransactions.length > 0;
 
-  if (!isAuthenticated) {
-    return (
-      <div className="pt-6 pb-4">
-        <h2 className="text-xl font-bold mb-2 text-white">Wallet</h2>
-        <p className="text-sm text-gray-400 mb-4 font-outfit">
-          Please log in to access your wallet
-        </p>
-        <LoginButton />
-      </div>
-    );
-  }
+  // Format the balance properly, handling zero, undefined, or NaN values
+  const formattedBalance =
+    typeof totalBalanceUsd === "number" && !isNaN(totalBalanceUsd)
+      ? totalBalanceUsd.toLocaleString("en-US", {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        })
+      : "0.00";
 
-  if (isLoading) {
+  // First check if the wallet is loading
+  if (accountLoading) {
     return (
       <div className="fixed inset-0 flex flex-col items-center justify-center bg-background/95 backdrop-blur-sm z-50">
         <div className="flex flex-col items-center justify-center p-8 max-w-md text-center">
@@ -89,6 +113,7 @@ export function Wallet() {
     );
   }
 
+  // Then check for errors
   if (error) {
     return (
       <div className="pt-6 pb-4">
@@ -98,14 +123,18 @@ export function Wallet() {
     );
   }
 
-  // Format the balance properly, handling zero, undefined, or NaN values
-  const formattedBalance =
-    typeof totalBalanceUsd === "number" && !isNaN(totalBalanceUsd)
-      ? totalBalanceUsd.toLocaleString("en-US", {
-          minimumFractionDigits: 2,
-          maximumFractionDigits: 2,
-        })
-      : "0.00";
+  // Finally check authentication status
+  if (!isAuthenticated) {
+    return (
+      <div className="pt-6 pb-4">
+        <h2 className="text-xl font-bold mb-2 text-white">Wallet</h2>
+        <p className="text-sm text-gray-400 mb-4 font-outfit">
+          Please log in to access your wallet
+        </p>
+        <LoginButton />
+      </div>
+    );
+  }
 
   return (
     <>
@@ -145,6 +174,8 @@ export function Wallet() {
           <div className="text-[42px] font-medium text-white mt-2">
             {privacyMode ? (
               "••••••"
+            ) : isLoadingPortfolio ? (
+              <span className="animate-pulse">Loading...</span>
             ) : (
               <>
                 <span className="mr-2">$</span>
@@ -194,47 +225,45 @@ export function Wallet() {
         </div>
 
         {/* Updated Tab Navigation */}
-        <div className="mx-auto max-w-md">
-          <div className="w-full h-[44px] p-1 bg-[#11101C] rounded-[24px] border border-[#373747] flex mb-6">
-            <div
-              onClick={() => setActiveTab("assets")}
-              className={`flex-1 h-full rounded-[20px] flex justify-center items-center cursor-pointer ${
+        <div className="flex justify-center mb-4">
+          <div className="flex bg-[#1A1A24] rounded-full p-1 w-full max-w-[400px]">
+            <button
+              className={`flex-1 py-2 px-4 rounded-full text-sm font-medium transition-colors ${
                 activeTab === "assets"
-                  ? "bg-gradient-to-br from-[#353545] to-[rgba(43,43,63,0.55)] border border-[#383A46] shadow-sm"
-                  : ""
+                  ? "bg-[#4364F9] text-white"
+                  : "text-gray-400 hover:text-white"
               }`}
+              onClick={() => setActiveTab("assets")}
             >
-              <div className="text-white text-base font-medium">Assets</div>
-            </div>
-            <div
-              onClick={() => setActiveTab("activity")}
-              className={`flex-1 h-full rounded-[20px] flex justify-center items-center cursor-pointer ${
+              Assets
+            </button>
+            <button
+              className={`flex-1 py-2 px-4 rounded-full text-sm font-medium transition-colors ${
                 activeTab === "activity"
-                  ? "bg-gradient-to-br from-[#353545] to-[rgba(43,43,63,0.55)] border border-[#383A46] shadow-sm"
-                  : ""
+                  ? "bg-[#4364F9] text-white"
+                  : "text-gray-400 hover:text-white"
               }`}
+              onClick={() => setActiveTab("activity")}
             >
-              <div className="text-white text-base font-medium relative">
-                Activity
-                {hasPendingTransactions && (
-                  <span className="absolute -top-1 -right-3 h-2 w-2 bg-primary rounded-full inline-block" />
-                )}
-              </div>
-            </div>
-            <div
-              onClick={() => setActiveTab("nfts")}
-              className={`flex-1 h-full rounded-[20px] flex justify-center items-center cursor-pointer ${
+              Activity
+              {hasPendingTransactions && (
+                <span className="inline-flex items-center justify-center w-2 h-2 ml-2 bg-yellow-500 rounded-full animate-pulse"></span>
+              )}
+            </button>
+            <button
+              className={`flex-1 py-2 px-4 rounded-full text-sm font-medium transition-colors ${
                 activeTab === "nfts"
-                  ? "bg-gradient-to-br from-[#353545] to-[rgba(43,43,63,0.55)] border border-[#383A46] shadow-sm"
-                  : ""
+                  ? "bg-[#4364F9] text-white"
+                  : "text-gray-400 hover:text-white"
               }`}
+              onClick={() => setActiveTab("nfts")}
             >
-              <div className="text-white text-base font-medium">NFTs</div>
-            </div>
+              NFTs
+            </button>
           </div>
         </div>
 
-        {/* Gradient Background Container with Rounded Top Corners */}
+        {/* Content Container */}
         <div className="w-screen -mx-4 rounded-t-2xl bg-gradient-to-br from-[#252531] to-[#13121E] min-h-[calc(100vh-300px)]">
           {/* Content based on active tab */}
           <div
@@ -244,35 +273,34 @@ export function Wallet() {
                 : "py-4"
             }
           >
-            {activeTab === "assets" && isAuthenticated && selectedAccount ? (
+            {activeTab === "assets" ? (
               <TokenList />
             ) : activeTab === "activity" ? (
               <TransactionHistory />
             ) : activeTab === "nfts" ? (
-              <div className="text-center text-gray-400 py-8">
-                NFTs coming soon
-              </div>
-            ) : (
-              <div className="text-center text-gray-400 py-8">
-                No account selected
-              </div>
-            )}
+              <NFTGallery />
+            ) : null}
           </div>
         </div>
       </div>
 
-      <SwapInterface
-        open={swapInterfaceOpen}
-        onOpenChange={setSwapInterfaceOpen}
-      />
-
-      <SendModal 
-        open={sendModalOpen} 
-        onOpenChange={setSendModalOpen} 
-      />
+      {/* Modals */}
+      <AnimatePresence>
+        {swapInterfaceOpen && (
+          <SwapInterface
+            open={swapInterfaceOpen}
+            onOpenChange={setSwapInterfaceOpen}
+          />
+        )}
+      </AnimatePresence>
 
       <AnimatePresence>
-        {/* AI Chatbox can be added here if needed */}
+        {sendModalOpen && (
+          <SendModal
+            open={sendModalOpen}
+            onOpenChange={setSendModalOpen}
+          />
+        )}
       </AnimatePresence>
     </>
   );

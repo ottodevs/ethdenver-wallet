@@ -2,7 +2,6 @@ import "@/app/globals.css";
 import AppProvider from "@/components/providers";
 import { ThemeProvider } from "@/components/theme-provider";
 import { ToastContextProvider } from "@/components/ui/toast-context";
-import { DataPreloadProvider } from "@/contexts/data-preload-context";
 import type { Metadata } from "next";
 import { getServerSession, Session } from "next-auth";
 import { Inter, Outfit } from "next/font/google";
@@ -40,9 +39,7 @@ export default async function RootLayout({
         >
           <ToastContextProvider>
             <AppProvider session={session as Session}>
-              <DataPreloadProvider>
-                {children}
-              </DataPreloadProvider>
+              {children}
             </AppProvider>
           </ToastContextProvider>
         </ThemeProvider>
