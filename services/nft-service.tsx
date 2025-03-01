@@ -1,9 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useOkto, UserOp } from "@okto_web3/react-sdk";
-import { getPortfolioNFT, nftTransfer } from "@okto_web3/react-sdk";
 import { useOktoAccount } from "@/hooks/use-okto-account";
+import { getPortfolioNFT, nftTransfer, useOkto, UserOp } from "@okto_web3/react-sdk";
+import { useEffect, useState } from "react";
 
 export interface NFT {
   id: string;
@@ -22,43 +21,80 @@ export function useNftService() {
   const [nfts, setNfts] = useState<NFT[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [hasInitialized, setHasInitialized] = useState(false);
 
   useEffect(() => {
+    let isMounted = true;
+    
     async function fetchNFTs() {
-      if (!oktoClient || !selectedAccount) return;
+      if (!oktoClient || !selectedAccount) {
+        if (isMounted) {
+          setIsLoading(false);
+          setHasInitialized(true);
+        }
+        return;
+      }
+      
+      // Only set loading to true on first load or when dependencies change
+      if (!hasInitialized) {
+        setIsLoading(true);
+      }
       
       try {
-        setIsLoading(true);
         setError(null);
         
         const nftData = await getPortfolioNFT(oktoClient);
         
-        // Transform the NFT data
-        const formattedNFTs: NFT[] = nftData.map(nft => ({
-          id: nft.nftId,
-          name: nft.nftName,
-          image: nft.image || "/placeholder-nft.svg",
-          collection: nft.collectionName,
-          collectionAddress: nft.collectionAddress,
-          tokenId: nft.nftId,
-          chain: nft.networkName.toLowerCase(),
-          caip2Id: getCaip2IdForChain(nft.networkName.toLowerCase())
-        }));
+        // Only update state if component is still mounted
+        if (!isMounted) return;
         
-        setNfts(formattedNFTs);
+        // Check if nftData exists and is an array
+        if (Array.isArray(nftData)) {
+          // Transform the NFT data
+          const formattedNFTs: NFT[] = nftData.map(nft => ({
+            id: nft.nftId || `nft-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
+            name: nft.nftName || "Unnamed NFT",
+            image: nft.image || "/placeholder-nft.svg",
+            collection: nft.collectionName || "Unknown Collection",
+            collectionAddress: nft.collectionAddress || "",
+            tokenId: nft.nftId || "",
+            chain: (nft.networkName || "ethereum").toLowerCase(),
+            caip2Id: getCaip2IdForChain((nft.networkName || "ethereum").toLowerCase())
+          }));
+          
+          setNfts(formattedNFTs);
+        } else {
+          // If nftData is not an array, set empty array (no error)
+          console.log("No NFT data returned or invalid format");
+          setNfts([]);
+        }
       } catch (err) {
         console.error("Failed to fetch NFTs:", err);
-        setError("Failed to load NFT data");
-        
-        // Fallback to empty state
-        setNfts([]);
+        // Only set error for actual API failures, not for empty data
+        if (isMounted) {
+          if (err instanceof Error && err.message !== "No NFTs found") {
+            setError("Failed to load NFT data");
+          } else {
+            // For "No NFTs found" or similar messages, just set empty array without error
+            setNfts([]);
+            setError(null);
+          }
+        }
       } finally {
-        setIsLoading(false);
+        if (isMounted) {
+          setIsLoading(false);
+          setHasInitialized(true);
+        }
       }
     }
 
     fetchNFTs();
-  }, [oktoClient, selectedAccount]);
+    
+    // Cleanup function to prevent state updates after unmount
+    return () => {
+      isMounted = false;
+    };
+  }, [oktoClient, selectedAccount, hasInitialized]);
 
   const transferNFT = async (nft: NFT, recipientAddress: string) => {
     if (!oktoClient) {

@@ -1,23 +1,47 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useOkto } from "@okto_web3/react-sdk";
-import { getPortfolioActivity } from "@okto_web3/react-sdk";
 import { useOktoAccount } from "@/hooks/use-okto-account";
+import { getPortfolioActivity, useOkto } from "@okto_web3/react-sdk";
+import { useEffect, useState } from "react";
 
-export interface Transaction {
+// This is our internal transaction type
+export type Transaction = {
   id: string;
-  type: "send" | "receive" | "swap";
-  hash: string;
-  token: string;
-  amount: number;
+  type: string;
+  status: string;
   timestamp: number;
-  status: "pending" | "completed" | "failed";
+  amount: string;
+  symbol: string;
+  to?: string;
+  from?: string;
+  hash?: string;
+};
+
+// This matches the Okto API response type
+interface UserPortfolioActivity {
+  symbol: string;
+  image: string;
+  name: string;
+  shortName: string;
+  id: string;
+  groupId: string;
+  description: string;
+  quantity: string;
+  orderType: string;
+  transferType: string;
+  status: string;
+  timestamp: number;
+  txHash: string;
+  caip2Id: string;
+  networkName: string;
+  networkExplorerUrl: string;
+  networkSymbol: string;
+  caipId: string;
 }
 
 export function useOktoTransactions() {
   const oktoClient = useOkto();
-  const { selectedAccount } = useOktoAccount();
+  const { selectedAccount, isAuthenticated } = useOktoAccount();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [pendingTransactions, setPendingTransactions] = useState<Transaction[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -25,32 +49,79 @@ export function useOktoTransactions() {
 
   useEffect(() => {
     async function fetchTransactions() {
-      if (!oktoClient || !selectedAccount) return;
-      
+      if (!oktoClient || !selectedAccount || !isAuthenticated) {
+        setIsLoading(false);
+        return;
+      }
+
       try {
         setIsLoading(true);
         setError(null);
-        
-        const activity = await getPortfolioActivity(oktoClient);
-        
-        // Transform activity data to match your Transaction interface
-        const formattedTransactions: Transaction[] = activity.map(item => ({
-          id: item.id,
-          type: item.transferType === "RECEIVE" ? "receive" : 
-                item.transferType === "SEND" ? "send" : "swap",
-          hash: item.txHash,
-          token: item.symbol,
-          amount: parseFloat(item.quantity),
-          timestamp: new Date(item.timestamp).getTime(),
-          status: item.status.toLowerCase() as "completed" | "pending" | "failed",
-        }));
+
+        // Fetch transactions from Okto
+        const response = await getPortfolioActivity(oktoClient);
+
+        // Handle the case when response is null or undefined
+        if (!response) {
+          console.log("No transaction data returned from API");
+          setTransactions([]);
+          setIsLoading(false);
+          return;
+        }
+
+        // Map the transactions to our format with safe access to properties
+        const formattedTransactions = Array.isArray(response) ? response.map((tx: UserPortfolioActivity) => {
+          // Generate a unique ID if none exists
+          const id = tx?.id || `tx-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+          
+          // Determine transaction type
+          let type = "unknown";
+          if (tx?.transferType) {
+            type = tx.transferType.toLowerCase() === "receive" ? "receive" : 
+                  tx.transferType.toLowerCase() === "send" ? "send" : 
+                  tx.transferType;
+          } else if (tx?.orderType) {
+            type = tx.orderType;
+          }
+          
+          // Format status
+          const status = tx?.status ? tx.status.toLowerCase() : "unknown";
+          
+          // Handle timestamp
+          let timestamp = Date.now();
+          if (tx?.timestamp) {
+            timestamp = typeof tx.timestamp === 'string' ? new Date(tx.timestamp).getTime() : tx.timestamp;
+          }
+          
+          // Format amount - use quantity from the API
+          const amount = tx?.quantity || "0";
+          
+          // Get symbol
+          const symbol = tx?.symbol || "";
+          
+          // Additional fields
+          const hash = tx?.txHash || "";
+          const to = ""; // Not directly available in the API
+          const from = ""; // Not directly available in the API
+          
+          return {
+            id,
+            type,
+            status,
+            timestamp,
+            amount,
+            symbol,
+            to,
+            from,
+            hash
+          };
+        }) : [];
         
         setTransactions(formattedTransactions);
       } catch (err) {
         console.error("Failed to fetch transactions:", err);
         setError("Failed to load transaction history");
-        
-        // Fallback to empty state
+        // Set empty array to prevent further errors
         setTransactions([]);
       } finally {
         setIsLoading(false);
@@ -58,7 +129,7 @@ export function useOktoTransactions() {
     }
 
     fetchTransactions();
-  }, [oktoClient, selectedAccount]);
+  }, [oktoClient, selectedAccount, isAuthenticated]);
 
   // Add a pending transaction to the UI
   const addPendingTransaction = (transaction: Transaction) => {

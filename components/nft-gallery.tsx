@@ -6,11 +6,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useNftService } from "@/services/nft-service";
 import { motion } from "framer-motion";
+import { ImageIcon } from "lucide-react";
 import Image from "next/image";
 import { useState } from "react";
-export function NFTGallery() {
-  const { nfts, transferNFT, isLoading } = useNftService();
-  const [selectedNft, setSelectedNft] = useState<string | null>(null);
+
+export function NFTGallery({ animated = true }: { animated?: boolean }) {
+  const { nfts, transferNFT, isLoading, error } = useNftService();
+  const [selectedNft/*, setSelectedNft*/] = useState<string | null>(null);
   const [transferModalOpen, setTransferModalOpen] = useState(false);
   const [recipient, setRecipient] = useState("");
   const [transferStatus, setTransferStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
@@ -21,13 +23,13 @@ export function NFTGallery() {
     show: {
       opacity: 1,
       transition: {
-        staggerChildren: 0.1,
+        staggerChildren: 0.05,
       },
     },
   };
 
   const item = {
-    hidden: { opacity: 0, y: 20 },
+    hidden: { opacity: 0, y: 10 },
     show: { opacity: 1, y: 0 },
   };
 
@@ -50,69 +52,73 @@ export function NFTGallery() {
     }
   };
 
-  const handleNftClick = (nftId: string) => {
-    setSelectedNft(nftId);
-    setTransferModalOpen(true);
-    setTransferStatus("idle");
-    setRecipient("");
-    setErrorMessage("");
-  };
+  // const handleNftClick = (nftId: string) => {
+  //   setSelectedNft(nftId);
+  //   setTransferModalOpen(true);
+  //   setTransferStatus("idle");
+  //   setRecipient("");
+  //   setErrorMessage("");
+  // };
 
   if (isLoading) {
     return (
-      <div className="grid grid-cols-2 gap-4">
-        {[...Array(4)].map((_, i) => (
-          <div
-            key={i}
-            className="aspect-square rounded-lg bg-muted animate-pulse"
-          />
-        ))}
+      <div className="flex justify-center items-center h-[300px]">
+        <p className="text-sm text-muted-foreground">Loading NFTs...</p>
       </div>
     );
   }
 
-  if (nfts.length === 0) {
+  if (error) {
     return (
-      <div className="text-center py-8">
-        <p className="text-muted-foreground">No NFTs found in your wallet</p>
+      <div className="flex justify-center items-center h-[300px]">
+        <p className="text-sm text-red-500">{error}</p>
       </div>
     );
   }
+
+  if (!nfts || nfts.length === 0) {
+    return (
+      <div className="flex flex-col justify-center items-center h-[300px]">
+        <ImageIcon className="h-8 w-8 text-muted-foreground mb-2" />
+        <p className="text-sm text-muted-foreground">No NFTs found</p>
+      </div>
+    );
+  }
+
+  const GalleryComponent = animated ? motion.div : "div";
+  const NFTComponent = animated ? motion.div : "div";
 
   return (
     <>
-      <motion.div
-        variants={container}
-        initial="hidden"
-        animate="show"
-        className="grid grid-cols-2 gap-4"
+      <GalleryComponent
+        className="grid grid-cols-2 gap-3"
+        variants={animated ? container : undefined}
+        initial={animated ? "hidden" : undefined}
+        animate={animated ? "show" : undefined}
       >
         {nfts.map((nft) => (
-          <motion.div
+          <NFTComponent
             key={nft.id}
-            variants={item}
-            className="overflow-hidden rounded-lg border bg-card cursor-pointer hover:shadow-md transition-shadow"
-            onClick={() => handleNftClick(nft.id)}
+            className="rounded-lg overflow-hidden border border-border"
+            variants={animated ? item : undefined}
           >
-            <div className="aspect-square relative">
+            <div className="relative aspect-square">
               <Image
                 src={nft.image}
                 alt={nft.name}
-                className="h-full w-full object-cover"
-                onError={(e) => {
-                  e.currentTarget.src = "/placeholder-nft.svg";
-                }}
+                fill
+                className="object-cover"
               />
             </div>
-            <div className="p-3">
-              <p className="font-medium truncate">{nft.name}</p>
-              <p className="text-xs text-muted-foreground truncate">
+            <div className="p-2">
+              <div className="font-medium truncate">{nft.name}</div>
+              <div className="text-xs text-muted-foreground truncate">
                 {nft.collection}
-              </p>
+              </div>
             </div>
-          </motion.div>
+          </NFTComponent>
         ))}
-      </motion.div>
+      </GalleryComponent>
 
       <Dialog open={transferModalOpen} onOpenChange={setTransferModalOpen}>
         <DialogContent>

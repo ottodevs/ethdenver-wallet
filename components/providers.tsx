@@ -1,8 +1,8 @@
 "use client";
-import { SessionProvider } from "next-auth/react";
-import { Hex, Hash, OktoProvider } from "@okto_web3/react-sdk";
-import React from "react";
+import { Hash, Hex, OktoProvider } from "@okto_web3/react-sdk";
 import { Session } from "next-auth";
+import { SessionProvider } from "next-auth/react";
+import React from "react";
  
 function AppProvider({ children, session }: { children: React.ReactNode, session: Session }) {
     return (
@@ -10,8 +10,7 @@ function AppProvider({ children, session }: { children: React.ReactNode, session
         <OktoProvider
             config={{
                 environment: "sandbox",
-                clientPrivateKey: process.env.NEXT_PUBLIC_CLIENT_PRIVATE_KEY as Hash,
-                clientSWA: process.env.NEXT_PUBLIC_CLIENT_SWA as Hex,
+                clientPrivateKey: process.env.NEXT_PUBLIC_CLIENT_PRIVATE_KEY as Hash,clientSWA: process.env.NEXT_PUBLIC_CLIENT_SWA as Hex,
             }}
         >
             {children}

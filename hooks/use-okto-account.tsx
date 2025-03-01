@@ -1,8 +1,7 @@
 "use client";
 
+import { getAccount, useOkto } from "@okto_web3/react-sdk";
 import { useEffect, useState } from "react";
-import { useOkto } from "@okto_web3/react-sdk";
-import { getAccount } from "@okto_web3/react-sdk";
 
 interface OktoAccount {
   address: string;
@@ -16,10 +15,30 @@ export function useOktoAccount() {
   const [selectedAccount, setSelectedAccount] = useState<OktoAccount | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
+  // Check authentication status
+  useEffect(() => {
+    if (!oktoClient) return;
+    
+    const checkAuthStatus = async () => {
+      try {
+        // Check if user is authenticated
+        const authStatus = oktoClient.isLoggedIn();
+        setIsAuthenticated(authStatus);
+      } catch (err) {
+        console.error("Failed to check authentication status:", err);
+        setIsAuthenticated(false);
+      }
+    };
+    
+    checkAuthStatus();
+  }, [oktoClient]);
+
+  // Fetch accounts only when authenticated
   useEffect(() => {
     async function fetchAccounts() {
-      if (!oktoClient) return;
+      if (!oktoClient || !isAuthenticated) return;
       
       try {
         setIsLoading(true);
@@ -46,7 +65,7 @@ export function useOktoAccount() {
     }
 
     fetchAccounts();
-  }, [oktoClient]);
+  }, [oktoClient, isAuthenticated]);
 
   const selectAccount = (address: string) => {
     const account = accounts.find(acc => acc.address === address);
@@ -60,6 +79,7 @@ export function useOktoAccount() {
     selectedAccount,
     selectAccount,
     isLoading,
-    error
+    error,
+    isAuthenticated
   };
 } 

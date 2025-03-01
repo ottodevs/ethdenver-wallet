@@ -1,13 +1,12 @@
 "use client"
 
-import { Card, CardContent } from "@/components/ui/card"
-import { Skeleton } from "@/components/ui/skeleton"
 import { useOktoTransactions } from "@/hooks/use-okto-transactions"
+import { formatDistanceToNow } from "date-fns"
 import { motion } from "framer-motion"
-import { ArrowDownLeft, ArrowUpRight, RefreshCw } from "lucide-react"
+import { ArrowDownLeft, ArrowUpRight, Clock } from "lucide-react"
 
 export function TransactionHistory({ animated = true }: { animated?: boolean }) {
-  const { transactions, isLoading } = useOktoTransactions()
+  const { transactions, isLoading, error } = useOktoTransactions()
 
   // Animation variants for Framer Motion
   const container = {
@@ -27,152 +26,119 @@ export function TransactionHistory({ animated = true }: { animated?: boolean }) 
 
   if (isLoading) {
     return (
-      <div className="space-y-3">
-        {[...Array(4)].map((_, i) => (
-          <Card key={i}>
-            <CardContent className="p-3">
-              <div className="flex items-center gap-3">
-                <Skeleton className="h-8 w-8 rounded-full" />
-                <div className="flex-1 space-y-2">
-                  <Skeleton className="h-4 w-24" />
-                  <Skeleton className="h-3 w-16" />
-                </div>
-                <div className="text-right space-y-2">
-                  <Skeleton className="h-4 w-16 ml-auto" />
-                  <Skeleton className="h-3 w-12 ml-auto" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+      <div className="flex justify-center items-center h-[300px]">
+        <p className="text-sm text-muted-foreground">Loading transactions...</p>
       </div>
     )
   }
 
-  if (transactions.length === 0) {
+  if (error) {
     return (
-      <div className="text-center py-8">
-        <p className="text-muted-foreground">No transactions found</p>
+      <div className="flex justify-center items-center h-[300px]">
+        <p className="text-sm text-red-500">{error}</p>
       </div>
     )
   }
 
-  if (animated) {
+  if (!transactions || transactions.length === 0) {
     return (
-      <motion.div
-        variants={container}
-        initial="hidden"
-        animate="show"
-        className="space-y-3"
-      >
-        {transactions.map((tx) => (
-          <motion.div
-            key={tx.id}
-            variants={item}
-            className={`flex items-center justify-between p-3 rounded-lg border ${
-              tx.status === "pending" ? "border-primary" : ""
-            } bg-card text-card-foreground`}
-          >
-            <div className="flex items-center space-x-3">
-              <div
-                className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                  tx.type === "receive"
-                    ? "bg-green-100 text-green-600"
-                    : tx.type === "send"
-                    ? "bg-blue-100 text-blue-600"
-                    : "bg-purple-100 text-purple-600"
-                }`}
-              >
-                {tx.type === "receive" ? (
-                  <ArrowDownLeft className="h-4 w-4" />
-                ) : tx.type === "send" ? (
-                  <ArrowUpRight className="h-4 w-4" />
-                ) : (
-                  <RefreshCw className="h-4 w-4" />
-                )}
-              </div>
-              <div>
-                <p className="font-medium capitalize">{tx.type}</p>
-                <p className="text-xs text-muted-foreground">
-                  {new Date(tx.timestamp).toLocaleString()}
-                </p>
-              </div>
-            </div>
-            <div className="text-right">
-              <p
-                className={`font-medium ${
-                  tx.type === "receive" ? "text-green-600" : ""
-                }`}
-              >
-                {tx.type === "receive" ? "+" : ""}
-                {tx.amount.toFixed(4)} {tx.token}
-              </p>
-              <p
-                className={`text-xs ${
-                  tx.status === "completed"
-                    ? "text-green-600"
-                    : tx.status === "pending"
-                    ? "text-amber-600"
-                    : "text-red-600"
-                }`}
-              >
-                {tx.status.charAt(0).toUpperCase() + tx.status.slice(1)}
-              </p>
-            </div>
-          </motion.div>
-        ))}
-      </motion.div>
-    );
-  } else {
-    return (
-      <div className="space-y-3">
-        {transactions.map((tx) => (
-          <Card key={tx.id} className={tx.status === "pending" ? "border-primary" : ""}>
-            <CardContent className="p-3">
-              <div className="flex items-center gap-3">
-                <div className={`h-8 w-8 rounded-full flex items-center justify-center ${
-                  tx.type === "receive" 
-                    ? "bg-green-100 text-green-600" 
-                    : tx.type === "send" 
-                      ? "bg-blue-100 text-blue-600" 
-                      : "bg-purple-100 text-purple-600"
-                }`}>
-                  {tx.type === "receive" ? (
-                    <ArrowDownLeft className="h-4 w-4" />
-                  ) : tx.type === "send" ? (
-                    <ArrowUpRight className="h-4 w-4" />
-                  ) : (
-                    <RefreshCw className="h-4 w-4" />
-                  )}
-                </div>
-                <div className="flex-1">
-                  <p className="font-medium capitalize">{tx.type}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {new Date(tx.timestamp).toLocaleString()}
-                  </p>
-                </div>
-                <div className="text-right">
-                  <p className={`font-medium ${
-                    tx.type === "receive" ? "text-green-600" : ""
-                  }`}>
-                    {tx.type === "receive" ? "+" : ""}{tx.amount.toFixed(4)} {tx.token}
-                  </p>
-                  <p className={`text-xs ${
-                    tx.status === "completed" 
-                      ? "text-green-600" 
-                      : tx.status === "pending" 
-                        ? "text-amber-600" 
-                        : "text-red-600"
-                  }`}>
-                    {tx.status.charAt(0).toUpperCase() + tx.status.slice(1)}
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+      <div className="flex flex-col justify-center items-center h-[300px]">
+        <Clock className="h-8 w-8 text-muted-foreground mb-2" />
+        <p className="text-sm text-muted-foreground">No transactions found</p>
       </div>
     )
   }
+
+  // Helper function to safely format transaction amounts
+  const formatAmount = (amount: string): string => {
+    if (typeof amount === 'number') {
+      return parseFloat(amount).toFixed(4);
+    }
+    if (typeof amount === 'string') {
+      const num = parseFloat(amount);
+      return isNaN(num) ? '0.0000' : num.toFixed(4);
+    }
+    return '0.0000';
+  };
+
+  // Helper function to format timestamp
+  const formatTimestamp = (timestamp: number): string => {
+    try {
+      return formatDistanceToNow(new Date(timestamp), { addSuffix: true });
+    } catch (error) {
+      console.error('Error formatting timestamp:', error);
+      return 'Unknown time';
+    }
+  };
+
+  // Helper function to get type text
+  const getTypeText = (type: string): string => {
+    const lowerType = type.toLowerCase();
+    if (lowerType === 'send' || lowerType === 'sent') return 'Sent';
+    if (lowerType === 'receive' || lowerType === 'received') return 'Received';
+    return type.charAt(0).toUpperCase() + type.slice(1);
+  };
+
+  // Helper function to get status class
+  const getStatusClass = (status: string): string => {
+    const lowerStatus = status.toLowerCase();
+    if (lowerStatus === 'completed' || lowerStatus === 'success') return 'text-green-500';
+    if (lowerStatus === 'failed' || lowerStatus === 'error') return 'text-red-500';
+    if (lowerStatus === 'pending') return 'text-yellow-500';
+    return 'text-muted-foreground';
+  };
+
+  const ListComponent = animated ? motion.div : "div"
+  const TransactionComponent = animated ? motion.div : "div"
+
+  return (
+    <ListComponent
+      className="space-y-2"
+      variants={animated ? container : undefined}
+      initial={animated ? "hidden" : undefined}
+      animate={animated ? "show" : undefined}
+    >
+      {transactions.map((tx) => (
+        <TransactionComponent
+          key={tx.id || `tx-${Date.now()}-${Math.random()}`}
+          variants={animated ? item : undefined}
+          className="flex items-center justify-between p-2 rounded-md hover:bg-muted/50"
+        >
+          <div className="flex items-center gap-3">
+            <div
+              className={`p-2 rounded-full ${
+                (tx.type || '').toLowerCase() === 'send' || (tx.type || '').toLowerCase() === 'sent'
+                  ? "bg-red-100" 
+                  : "bg-green-100"
+              }`}
+            >
+              {(tx.type || '').toLowerCase() === 'send' || (tx.type || '').toLowerCase() === 'sent' ? (
+                <ArrowUpRight className="h-4 w-4 text-red-500" />
+              ) : (
+                <ArrowDownLeft className="h-4 w-4 text-green-500" />
+              )}
+            </div>
+            <div>
+              <div className="font-medium">
+                {getTypeText(tx.type || '')} {tx.symbol || ''}
+              </div>
+              <div className="text-xs text-muted-foreground">
+                {formatTimestamp(tx.timestamp)}
+              </div>
+            </div>
+          </div>
+          <div className="text-right">
+            <div className="font-medium">
+              {(tx.type || '').toLowerCase() === 'send' || (tx.type || '').toLowerCase() === 'sent' ? "-" : "+"}
+              {formatAmount(tx.amount)} {tx.symbol || ''}
+            </div>
+            <div className={`text-xs ${getStatusClass(tx.status || '')}`}>
+              {tx.status ? (tx.status.charAt(0).toUpperCase() + tx.status.slice(1)) : 'Unknown'}
+            </div>
+          </div>
+        </TransactionComponent>
+      ))}
+    </ListComponent>
+  )
 }
 

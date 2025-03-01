@@ -6,12 +6,12 @@ import { Card, CardContent } from "@/components/ui/card"
 import { useOktoPortfolio } from "@/hooks/use-okto-portfolio"
 import { useWallet } from "@/hooks/use-wallet"
 import { motion } from "framer-motion"
-import { Eye, EyeOff, Share2 } from "lucide-react"
-import Image from "next/image"
+import { Coins, Eye, EyeOff, Share2 } from "lucide-react"
 import { useState } from "react"
-export function TokenList() {
+
+export function TokenList({ animated = true }: { animated?: boolean }) {
   const { privacyMode, togglePrivacyMode } = useWallet()
-  const { tokens, isLoading } = useOktoPortfolio()
+  const { tokens, isLoading, error } = useOktoPortfolio()
   const [showTokenDetail, setShowTokenDetail] = useState<string | null>(null)
 
   const smallValueTokens = tokens.filter((token) => token.valueUsd < 10)
@@ -21,55 +21,50 @@ export function TokenList() {
     show: {
       opacity: 1,
       transition: {
-        staggerChildren: 0.1,
+        staggerChildren: 0.05,
       },
     },
   }
 
   const item = {
-    hidden: { opacity: 0, y: 20 },
+    hidden: { opacity: 0, y: 10 },
     show: { opacity: 1, y: 0 },
   }
 
   if (isLoading) {
     return (
-      <div className="space-y-3">
-        {[...Array(4)].map((_, i) => (
-          <div
-            key={i}
-            className="flex items-center justify-between p-3 rounded-lg border bg-card text-card-foreground"
-          >
-            <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 rounded-full bg-muted animate-pulse" />
-              <div className="space-y-1">
-                <div className="h-4 w-20 bg-muted animate-pulse rounded" />
-                <div className="h-3 w-16 bg-muted animate-pulse rounded" />
-              </div>
-            </div>
-            <div className="text-right space-y-1">
-              <div className="h-4 w-16 bg-muted animate-pulse rounded ml-auto" />
-              <div className="h-3 w-12 bg-muted animate-pulse rounded ml-auto" />
-            </div>
-          </div>
-        ))}
+      <div className="flex justify-center items-center h-[300px]">
+        <p className="text-sm text-muted-foreground">Loading tokens...</p>
       </div>
     )
   }
 
-  if (tokens.length === 0) {
+  if (error) {
     return (
-      <div className="text-center py-8">
-        <p className="text-muted-foreground">No tokens found in your wallet</p>
+      <div className="flex justify-center items-center h-[300px]">
+        <p className="text-sm text-red-500">{error}</p>
       </div>
     )
   }
+
+  if (!tokens || tokens.length === 0) {
+    return (
+      <div className="flex flex-col justify-center items-center h-[300px]">
+        <Coins className="h-8 w-8 text-muted-foreground mb-2" />
+        <p className="text-sm text-muted-foreground">No tokens found in your wallet</p>
+      </div>
+    )
+  }
+
+  const ListComponent = animated ? motion.div : "div"
+  const TokenComponent = animated ? motion.div : "div"
 
   return (
-    <motion.div
-      variants={container}
-      initial="hidden"
-      animate="show"
-      className="space-y-3"
+    <ListComponent
+      className="space-y-2"
+      variants={animated ? container : undefined}
+      initial={animated ? "hidden" : undefined}
+      animate={animated ? "show" : undefined}
     >
       <div className="flex items-center justify-between mb-2">
         <h3 className="text-sm font-medium">Your Assets</h3>
@@ -84,36 +79,29 @@ export function TokenList() {
       </div>
 
       {tokens.map((token) => (
-        <motion.div
+        <TokenComponent
           key={token.id}
-          variants={item}
-          className="flex items-center justify-between p-3 rounded-lg border bg-card text-card-foreground"
+          variants={animated ? item : undefined}
+          className="flex items-center justify-between p-2 rounded-md hover:bg-muted/50"
         >
-          <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 rounded-full overflow-hidden bg-muted">
-              <Image
-                src={token.icon}
-                alt={token.symbol}
-                className="h-full w-full object-cover"
-                onError={(e) => {
-                  e.currentTarget.src = "/placeholder.svg?height=40&width=40"
-                }}
-              />
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
+              {token.symbol.charAt(0)}
             </div>
             <div>
-              <p className="font-medium">{token.symbol}</p>
-              <p className="text-xs text-muted-foreground">{token.name}</p>
+              <div className="font-medium">{token.name}</div>
+              <div className="text-xs text-muted-foreground">
+                {token.balance} {token.symbol}
+              </div>
             </div>
           </div>
           <div className="text-right">
-            <p className="font-medium">
-              {privacyMode ? "••••" : token.balance.toFixed(4)}
-            </p>
-            <p className="text-xs text-muted-foreground">
-              {privacyMode ? "••••" : `$${token.valueUsd.toFixed(2)}`}
-            </p>
+            <div className="font-medium">${token.valueUsd.toFixed(2)}</div>
+            <div className="text-xs text-muted-foreground">
+              ${(token.valueUsd / token.balance).toFixed(2)}
+            </div>
           </div>
-        </motion.div>
+        </TokenComponent>
       ))}
 
       {smallValueTokens.length > 0 && (
@@ -140,7 +128,7 @@ export function TokenList() {
       )}
 
       {showTokenDetail && <TokenDetail tokenId={showTokenDetail} onClose={() => setShowTokenDetail(null)} />}
-    </motion.div>
+    </ListComponent>
   )
 }
 

@@ -9,9 +9,10 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { useTheme } from "next-themes"
-import { Copy, ExternalLink, LogOut, Moon, MoreVertical, Settings, Shield, Sun } from "lucide-react"
 import { useWallet } from "@/hooks/use-wallet"
+import { Copy, ExternalLink, LogOut, Moon, MoreVertical, Settings, Shield, Sun } from "lucide-react"
+import { signOut } from "next-auth/react"
+import { useTheme } from "next-themes"
 
 export function OptionsDropdown() {
   const { setTheme, theme } = useTheme()
@@ -19,6 +20,18 @@ export function OptionsDropdown() {
 
   const handleCopyAddress = () => {
     navigator.clipboard.writeText(walletAddress)
+  }
+
+  const handleLogout = async () => {
+    try {
+      // First disconnect from Okto
+      disconnect()
+      
+      // Then sign out from Next-Auth
+      await signOut({ redirect: true, callbackUrl: "/auth/signin" })
+    } catch (error) {
+      console.error("Logout failed:", error)
+    }
   }
 
   return (
@@ -62,9 +75,9 @@ export function OptionsDropdown() {
           Security
         </DropdownMenuItem>
         <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={disconnect} className="text-red-500 focus:text-red-500">
+        <DropdownMenuItem onClick={handleLogout} className="text-red-500 focus:text-red-500">
           <LogOut className="mr-2 h-4 w-4" />
-          Disconnect
+          Sign Out
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

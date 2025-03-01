@@ -1,13 +1,8 @@
-import type React from "react"
 import "@/app/globals.css"
+import { ThemeProvider } from "@/components/theme-provider"
 import type { Metadata } from "next"
 import { Inter } from "next/font/google"
-import { ThemeProvider } from "@/components/theme-provider"
-import { WalletProvider } from "@/hooks/use-wallet"
-import { authOptions } from "./api/auth/[...nextauth]/route"
-import { getServerSession } from "next-auth"
-import AppProvider from "@/components/providers"
-import { redirect } from "next/navigation"
+import type React from "react"
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -21,21 +16,15 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode
 }>) {
-  const session = await getServerSession(authOptions);
-
-  if (!session) {
-    redirect("/api/auth/signin");
-  }
-
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={inter.className}>
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
-        <AppProvider session={session}><WalletProvider>{children}</WalletProvider></AppProvider>
+          {children}
         </ThemeProvider>
       </body>
     </html>
-  )
+  );
 }
 
 

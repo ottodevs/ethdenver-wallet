@@ -1,9 +1,9 @@
+import type { AuthOptions } from "next-auth";
 import NextAuth from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
-import type { AuthOptions } from "next-auth";
  
 export const authOptions: AuthOptions = {
-  debug: true,
+  // debug: true,
   secret: process.env.AUTH_SECRET,
   providers: [
     GoogleProvider({ // Configure Google Provider
@@ -26,6 +26,9 @@ export const authOptions: AuthOptions = {
       session.id_token = token.id_token;
       return session;
     },
+  },
+  pages: {
+    signIn: '/auth/signin', // Custom sign-in page
   },
 };
  
