@@ -2,7 +2,7 @@ import { Wallet } from "@/components/wallet"
 
 export default function Home() {
   return (
-    <main className="flex min-h-screen flex-col items-center bg-gradient-to-b from-background to-muted">
+    <main className="flex min-h-screen flex-col items-center bg-gradient-to-b from-background to-muted pb-20">
       <div className="container max-w-md p-4">
         <Wallet />
       </div>

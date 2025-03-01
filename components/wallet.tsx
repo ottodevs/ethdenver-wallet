@@ -11,6 +11,7 @@ import { TransactionHistory } from "@/components/transaction-history"
 import { SendModal } from "@/components/send-modal"
 import { ReceiveModal } from "@/components/receive-modal"
 import { OptionsDropdown } from "@/components/options-dropdown"
+import { AIChatbox } from "@/components/ai-chatbox"
 import { useWallet } from "@/hooks/use-wallet"
 import { ArrowDownLeft, ArrowUpRight, BarChart3, WalletIcon } from "lucide-react"
 
@@ -89,6 +90,8 @@ export function Wallet() {
       <AnimatePresence>
         {receiveModalOpen && <ReceiveModal open={receiveModalOpen} onOpenChange={setReceiveModalOpen} />}
       </AnimatePresence>
+
+      <AIChatbox />
     </div>
   )
 }
