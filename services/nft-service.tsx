@@ -41,15 +41,22 @@ export function useNftService() {
       }
       
       try {
-        setError(null);
+        console.log("Fetching NFTs...");
+        const response = await getPortfolioNFT(oktoClient);
         
-        const nftData = await getPortfolioNFT(oktoClient);
+        // Handle different response formats
+        let nftData;
         
-        // Only update state if component is still mounted
-        if (!isMounted) return;
+        // Check if response is an object with a data property (common API pattern)
+        if (response && typeof response === 'object' && 'data' in response) {
+          nftData = response.data;
+        } else {
+          // If response is directly the array or another format
+          nftData = response;
+        }
         
         // Check if nftData exists and is an array
-        if (Array.isArray(nftData)) {
+        if (Array.isArray(nftData) && nftData.length > 0) {
           // Transform the NFT data
           const formattedNFTs: NFT[] = nftData.map(nft => ({
             id: nft.nftId || `nft-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
@@ -64,20 +71,53 @@ export function useNftService() {
           
           setNfts(formattedNFTs);
         } else {
-          // If nftData is not an array, set empty array (no error)
-          console.log("No NFT data returned or invalid format");
+          // If nftData is not an array or is empty, set empty array (no error)
+          console.log("No NFTs found for this user");
           setNfts([]);
         }
       } catch (err) {
         console.error("Failed to fetch NFTs:", err);
+        
         // Only set error for actual API failures, not for empty data
         if (isMounted) {
-          if (err instanceof Error && err.message !== "No NFTs found") {
-            setError("Failed to load NFT data");
-          } else {
+          // Check if error is an Axios error with response data
+          if (err && typeof err === 'object' && 'response' in err && 
+              err.response && typeof err.response === 'object' && 'data' in err.response) {
+            
+            const errorData = err.response.data;
+            // Check for the specific "No Active Collections Found" error
+            if (errorData && 
+                typeof errorData === 'object' &&
+                'status' in errorData &&
+                'error' in errorData &&
+                errorData.status === "error" &&
+                errorData.error &&
+                typeof errorData.error === 'object' &&
+                'message' in errorData.error &&
+                'errorCode' in errorData.error &&
+                (errorData.error.message === "No Active Collections Found" ||
+                 errorData.error.errorCode === "ER-TECH-0001")) {
+              
+              console.log("No active NFT collections found - treating as empty state");
+              setNfts([]);
+              setError(null);
+              return;
+            }
+          }
+          
+          // Check if error is related to no NFTs found
+          if (err instanceof Error && 
+              (err.message.includes("No NFTs found") || 
+               err.message.includes("not found") || 
+               err.message.includes("empty") ||
+               err.message.includes("No Active Collections"))) {
             // For "No NFTs found" or similar messages, just set empty array without error
             setNfts([]);
             setError(null);
+          } else {
+            // For other errors, show the error message
+            setError("Failed to load NFT data");
+            console.error("NFT loading error details:", err);
           }
         }
       } finally {
