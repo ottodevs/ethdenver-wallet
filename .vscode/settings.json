@@ -1,4 +1,11 @@
 {
+      // files
+      "files.associations": {
+        "*.css": "tailwindcss",
+        ".env.*.local": "env",
+        ".env.local": "env",
+        ".npmrc": "ini"
+    },
     "typescript.tsserver.watchOptions": {
       "watchDirectory": "useFsEvents",
       "watchFile": "useFsEvents",
