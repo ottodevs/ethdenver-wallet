@@ -15,6 +15,9 @@ export type Transaction = {
   to?: string;
   from?: string;
   hash?: string;
+  networkName?: string;
+  networkSymbol?: string;
+  valueUsd?: number;
 };
 
 // This matches the Okto API response type
@@ -37,6 +40,8 @@ interface UserPortfolioActivity {
   networkExplorerUrl: string;
   networkSymbol: string;
   caipId: string;
+  valueUsd?: string;
+  price?: string;
 }
 
 export function useOktoTransactions() {
@@ -76,7 +81,7 @@ export function useOktoTransactions() {
           
           // Determine transaction type
           let type = "unknown";
-          if (tx?.transferType) {
+          if (tx?.transferType && typeof tx.transferType === 'string') {
             type = tx.transferType.toLowerCase() === "receive" ? "receive" : 
                   tx.transferType.toLowerCase() === "send" ? "send" : 
                   tx.transferType;
@@ -85,12 +90,24 @@ export function useOktoTransactions() {
           }
           
           // Format status
-          const status = tx?.status ? tx.status.toLowerCase() : "unknown";
+          const status = tx?.status 
+            ? (typeof tx.status === 'string' ? tx.status.toLowerCase() : String(tx.status).toLowerCase()) 
+            : "unknown";
           
           // Handle timestamp
           let timestamp = Date.now();
           if (tx?.timestamp) {
-            timestamp = typeof tx.timestamp === 'string' ? new Date(tx.timestamp).getTime() : tx.timestamp;
+            // Check if timestamp is a Unix timestamp in seconds (not milliseconds)
+            if (typeof tx.timestamp === 'number' && tx.timestamp < 10000000000) {
+              // Convert seconds to milliseconds
+              timestamp = tx.timestamp * 1000;
+            } else if (typeof tx.timestamp === 'string') {
+              // Parse string timestamp
+              timestamp = new Date(tx.timestamp).getTime();
+            } else {
+              // Use as is if it's already in milliseconds
+              timestamp = tx.timestamp;
+            }
           }
           
           // Format amount - use quantity from the API
@@ -104,6 +121,19 @@ export function useOktoTransactions() {
           const to = ""; // Not directly available in the API
           const from = ""; // Not directly available in the API
           
+          // Add network information to the transaction object
+          const networkName = tx?.networkName || "";
+          const networkSymbol = tx?.networkSymbol || "";
+          
+          // Estimate USD value (if available)
+          let valueUsd = 0;
+          if (tx?.valueUsd) {
+            valueUsd = parseFloat(tx.valueUsd);
+          } else if (tx?.quantity && tx?.price) {
+            // Calculate from quantity and price if available
+            valueUsd = parseFloat(tx.quantity) * parseFloat(tx.price);
+          }
+          
           return {
             id,
             type,
@@ -113,15 +143,17 @@ export function useOktoTransactions() {
             symbol,
             to,
             from,
-            hash
+            hash,
+            networkName,
+            networkSymbol,
+            valueUsd
           };
         }) : [];
         
         setTransactions(formattedTransactions);
       } catch (err) {
         console.error("Failed to fetch transactions:", err);
-        setError("Failed to load transaction history");
-        // Set empty array to prevent further errors
+        setError(err instanceof Error ? err.message : "Failed to load transaction history");
         setTransactions([]);
       } finally {
         setIsLoading(false);
