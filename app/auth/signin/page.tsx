@@ -51,8 +51,11 @@ function SignInContent() {
         </div>
       )}
 
+      {/* Espacio vacío para empujar el botón hacia abajo */}
+      <div className="flex-grow"></div>
+
       {/* Sign in button */}
-      <div className="z-10 mb-6 w-full max-w-md px-4">
+      <div className="z-10 w-full max-w-md px-4 mb-12">
         <button
           onClick={handleGoogleSignIn}
           className="flex w-full items-center justify-center gap-2 rounded-lg bg-white py-3 px-4 text-sm font-medium text-black shadow-sm hover:bg-gray-100"

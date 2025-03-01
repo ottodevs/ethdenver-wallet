@@ -22,28 +22,65 @@ import { TransactionHistory } from "./transaction-history";
 export function Wallet() {
   const router = useRouter();
   const { privacyMode, togglePrivacyMode } = useWallet();
-  const { isLoading: accountLoading, error, isAuthenticated } = useOktoAccount();
-  const { totalBalanceUsd, isLoading: isLoadingPortfolio, hasInitialized, refetch } = useOktoPortfolio();
+  const { isLoading: accountLoading, error: accountError, isAuthenticated } = useOktoAccount();
+  const { 
+    totalBalanceUsd, 
+    isLoading: isLoadingPortfolio, 
+    hasInitialized, 
+    error: portfolioError,
+    refetch 
+  } = useOktoPortfolio();
   const { pendingTransactions } = useOktoTransactions();
   const [swapInterfaceOpen, setSwapInterfaceOpen] = useState(false);
   const [sendModalOpen, setSendModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("assets");
+  const [loadingTimeout, setLoadingTimeout] = useState(false);
 
-  // For debugging
+  // Mejorado para depuración
   useEffect(() => {
-    console.log("Portfolio data:", { 
+    console.log("Wallet component state:", { 
+      accountLoading,
+      accountError,
+      isAuthenticated,
       totalBalanceUsd, 
       isLoadingPortfolio,
-      isAuthenticated
+      hasInitialized,
+      portfolioError
     });
-  }, [totalBalanceUsd, isLoadingPortfolio, isAuthenticated]);
+  }, [
+    accountLoading, 
+    accountError, 
+    isAuthenticated, 
+    totalBalanceUsd, 
+    isLoadingPortfolio, 
+    hasInitialized,
+    portfolioError
+  ]);
 
-  // Add a useEffect to retry loading if needed
+  // Detectar si la carga toma demasiado tiempo
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
+    
+    if (accountLoading || (isAuthenticated && isLoadingPortfolio && !hasInitialized)) {
+      timer = setTimeout(() => {
+        console.log("Loading timeout reached - UI might be stuck");
+        setLoadingTimeout(true);
+      }, 10000); // 10 segundos de timeout
+    } else {
+      setLoadingTimeout(false);
+    }
+    
+    return () => {
+      if (timer) clearTimeout(timer);
+    };
+  }, [accountLoading, isAuthenticated, isLoadingPortfolio, hasInitialized]);
+
+  // Mejorado el mecanismo de reintento
   useEffect(() => {
     let retryTimer: NodeJS.Timeout;
     
     if (isAuthenticated && isLoadingPortfolio && !hasInitialized) {
-      // If we're authenticated but still loading after 5 seconds, try to force refresh
+      // Si estamos autenticados pero aún cargando después de 5 segundos, intentar refrescar
       retryTimer = setTimeout(() => {
         console.log("Portfolio still loading after timeout, forcing refresh");
         refetch(true);
@@ -66,8 +103,14 @@ export function Wallet() {
         })
       : "0.00";
 
-  // First check if the wallet is loading
-  if (accountLoading) {
+  // Añadir botón de reintentar si hay timeout
+  const handleRetry = () => {
+    console.log("Manual retry triggered");
+    window.location.reload();
+  };
+
+  // Mostrar pantalla de carga con botón de reintentar si toma demasiado tiempo
+  if (accountLoading || (isAuthenticated && isLoadingPortfolio && !hasInitialized)) {
     return (
       <div className="fixed inset-0 flex flex-col items-center justify-center bg-background/95 backdrop-blur-sm z-50">
         <div className="flex flex-col items-center justify-center p-8 max-w-md text-center">
@@ -108,22 +151,44 @@ export function Wallet() {
             <div className="w-2 h-2 rounded-full bg-blue-500 animate-bounce" style={{ animationDelay: "150ms" }}></div>
             <div className="w-2 h-2 rounded-full bg-blue-500 animate-bounce" style={{ animationDelay: "300ms" }}></div>
           </div>
+          
+          {/* Mostrar botón de reintentar si la carga toma demasiado tiempo */}
+          {loadingTimeout && (
+            <div className="mt-6">
+              <p className="text-yellow-400 mb-2">
+                La carga está tomando más tiempo de lo esperado.
+              </p>
+              <button 
+                onClick={handleRetry}
+                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+              >
+                Reintentar
+              </button>
+            </div>
+          )}
         </div>
       </div>
     );
   }
 
-  // Then check for errors
-  if (error) {
+  // Mostrar errores de cuenta o portfolio
+  if (accountError || portfolioError) {
+    const errorMessage = accountError || portfolioError;
     return (
       <div className="pt-6 pb-4">
         <h2 className="text-xl font-bold mb-2 text-white">Wallet</h2>
-        <p className="text-red-500 font-outfit">{error}</p>
+        <p className="text-red-500 font-outfit mb-4">{errorMessage}</p>
+        <button 
+          onClick={handleRetry}
+          className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+        >
+          Reintentar
+        </button>
       </div>
     );
   }
 
-  // Finally check authentication status
+  // Verificar autenticación
   if (!isAuthenticated) {
     return (
       <div className="pt-6 pb-4">
