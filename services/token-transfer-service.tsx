@@ -1,19 +1,33 @@
 "use client";
 
-import { useOkto, UserOp } from "@okto_web3/react-sdk";
-import { tokenTransfer } from "@okto_web3/react-sdk";
-import { useOktoTransactions, Transaction } from "@/hooks/use-okto-transactions";
+import { useAuth } from "@/contexts/auth-context";
+import { useOktoTransactions } from "@/hooks/use-okto-transactions";
+import { tokenTransfer, useOkto } from "@okto_web3/react-sdk";
 
+// Define the Transaction type
+interface Transaction {
+  id: string;
+  type: string;
+  hash: string;
+  amount: string;
+  timestamp: number;
+  status: "pending" | "completed" | "failed";
+  symbol: string;
+}
+
+// Define the TokenTransferParams interface
 interface TokenTransferParams {
   tokenId: string;
-  tokenSymbol: string;
+  symbol: string;
   recipient: string;
   amount: number;
   caip2Id: string;
+  tokenAddress?: string;
 }
 
 export function useTokenTransferService() {
   const oktoClient = useOkto();
+  const { checkAuthStatus } = useAuth();
   const { addPendingTransaction, updatePendingTransaction } = useOktoTransactions();
 
   const sendToken = async (params: TokenTransferParams) => {
@@ -21,14 +35,22 @@ export function useTokenTransferService() {
       throw new Error("Okto client not initialized");
     }
 
+    // Verificar autenticación antes de continuar
+    const isAuth = await checkAuthStatus();
+    if (!isAuth) {
+      throw new Error("Authentication required");
+    }
+
+    console.log("Starting token transfer with params:", params);
+
     // Create a pending transaction for optimistic UI
     const pendingTxId = `pending-${Date.now()}`;
     const pendingTx: Transaction = {
       id: pendingTxId,
       type: "send",
       hash: "",
-      token: params.tokenSymbol,
-      amount: params.amount,
+      symbol: params.symbol,
+      amount: params.amount.toString(),
       timestamp: Date.now(),
       status: "pending",
     };
@@ -38,28 +60,30 @@ export function useTokenTransferService() {
 
     try {
       // Convert amount to BigInt with proper decimals (usually 18 for most tokens)
-      const amountInSmallestUnit = BigInt(params.amount * 10**18);
+      const amountInSmallestUnit = BigInt(Math.floor(params.amount * 10**18));
       
+      // Prepare transfer parameters according to Okto documentation
       const transferParams = {
         amount: amountInSmallestUnit,
         recipient: params.recipient as `0x${string}`,
-        token: "" as `0x${string}`, // Empty string for native token, or token contract address
+        token: (params.tokenAddress || "") as `0x${string}`, // Empty string for native token
         caip2Id: params.caip2Id
       };
       
-      // Create the user operation
-      const userOp = await tokenTransfer(oktoClient, transferParams) as UserOp;
+      console.log("Transfer params:", transferParams);
       
-      // Sign the user operation
-      const signedUserOp = await oktoClient.signUserOp(userOp);
+      // Usar el flujo abstracto directamente - Okto maneja internamente la creación y ejecución del UserOp
+      const result = await tokenTransfer(oktoClient, transferParams);
+      console.log("Token transfer result:", result);
       
-      // Execute the user operation
-      const txHash = await oktoClient.executeUserOp(signedUserOp);
+      // El resultado es un jobId (string)
+      const jobId = result;
+      console.log("Transaction submitted with jobId:", jobId);
       
-      // Update the transaction status
-      updatePendingTransaction(pendingTxId, "completed", txHash);
+      // Update the transaction status to completed with the jobId
+      updatePendingTransaction(pendingTxId, "completed", jobId);
       
-      return txHash;
+      return jobId;
     } catch (error) {
       console.error("Token transfer failed:", error);
       

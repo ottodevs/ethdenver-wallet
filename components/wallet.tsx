@@ -2,6 +2,7 @@
 
 import { DelegationBanner } from "@/components/delegation-banner";
 import { OptionsDropdown } from "@/components/options-dropdown";
+import { SendModal } from "@/components/send-modal";
 import { SwapInterface } from "@/components/swap-interface";
 import { TokenList } from "@/components/token-list";
 import { Button } from "@/components/ui/button";
@@ -25,6 +26,7 @@ export function Wallet() {
   const { totalBalanceUsd, isLoading: isLoadingPortfolio } = useOktoPortfolio();
   const { pendingTransactions } = useOktoTransactions();
   const [swapInterfaceOpen, setSwapInterfaceOpen] = useState(false);
+  const [sendModalOpen, setSendModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("assets");
 
   const hasPendingTransactions = pendingTransactions.length > 0;
@@ -139,13 +141,19 @@ export function Wallet() {
               </div>
               <span className="text-[14px] text-gray-400 mt-2">BUY</span>
             </div>
-            <div className="flex flex-col items-center">
+            <div 
+              className="flex flex-col items-center cursor-pointer"
+              onClick={() => setSwapInterfaceOpen(true)}
+            >
               <div className="w-[48px] h-[48px] bg-[#4364F9] rounded-full flex items-center justify-center">
                 <Image src="/swap.svg" alt="Swap" width={48} height={48} />
               </div>
               <span className="text-[14px] text-gray-400 mt-2">SWAP</span>
             </div>
-            <div className="flex flex-col items-center">
+            <div 
+              className="flex flex-col items-center cursor-pointer"
+              onClick={() => setSendModalOpen(true)}
+            >
               <div className="w-[48px] h-[48px] bg-[#4364F9] rounded-full flex items-center justify-center">
                 <Image src="/send.svg" alt="Send" width={48} height={48} />
               </div>
@@ -234,6 +242,11 @@ export function Wallet() {
       <SwapInterface
         open={swapInterfaceOpen}
         onOpenChange={setSwapInterfaceOpen}
+      />
+
+      <SendModal 
+        open={sendModalOpen} 
+        onOpenChange={setSendModalOpen} 
       />
 
       <AnimatePresence>
