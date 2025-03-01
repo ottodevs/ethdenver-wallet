@@ -5,87 +5,54 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { ResponsiveDialog } from "@/components/ui/responsive-dialog"
 import { useOktoAccount } from "@/hooks/use-okto-account"
-import { useChainService } from "@/services/chain-service"
+import { Chain, useChainService } from "@/services/chain-service"
 import { Copy, Minus, Plus } from "lucide-react"
 import Image from "next/image"
 import QRCode from "qrcode"
 import { useEffect, useState } from "react"
+import useSWR from "swr"
 
-// Popular tokens by chain
-const POPULAR_TOKENS: Record<string, Array<{id: string, symbol: string, name: string, contractAddress?: string}>> = {
-  "ethereum": [
-    { id: "eth", symbol: "ETH", name: "Ethereum" },
-    { id: "usdc-ethereum", symbol: "USDC", name: "USD Coin", contractAddress: "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48" },
-    { id: "usdt-ethereum", symbol: "USDT", name: "Tether", contractAddress: "0xdAC17F958D2ee523a2206206994597C13D831ec7" },
-    { id: "dai-ethereum", symbol: "DAI", name: "Dai Stablecoin", contractAddress: "0x6B175474E89094C44Da98b954EedeAC495271d0F" },
-    { id: "wbtc-ethereum", symbol: "WBTC", name: "Wrapped Bitcoin", contractAddress: "0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599" },
-  ],
-  "polygon": [
-    { id: "matic", symbol: "MATIC", name: "Polygon" },
-    { id: "usdc-polygon", symbol: "USDC", name: "USD Coin", contractAddress: "0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174" },
-    { id: "usdt-polygon", symbol: "USDT", name: "Tether", contractAddress: "0xc2132D05D31c914a87C6611C10748AEb04B58e8F" },
-    { id: "dai-polygon", symbol: "DAI", name: "Dai Stablecoin", contractAddress: "0x8f3Cf7ad23Cd3CaDbD9735AFf958023239c6A063" },
-  ],
-  "arbitrum": [
-    { id: "eth-arbitrum", symbol: "ETH", name: "Ethereum" },
-    { id: "usdc-arbitrum", symbol: "USDC", name: "USD Coin", contractAddress: "0xFF970A61A04b1cA14834A43f5dE4533eBDDB5CC8" },
-    { id: "usdt-arbitrum", symbol: "USDT", name: "Tether", contractAddress: "0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9" },
-    { id: "dai-arbitrum", symbol: "DAI", name: "Dai Stablecoin", contractAddress: "0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1" },
-  ],
-  "optimism": [
-    { id: "eth-optimism", symbol: "ETH", name: "Ethereum" },
-    { id: "usdc-optimism", symbol: "USDC", name: "USD Coin", contractAddress: "0x7F5c764cBc14f9669B88837ca1490cCa17c31607" },
-    { id: "dai-optimism", symbol: "DAI", name: "Dai Stablecoin", contractAddress: "0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1" },
-  ],
-  "base": [
-    { id: "eth-base", symbol: "ETH", name: "Ethereum" },
-    { id: "usdc-base", symbol: "USDC", name: "USD Coin", contractAddress: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913" },
-    { id: "dai-base", symbol: "DAI", name: "Dai Stablecoin", contractAddress: "0x50c5725949A6F0c72E6C4a641F24049A917DB0Cb" },
-  ],
-  "avalanche": [
-    { id: "avax", symbol: "AVAX", name: "Avalanche" },
-    { id: "usdc-avalanche", symbol: "USDC", name: "USD Coin", contractAddress: "0xB97EF9Ef8734C71904D8002F8b6Bc66Dd9c48a6E" },
-    { id: "usdt-avalanche", symbol: "USDT", name: "Tether", contractAddress: "0x9702230A8Ea53601f5cD2dc00fDBc13d4dF4A8c7" },
-    { id: "dai-avalanche", symbol: "DAI", name: "Dai Stablecoin", contractAddress: "0xd586E7F844cEa2F87f50152665BCbc2C279D8d70" },
-  ]
+// Token list URLs - using popular maintained lists
+const TOKEN_LISTS = {
+  default: "https://tokens.uniswap.org", // Updated URL
+  extended: "https://tokens.coingecko.com/uniswap/all.json"
 }
 
-// Token decimals mapping
-const TOKEN_DECIMALS: Record<string, number> = {
-  // Ethereum tokens
-  "eth": 18,
-  "usdc-ethereum": 6,
-  "usdt-ethereum": 6,
-  "dai-ethereum": 18,
-  "wbtc-ethereum": 8,
-  
-  // Polygon tokens
-  "matic": 18,
-  "usdc-polygon": 6,
-  "usdt-polygon": 6,
-  "dai-polygon": 18,
-  
-  // Arbitrum tokens
-  "eth-arbitrum": 18,
-  "usdc-arbitrum": 6,
-  "usdt-arbitrum": 6,
-  "dai-arbitrum": 18,
-  
-  // Optimism tokens
-  "eth-optimism": 18,
-  "usdc-optimism": 6,
-  "dai-optimism": 18,
-  
-  // Base tokens
-  "eth-base": 18,
-  "usdc-base": 6,
-  "dai-base": 18,
-  
-  // Avalanche tokens
-  "avax": 18,
-  "usdc-avalanche": 6,
-  "usdt-avalanche": 6,
-  "dai-avalanche": 18
+interface TokenInfo {
+  chainId: number
+  address: string
+  name: string
+  symbol: string
+  decimals: number
+  logoURI?: string
+}
+
+interface TokenList {
+  name: string
+  timestamp: string
+  version: {
+    major: number
+    minor: number
+    patch: number
+  }
+  tokens: TokenInfo[]
+}
+
+// Fetch function for token lists with proper error handling
+const fetchTokenList = async (url: string): Promise<TokenList> => {
+  try {
+    const response = await fetch(url, { 
+      headers: { 'Accept': 'application/json' },
+      cache: 'force-cache'
+    })
+    if (!response.ok) {
+      throw new Error(`Failed to fetch token list from ${url}`)
+    }
+    return response.json()
+  } catch (error) {
+    console.error("Error fetching token list:", error)
+    throw error
+  }
 }
 
 interface ReceiveModalProps {
@@ -102,39 +69,94 @@ export function ReceiveModal({ open, onOpenChange }: ReceiveModalProps) {
   const [amount, setAmount] = useState("")
   const [selectedToken, setSelectedToken] = useState("")
   const [selectedChain, setSelectedChain] = useState("")
-  const [availableTokens, setAvailableTokens] = useState<Array<{id: string, symbol: string, name: string, contractAddress?: string}>>([])
+  const [availableTokens, setAvailableTokens] = useState<Array<{id: string, symbol: string, name: string, contractAddress?: string, decimals: number, logoURI?: string}>>([])
+  
+  // Fetch token list
+  const { data: tokenList, error: tokenListError } = useSWR<TokenList>(
+    TOKEN_LISTS.default,
+    fetchTokenList,
+    { revalidateOnFocus: false }
+  )
 
   const walletAddress = selectedAccount?.address || ""
   const selectedTokenData = availableTokens.find(t => t.id === selectedToken)
 
   // Update available tokens when chain changes
   useEffect(() => {
-    if (selectedChain) {
+    if (selectedChain && tokenList) {
       const chainData = chains.find(c => c.id === selectedChain)
       if (chainData) {
-        const chainName = chainData.name.toLowerCase()
-        const tokensForChain = POPULAR_TOKENS[chainName] || []
-        setAvailableTokens(tokensForChain)
+        // Convert chain ID to number for comparison with token list
+        const chainIdNumber = parseInt(chainData.id)
         
-        // Reset selected token when chain changes
+        // Filter tokens by chain ID
+        const tokensForChain = tokenList.tokens
+          .filter(token => token.chainId === chainIdNumber)
+          // Map to our format
+          .map(token => ({
+            id: `${token.symbol.toLowerCase()}-${chainData.name.toLowerCase()}`,
+            symbol: token.symbol,
+            name: token.name,
+            contractAddress: token.address,
+            decimals: token.decimals,
+            logoURI: token.logoURI
+          }))
+          // Add native token if not present
+          const nativeToken = getNativeToken(chainData)
+          if (nativeToken.length > 0 && !tokensForChain.some(token => token.id === nativeToken[0].id)) {
+            tokensForChain.push({
+              ...nativeToken[0],
+              contractAddress: '',
+              logoURI: undefined
+            })
+          }
+        
+          setAvailableTokens(tokensForChain)
+          // Reset selected token when chain changes
         setSelectedToken("")
       }
     } else {
       setAvailableTokens([])
       setSelectedToken("")
     }
-  }, [selectedChain, chains])
+  }, [selectedChain, chains, tokenList])
+
+  // Helper function to get native token for a chain
+  const getNativeToken = (chain: Chain) => {
+    const chainName = chain.name.toLowerCase()
+    
+    // Map of chain names to their native tokens
+    const nativeTokens: Record<string, {symbol: string, name: string, decimals: number}> = {
+      "ethereum": { symbol: "ETH", name: "Ethereum", decimals: 18 },
+      "polygon": { symbol: "MATIC", name: "Polygon", decimals: 18 },
+      "arbitrum": { symbol: "ETH", name: "Ethereum", decimals: 18 },
+      "optimism": { symbol: "ETH", name: "Ethereum", decimals: 18 },
+      "base": { symbol: "ETH", name: "Ethereum", decimals: 18 },
+      "avalanche": { symbol: "AVAX", name: "Avalanche", decimals: 18 },
+    }
+    
+    const nativeToken = nativeTokens[chainName]
+    if (!nativeToken) return []
+    
+    return [{
+      id: nativeToken.symbol.toLowerCase() + (chainName !== "ethereum" ? `-${chainName}` : ""),
+      symbol: nativeToken.symbol,
+      name: nativeToken.name,
+      decimals: nativeToken.decimals,
+      logoURI: undefined,
+      contractAddress: undefined
+    }]
+  }
 
   // Generate QR code data URL when wallet address or parameters change
   useEffect(() => {
     if (!walletAddress) return
 
-    // For basic address sharing (no parameters)
     let qrData = walletAddress
     
     if (showAdvancedOptions && selectedTokenData) {
-      // Get the correct decimals for the selected token
-      const decimals = TOKEN_DECIMALS[selectedTokenData.id] || 18
+      // Get decimals directly from the selected token data
+      const decimals = selectedTokenData.decimals || 18
       
       // Different format based on token type
       if (selectedTokenData.contractAddress) {
@@ -316,6 +338,11 @@ export function ReceiveModal({ open, onOpenChange }: ReceiveModalProps) {
       description="Share your QR code to receive funds"
       contentClassName="max-w-md"
     >
+      {tokenListError && (
+        <div className="text-sm text-red-500 mb-2">
+          Failed to load token list. Using limited token selection.
+        </div>
+      )}
       {receiveContent}
     </ResponsiveDialog>
   )
