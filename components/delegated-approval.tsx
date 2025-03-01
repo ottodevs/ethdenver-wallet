@@ -47,6 +47,7 @@ export function DelegatedApproval({ open, onOpenChange }: DelegatedApprovalProps
       
       // Almacenamos el indicador de que la delegación está activa
       localStorage.setItem('okto_delegation_enabled', 'true')
+      localStorage.removeItem('okto_delegation_banner_dismissed')
       
       // También almacenamos la clave de sesión si está disponible
       const sessionKey = localStorage.getItem('okto_session_key')
