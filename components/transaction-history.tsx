@@ -134,8 +134,22 @@ export function TransactionHistory({ animated = true }: { animated?: boolean }) 
   // Helper function to format USD value
   const formatUsdValue = (
     value: string | number | null,
+    symbol: string = ""
   ): string => {
-    if (value === null || value === undefined) return "";
+    // If value is null/undefined, try to find matching transaction by symbol
+    if (value === null || value === undefined) {
+      if (symbol) {
+        const matchingTx = transactions.find((tx) => tx.symbol === symbol);
+        if (
+          matchingTx &&
+          matchingTx.valueUsd &&
+          typeof matchingTx.valueUsd === "number"
+        ) {
+          return `$${matchingTx.valueUsd.toFixed(2)}`;
+        }
+      }
+      return ""; // Return empty string instead of "$0.00" to match HEAD behavior
+    }
 
     let numValue: number;
     if (typeof value === "string") {
@@ -230,7 +244,7 @@ export function TransactionHistory({ animated = true }: { animated?: boolean }) 
     >
       {transactions.map((tx) => {
         // Format USD value if available - try multiple properties
-        const usdValue = formatUsdValue(tx.valueUsd || 0);
+        const usdValue = formatUsdValue(tx.valueUsd || 0, tx.symbol || "");
         const formattedAmount = formatAmount(tx.amount);
         const isOutgoing =
           (tx.type || "").toLowerCase() === "send" ||
