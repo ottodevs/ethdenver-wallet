@@ -101,7 +101,7 @@ export default function AskAeris() {
                 <div className="rounded-2xl p-4 bg-[#1F2B66] text-white">
                   <p className="text-[15px]">
                     I noticed that you have 239.87 USDC tokens spread across 4
-                    different networks. Let's consolidate them so we can make
+                    different networks. Let&apos;s consolidate them so we can make
                     this easy for you... /thinking
                   </p>
                 </div>
