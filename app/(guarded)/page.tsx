@@ -1,8 +1,10 @@
-"use client"
+import DashboardClient from "@/components/dashboard-client";
+import { Suspense } from "react";
 
-import { redirect } from "next/navigation";
-
-export default function ProtectedPage() {
-  redirect("/dashboard");
+export default function RootPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <DashboardClient />
+    </Suspense>
+  );
 }
-

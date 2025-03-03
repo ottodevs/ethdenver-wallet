@@ -14,5 +14,9 @@ export default async function ProtectedLayout({
     redirect("/auth/signin");
   }
 
-  return <ProtectedClientLayout session={session}>{children}</ProtectedClientLayout>;
+  return (
+    <div className="max-w-full overflow-x-hidden">
+      <ProtectedClientLayout session={session}>{children}</ProtectedClientLayout>
+    </div>
+  );
 } 
