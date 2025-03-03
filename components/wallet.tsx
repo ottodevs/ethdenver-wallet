@@ -366,7 +366,7 @@ export function Wallet() {
         </div>
 
         {/* Content Container */}
-        <div className="w-screen -mx-4 rounded-t-2xl bg-gradient-to-br from-[#252531] to-[#13121E] min-h-[calc(100vh-300px)]">
+        <div className="w-full mx-auto rounded-t-2xl bg-gradient-to-br from-[#252531] to-[#13121E] min-h-[calc(100vh-300px)]">
           {/* Content based on active tab */}
           <div
             className={
