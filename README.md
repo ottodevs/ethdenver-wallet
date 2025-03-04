@@ -103,6 +103,7 @@ pnpm start
 
 ## 🔮 Future Roadmap
 
+- [ ] Advanced AI Agent features
 - [ ] Enhanced security features
 - [ ] Additional blockchain integrations
 - [ ] Advanced portfolio analytics
@@ -138,6 +139,9 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 </p>
 
 <p align="center">
+  <a href="https://twitter.com/jcruzfff">
+    <img src="https://img.shields.io/twitter/follow/jcruzfff?style=social" alt="Twitter Follow" />
+  </a>
   <a href="https://twitter.com/ottodevs">
     <img src="https://img.shields.io/twitter/follow/ottodevs?style=social" alt="Twitter Follow" />
   </a>
