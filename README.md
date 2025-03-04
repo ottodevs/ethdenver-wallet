@@ -1,6 +1,6 @@
 # Aeris Wallet
 
-<!-- ![Aeris Banner](https://via.placeholder.com/1200x300?text=Aeris+Wallet) -->
+![Aeris Banner](/docs/assets/aeris-banner.png)
 
 [![ETHDenver 2025](https://img.shields.io/badge/ETHDenver-2025-6A3BE4?style=for-the-badge&logo=ethereum&logoColor=white)](https://ethdenver2025.devfolio.co/quadratic-voting)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow?style=for-the-badge)](https://opensource.org/licenses/MIT)
@@ -112,8 +112,8 @@ pnpm start
 
 ## 👥 Team
 
-- **Jonathan Cruz** - Frontend Developer
-- **Otto G** - Blockchain Engineer
+- **[Jonathan Cruz](https://github.com/jcruzfff)** - Frontend Developer & UI/UX Designer
+- **[Otto G](https://github.com/ottodevs)** - Blockchain & Fullstack Engineer
 
 ## 🤝 Contributing
 
@@ -134,7 +134,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ---
 
 <p align="center">
-  <sub>Built with ❤️ during the ETHDenver Hackathon</sub>
+  <sub>Built with ❤️ during the ETHDenver 2025 Hackathon</sub>
 </p>
 
 <p align="center">
@@ -143,5 +143,14 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
   </a>
   <a href="https://github.com/ottodevs/ethdenver-wallet">
     <img src="https://img.shields.io/github/stars/ottodevs/ethdenver-wallet?style=social" alt="GitHub stars" />
+  </a>
+</p>
+
+<p align="center">
+  <a href="https://devfolio.co/projects/aeris-375a">
+    <img src="https://img.shields.io/badge/Devfolio-Project-blue?style=flat" alt="Devfolio Project" />
+  </a>
+  <a href="https://ethdenver.com">
+    <img src="https://img.shields.io/badge/ETHDenver-2025-purple?style=flat" alt="ETHDenver 2025" />
   </a>
 </p>
