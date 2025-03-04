@@ -72,8 +72,8 @@ Aeris Wallet is built with a modern tech stack:
     <td align="center"><img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/nextjs/nextjs-original.svg" width="40" height="40"/><br />Next.js</td>
     <td align="center"><img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/react/react-original.svg" width="40" height="40"/><br />React</td>
     <td align="center"><img src="https://tailwindcss.com/_next/static/media/tailwindcss-mark.d52e9897.svg" width="40" height="40"/><br />Tailwind</td>
-    <td align="center"><img src="https://www.vectorlogo.zone/logos/ethereum/ethereum-icon.svg" width="40" height="40"/><br />Ethereum</td>
-    <td align="center"><img src="https://optimism.io/images/logos/optimism.svg" width="40" height="40"/><br />Optimism</td>
+    <td align="center"><img src="https://docs.okto.tech/images/brand-kit/icons/icon.png" width="40" height="40"/><br />Okto</td>
+    <td align="center"><img src="https://www.optimism.io/brand/optimism-logo.svg" width="40" height="40"/><br />Optimism</td>
   </tr>
 </table>
 
