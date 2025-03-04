@@ -38,7 +38,7 @@ export function Wallet() {
   const [loadingTimeout, setLoadingTimeout] = useState(false);
   const [authTimeout, setAuthTimeout] = useState(false);
 
-  // Mejorado para depuración
+  // Improved for debugging
   useEffect(() => {
     console.log("Wallet component state:", { 
       accountLoading,
@@ -59,7 +59,7 @@ export function Wallet() {
     portfolioError
   ]);
 
-  // Detectar si la carga toma demasiado tiempo
+  // Detect if the load takes too long
   useEffect(() => {
     let timer: NodeJS.Timeout;
     
@@ -67,7 +67,7 @@ export function Wallet() {
       timer = setTimeout(() => {
         console.log("Loading timeout reached - UI might be stuck");
         setLoadingTimeout(true);
-      }, 10000); // 10 segundos de timeout
+      }, 2_000); // 2 seconds timeout
     } else {
       setLoadingTimeout(false);
     }
@@ -77,7 +77,6 @@ export function Wallet() {
     };
   }, [accountLoading, isAuthenticated, isLoadingPortfolio, hasInitialized]);
 
-  // Nuevo: Timeout para autenticación
   useEffect(() => {
     let authTimer: NodeJS.Timeout;
     
@@ -86,7 +85,7 @@ export function Wallet() {
         console.log("Authentication timeout reached - redirecting to login");
         setAuthTimeout(true);
         router.push("/auth/signin");
-      }, 15000); // 15 segundos de timeout para autenticación
+      }, 1_500); // 1.5 seconds timeout for authentication
     }
     
     return () => {
@@ -94,16 +93,16 @@ export function Wallet() {
     };
   }, [accountLoading, isAuthenticated, router]);
 
-  // Mejorado el mecanismo de reintento
+  // Improved retry mechanism
   useEffect(() => {
     let retryTimer: NodeJS.Timeout;
     
     if (isAuthenticated && isLoadingPortfolio && !hasInitialized) {
-      // Si estamos autenticados pero aún cargando después de 5 segundos, intentar refrescar
+      // If we are authenticated but still loading after 5 seconds, try to refresh
       retryTimer = setTimeout(() => {
         console.log("Portfolio still loading after timeout, forcing refresh");
         refetch(true);
-      }, 5000);
+      }, 1_500); // 1.5 seconds timeout for refresh
     }
     
     return () => {
@@ -122,13 +121,13 @@ export function Wallet() {
         })
       : "0.00";
 
-  // Añadir botón de reintentar si hay timeout
+  // Add a retry button if there is a timeout
   const handleRetry = () => {
     console.log("Manual retry triggered");
     window.location.reload();
   };
 
-  // Mostrar pantalla de carga mientras se autentica o se carga el portfolio
+  // Show loading screen while authenticating or loading the portfolio
   if (accountLoading || (isAuthenticated && isLoadingPortfolio && !hasInitialized)) {
     return (
       <div className="fixed inset-0 flex flex-col items-center justify-center bg-background/95 backdrop-blur-sm z-50">
@@ -179,7 +178,7 @@ export function Wallet() {
             <div className="w-2 h-2 rounded-full bg-blue-500 animate-bounce" style={{ animationDelay: "300ms" }}></div>
           </div>
           
-          {/* Mostrar botón de reintentar si la carga toma demasiado tiempo */}
+          {/* Show retry button if the load takes too long */}
           {loadingTimeout && (
             <div className="mt-6">
               <p className="text-yellow-400 mb-2">
@@ -194,7 +193,7 @@ export function Wallet() {
             </div>
           )}
           
-          {/* Mostrar botón de login si la autenticación toma demasiado tiempo */}
+          {/* Show login button if authentication takes too long */}
           {authTimeout && (
             <div className="mt-6">
               <p className="text-yellow-400 mb-2">
@@ -213,7 +212,7 @@ export function Wallet() {
     );
   }
 
-  // Mostrar errores de cuenta o portfolio
+  // Show account or portfolio errors
   if (accountError || portfolioError) {
     const errorMessage = accountError || portfolioError;
     return (
@@ -230,7 +229,7 @@ export function Wallet() {
     );
   }
 
-  // Si no está autenticado, no mostrar nada mientras se redirige
+  // If not authenticated, don't show anything while redirecting
   if (!isAuthenticated) {
     return null;
   }
@@ -251,7 +250,7 @@ export function Wallet() {
           </Button>
         </div>
 
-        {/* Banner de delegación justo después de la barra superior */}
+          {/* Delegation banner immediately after the top bar */}
         <DelegationBanner />
 
         {/* Centered Total Balance Section */}
