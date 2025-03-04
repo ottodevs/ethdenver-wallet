@@ -1,13 +1,31 @@
 # Aeris Wallet
 
-![Aeris Wallet](https://img.shields.io/badge/Aeris-Wallet-4364F9?style=for-the-badge&logo=ethereum&logoColor=white)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Next.js](https://img.shields.io/badge/Next.js-14.2.16-black?style=flat&logo=next.js)](https://nextjs.org/)
-[![Optimism](https://img.shields.io/badge/Optimism-Superchain-FF0420?style=flat&logo=optimism&logoColor=white)](https://www.optimism.io/)
+<!-- ![Aeris Banner](https://via.placeholder.com/1200x300?text=Aeris+Wallet) -->
+
+[![ETHDenver 2025](https://img.shields.io/badge/ETHDenver-2025-6A3BE4?style=for-the-badge&logo=ethereum&logoColor=white)](https://ethdenver2025.devfolio.co/quadratic-voting)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow?style=for-the-badge)](https://opensource.org/licenses/MIT)
+[![Next.js](https://img.shields.io/badge/Next.js-14.2.16-black?style=for-the-badge&logo=next.js)](https://nextjs.org/)
+[![Live Demo](https://img.shields.io/badge/Demo-Live-brightgreen?style=for-the-badge)](https://createyourwallet.vercel.app)
+
+[![Optimism](https://img.shields.io/badge/Optimism-Superchain-FF0420?style=for-the-badge&logo=optimism&logoColor=white)](https://www.optimism.io/)
+[![Okto SDK](https://img.shields.io/badge/Powered_by-Okto-4364F9?style=for-the-badge)](https://www.okto.tech/)
+[![AI-Powered](https://img.shields.io/badge/AI-Powered-9cf?style=for-the-badge&logo=openai&logoColor=white)](https://ai.vercel.ai/)
 
 > Effortless login, seamless wallet management, and reliable transactions across the most popular blockchains—combining simplicity with interoperability.
 
-<!-- ![Aeris Wallet Demo](https://via.placeholder.com/800x400?text=Aeris+Wallet+Demo) -->
+Aeris is a modern blockchain wallet that bridges the gap between Web2 and Web3, making crypto management as intuitive as using any everyday application. Sign in with Google, manage all your assets in one place, and execute cross-chain transactions with minimal friction.
+
+## 🚀 Try It Now
+
+Experience Aeris at [createyourwallet.vercel.app](https://createyourwallet.vercel.app) (best viewed on mobile).
+
+```bash
+# Clone and run it locally
+git clone https://github.com/ottodevs/ethdenver-wallet.git
+cd ethdenver-wallet
+pnpm install
+pnpm dev
+```
 
 ## 🌟 Features
 
@@ -19,80 +37,6 @@
 - **Privacy Mode**: Hide your balances with a single tap
 - **Chain Abstraction**: Seamless cross-chain operations without technical complexity
 
-## 🚀 Quick Start
-
-### Prerequisites
-
-- Node.js 18+ and npm/yarn/pnpm
-- A modern web browser
-
-### Installation
-
-```bash
-# Clone the repository
-git clone https://github.com/ottodevs/ethdenver-wallet.git aeris-wallet
-cd aeris-wallet
-
-# Install dependencies
-pnpm install
-
-# Set up environment variables
-cp .env.local.example .env.local
-# Edit .env.local with your API keys
-```
-
-### Development
-
-```bash
-# Start the development server
-pnpm dev
-
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
-
-### Production Build
-
-```bash
-# Build for production
-pnpm build
-
-# Start the production server
-pnpm start
-```
-
-## 🏗️ Architecture
-
-Aeris Wallet is built with a modern tech stack:
-
-- **Frontend**: Next.js 14, React, Tailwind CSS
-- **Authentication**: NextAuth.js with Google provider
-- **Blockchain Integration**: Okto SDK, Wagmi
-- **Chain Abstraction**: Superchain technology
-- **AI Capabilities**: AI SDK with OpenAI integration
-
-### Key Components
-
-- **Session Key Delegation**: Secure and convenient transaction approvals
-- **Multi-chain Support**: Ethereum, Optimism, Base, Arbitrum, and more
-- **Responsive Design**: Optimized for both mobile and desktop experiences
-
-## 🔧 Technologies
-
-<table>
-  <tr>
-    <td align="center"><img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/nextjs/nextjs-original.svg" width="40" height="40"/><br />Next.js</td>
-    <td align="center"><img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/react/react-original.svg" width="40" height="40"/><br />React</td>
-    <td align="center"><img src="https://tailwindcss.com/_next/static/media/tailwindcss-mark.d52e9897.svg" width="40" height="40"/><br />Tailwind</td>
-    <td align="center"><img src="https://www.vectorlogo.zone/logos/ethereum/ethereum-icon.svg" width="40" height="40"/><br />Ethereum</td>
-    <td align="center"><img src="https://assets.devfolio.co/company/e2a86d4473c649169f3d865a20b23715/assets/favicon.png" width="40" height="40"/><br />Optimism</td>
-  </tr>
-</table>
-
-- [Okto SDK](https://okto.xyz) - Wallet management and session key delegation
-- [Superchain](https://www.optimism.io/superchain) - Chain abstraction and cross-chain operations
-- [Wagmi](https://wagmi.sh/) - React hooks for Ethereum
-- [NextAuth.js](https://next-auth.js.org/) - Authentication for Next.js
-- [AI SDK](https://ai.vercel.ai/) - Conversational AI integration
-
 ## 🧩 Problem & Solution
 
 ### The Problem
@@ -102,8 +46,6 @@ Managing multiple crypto wallets is often complicated, requiring users to:
 - Manually track assets across chains
 - Navigate complex blockchain processes
 - Remember seed phrases and private keys
-
-This leads to confusion, errors, and a poor user experience.
 
 ### Our Solution
 
@@ -115,21 +57,49 @@ Aeris makes managing crypto assets easy by providing:
 
 ## 🔄 User Flow
 
-1. **Authentication**: Users log in with Google credentials
+1. **Authentication**: Log in with Google credentials
 2. **Wallet Creation**: A Web3 wallet is instantly created/accessed
-3. **Dashboard**: Users see all their assets across blockchains
+3. **Dashboard**: View all your assets across blockchains
 4. **Transactions**: Send, receive, or swap assets with minimal steps
 5. **AI Assistance**: Ask the AI agent to help with transactions
 
+## 🏗️ Architecture
+
+Aeris Wallet is built with a modern tech stack:
+
+<table>
+  <tr>
+    <td align="center"><img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/nextjs/nextjs-original.svg" width="40" height="40"/><br />Next.js</td>
+    <td align="center"><img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/react/react-original.svg" width="40" height="40"/><br />React</td>
+    <td align="center"><img src="https://tailwindcss.com/_next/static/media/tailwindcss-mark.d52e9897.svg" width="40" height="40"/><br />Tailwind</td>
+    <td align="center"><img src="https://www.vectorlogo.zone/logos/ethereum/ethereum-icon.svg" width="40" height="40"/><br />Ethereum</td>
+    <td align="center"><img src="https://optimism.io/images/logos/optimism.svg" width="40" height="40"/><br />Optimism</td>
+  </tr>
+</table>
+
+- **[Okto SDK](https://okto.xyz)**: Wallet management and session key delegation
+- **[Superchain](https://www.optimism.io/superchain)**: Chain abstraction and cross-chain operations
+- **[NextAuth.js](https://next-auth.js.org/)**: Authentication for Next.js
+- **[AI SDK](https://ai.vercel.ai/)**: Conversational AI integration
+
 ## 🛠️ Development
 
-This project was built during a hackathon, leveraging:
+```bash
+# Install dependencies
+pnpm install
 
-- Okto SDK for session key delegation
-- Superchain for chain abstraction
-- Next.js App Router for modern React patterns
-- Tailwind CSS for responsive design
-- AI SDK for natural language interactions
+# Run development server
+pnpm dev
+
+# For HTTPS development (recommended for wallet testing)
+pnpm dev:https
+
+# Build for production
+pnpm build
+
+# Start production server
+pnpm start
+```
 
 ## 🔮 Future Roadmap
 
@@ -145,10 +115,17 @@ This project was built during a hackathon, leveraging:
 - **Jonathan Cruz** - Frontend Developer
 - **Otto G** - Blockchain Engineer
 
-## 🔗 Links
+## 🤝 Contributing
 
-- [Live Demo](https://createyourwallet.vercel.app) (Best experienced on mobile)
-- [GitHub Repository](https://github.com/yourusername/aeris-wallet)
+We welcome contributions! Here's how to get started:
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+For major changes, please open an issue first to discuss what you would like to change.
 
 ## 📄 License
 
@@ -158,4 +135,13 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 <p align="center">
   <sub>Built with ❤️ during the ETHDenver Hackathon</sub>
+</p>
+
+<p align="center">
+  <a href="https://twitter.com/ottodevs">
+    <img src="https://img.shields.io/twitter/follow/ottodevs?style=social" alt="Twitter Follow" />
+  </a>
+  <a href="https://github.com/ottodevs/ethdenver-wallet">
+    <img src="https://img.shields.io/github/stars/ottodevs/ethdenver-wallet?style=social" alt="GitHub stars" />
+  </a>
 </p>
