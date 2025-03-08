@@ -1,7 +1,7 @@
 {
       // files
       "files.associations": {
-        "*.css": "tailwindcss",
+        "*.css": "postcss",
         ".env.*.local": "env",
         ".env.local": "env",
         ".npmrc": "ini"
