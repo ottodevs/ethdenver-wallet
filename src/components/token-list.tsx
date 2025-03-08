@@ -109,7 +109,7 @@ export function TokenList({ animated = true }: { animated?: boolean }) {
     );
   }
 
-  if (tokens.length === 0 && hasInitialized) {
+  if (tokens.length === 0 && hasInitialized && !isLoading) {
     return (
       <div className="flex flex-col justify-center items-center h-[300px]">
         <Coins className="h-8 w-8 text-muted-foreground mb-2" />
@@ -124,6 +124,16 @@ export function TokenList({ animated = true }: { animated?: boolean }) {
             Refresh
           </button>
         )}
+      </div>
+    );
+  }
+
+  if (isLoading) {
+    return (
+      <div className="space-y-1">
+        {Array(3).fill(0).map((_, i) => (
+          <TokenSkeleton key={`skeleton-${i}`} />
+        ))}
       </div>
     );
   }

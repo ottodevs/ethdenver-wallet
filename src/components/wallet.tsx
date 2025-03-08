@@ -28,15 +28,12 @@ export function Wallet() {
     isLoading: isLoadingPortfolio, 
     hasInitialized, 
     error: portfolioError,
-    refetch 
   } = useOktoPortfolio();
   const { pendingTransactions } = useOktoTransactions();
   const [swapInterfaceOpen, setSwapInterfaceOpen] = useState(false);
   const [sendModalOpen, setSendModalOpen] = useState(false);
   const [buyModalOpen, setBuyModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("assets");
-  const [loadingTimeout, setLoadingTimeout] = useState(false);
-  const [authTimeout, setAuthTimeout] = useState(false);
 
   // Improved for debugging
   useEffect(() => {
@@ -59,57 +56,6 @@ export function Wallet() {
     portfolioError
   ]);
 
-  // Detect if the load takes too long
-  useEffect(() => {
-    let timer: NodeJS.Timeout;
-    
-    if (accountLoading || (isAuthenticated && isLoadingPortfolio && !hasInitialized)) {
-      timer = setTimeout(() => {
-        console.log("Loading timeout reached - UI might be stuck");
-        setLoadingTimeout(true);
-      }, 2_000); // 2 seconds timeout
-    } else {
-      setLoadingTimeout(false);
-    }
-    
-    return () => {
-      if (timer) clearTimeout(timer);
-    };
-  }, [accountLoading, isAuthenticated, isLoadingPortfolio, hasInitialized]);
-
-  useEffect(() => {
-    let authTimer: NodeJS.Timeout;
-    
-    if (accountLoading && !isAuthenticated) {
-      authTimer = setTimeout(() => {
-        console.log("Authentication timeout reached - redirecting to login");
-        setAuthTimeout(true);
-        router.push("/auth/signin");
-      }, 1_500); // 1.5 seconds timeout for authentication
-    }
-    
-    return () => {
-      if (authTimer) clearTimeout(authTimer);
-    };
-  }, [accountLoading, isAuthenticated, router]);
-
-  // Improved retry mechanism
-  useEffect(() => {
-    let retryTimer: NodeJS.Timeout;
-    
-    if (isAuthenticated && isLoadingPortfolio && !hasInitialized) {
-      // If we are authenticated but still loading after 5 seconds, try to refresh
-      retryTimer = setTimeout(() => {
-        console.log("Portfolio still loading after timeout, forcing refresh");
-        refetch(true);
-      }, 1_500); // 1.5 seconds timeout for refresh
-    }
-    
-    return () => {
-      if (retryTimer) clearTimeout(retryTimer);
-    };
-  }, [isAuthenticated, isLoadingPortfolio, hasInitialized, refetch]);
-
   const hasPendingTransactions = pendingTransactions.length > 0;
 
   // Format the balance properly, handling zero, undefined, or NaN values
@@ -120,13 +66,7 @@ export function Wallet() {
           maximumFractionDigits: 2,
         })
       : "0.00";
-
-  // Add a retry button if there is a timeout
-  const handleRetry = () => {
-    console.log("Manual retry triggered");
-    window.location.reload();
-  };
-
+  
   // Show loading screen while authenticating or loading the portfolio
   if (accountLoading || (isAuthenticated && isLoadingPortfolio && !hasInitialized)) {
     return (
@@ -174,57 +114,10 @@ export function Wallet() {
           
           <div className="flex space-x-1 mt-2">
             <div className="w-2 h-2 rounded-full bg-blue-500 animate-bounce" style={{ animationDelay: "0ms" }}></div>
-            <div className="w-2 h-2 rounded-full bg-blue-500 animate-bounce" style={{ animationDelay: "150ms" }}></div>
-            <div className="w-2 h-2 rounded-full bg-blue-500 animate-bounce" style={{ animationDelay: "300ms" }}></div>
+            <div className="w-2 h-2 rounded-full bg-blue-500 animate-bounce" style={{ animationDelay: "50ms" }}></div>
+            <div className="w-2 h-2 rounded-full bg-blue-500 animate-bounce" style={{ animationDelay: "100ms" }}></div>
           </div>
-          
-          {/* Show retry button if the load takes too long */}
-          {loadingTimeout && (
-            <div className="mt-6">
-              <p className="text-yellow-400 mb-2">
-                The load is taking longer than expected.
-              </p>
-              <button 
-                onClick={handleRetry}
-                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-              >
-                Retry
-              </button>
-            </div>
-          )}
-          
-          {/* Show login button if authentication takes too long */}
-          {authTimeout && (
-            <div className="mt-6">
-              <p className="text-yellow-400 mb-2">
-                Authentication verification failed.
-              </p>
-              <button 
-                onClick={() => router.push("/auth/signin")}
-                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-              >
-                Go to Login
-              </button>
-            </div>
-          )}
         </div>
-      </div>
-    );
-  }
-
-  // Show account or portfolio errors
-  if (accountError || portfolioError) {
-    const errorMessage = accountError || portfolioError;
-    return (
-      <div className="pt-6 pb-4">
-        <h2 className="text-xl font-bold mb-2 text-white">Wallet</h2>
-        <p className="text-red-500 font-outfit mb-4">{errorMessage}</p>
-        <button 
-          onClick={handleRetry}
-          className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-        >
-          Retry
-        </button>
       </div>
     );
   }
