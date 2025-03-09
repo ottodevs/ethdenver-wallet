@@ -4,9 +4,6 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
-overrides:
-  '@okto_web3/typescript-config': link:../../../../Library/pnpm/global/5/node_modules/@okto_web3/typescript-config
-
 importers:
 
   .:
@@ -24,8 +21,8 @@ importers:
         specifier: 0.4.0
         version: 0.4.0(react@19.0.0)(typescript@5.8.2)
       '@okto_web3/typescript-config':
-        specifier: link:../../../../Library/pnpm/global/5/node_modules/@okto_web3/typescript-config
-        version: link:../../../../Library/pnpm/global/5/node_modules/@okto_web3/typescript-config
+        specifier: github:okto-hq/okto-js-sdk-monorepo#path:/packages/typescript-config
+        version: https://codeload.github.com/okto-hq/okto-js-sdk-monorepo/tar.gz/8288f0a3a144e03f99ece8f7c92664bd609313df#path:/packages/typescript-config
       '@radix-ui/react-avatar':
         specifier: 1.1.3
         version: 1.1.3(@types/react-dom@19.0.4(@types/react@19.0.10))(@types/react@19.0.10)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
@@ -880,6 +877,10 @@ packages:
     resolution: {integrity: sha512-nybRUp3ncjwhQWChZQwJWpuUSpfBBkw5EyBbcBLI7MGA4QacUO3p+4kPa6WKbd3v3ClM3Ku1UXZzFtGgVLDqSw==}
     peerDependencies:
       react: ^16.0.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
+
+  '@okto_web3/typescript-config@https://codeload.github.com/okto-hq/okto-js-sdk-monorepo/tar.gz/8288f0a3a144e03f99ece8f7c92664bd609313df#path:/packages/typescript-config':
+    resolution: {path: /packages/typescript-config, tarball: https://codeload.github.com/okto-hq/okto-js-sdk-monorepo/tar.gz/8288f0a3a144e03f99ece8f7c92664bd609313df}
+    version: 0.0.0
 
   '@open-draft/deferred-promise@2.2.0':
     resolution: {integrity: sha512-CecwLWx3rhxVQF6V4bAgPS5t+So2sTbPgAzafKkVizyi7tlwpcFpdFqq+wqF2OwNBmqFuu6tOyouTuxgpMfzmA==}
@@ -5275,6 +5276,8 @@ snapshots:
       - debug
       - typescript
       - utf-8-validate
+
+  '@okto_web3/typescript-config@https://codeload.github.com/okto-hq/okto-js-sdk-monorepo/tar.gz/8288f0a3a144e03f99ece8f7c92664bd609313df#path:/packages/typescript-config': {}
 
   '@open-draft/deferred-promise@2.2.0': {}
 
