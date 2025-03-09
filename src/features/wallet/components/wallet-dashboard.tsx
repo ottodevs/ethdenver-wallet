@@ -9,7 +9,7 @@ import { portfolioState$ } from '@/features/shared/state/portfolio-state'
 import { transactionsState$ } from '@/features/shared/state/transactions-state'
 import { TransactionHistory } from '@/features/transactions/components/transaction-history'
 import { observer } from '@legendapp/state/react'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { ActionButtons } from './action-buttons'
 import { BalanceDisplay } from './balance-display'
 import { DelegationBanner } from './delegation-banner'
@@ -19,18 +19,27 @@ import { WalletHeader } from './wallet-header'
 export const WalletDashboard = observer(function WalletDashboard() {
     const { isLoading, isAuthenticated } = useOktoAccount()
     const [activeTab, setActiveTab] = useState('assets')
+    const [isClient, setIsClient] = useState(false)
 
-    // Obtenemos directamente del estado global para evitar problemas con el hook
-    const pendingTransactions = transactionsState$.pendingTransactions.get()
+    // Use useEffect to detect client-side rendering
+    useEffect(() => {
+        setIsClient(true)
+    }, [])
 
-    // Obtenemos solo lo que necesitamos del estado del portfolio y NFTs
-    const isLoadingPortfolio = portfolioState$.isLoading.get()
-    const isLoadingNFTs = nftsState$.isLoading.get()
+    // Only access state on the client side
+    const pendingTransactions = isClient ? transactionsState$.pendingTransactions.get() : []
+    const isLoadingPortfolio = isClient ? portfolioState$.isLoading.get() : true
+    const isLoadingNFTs = isClient ? nftsState$.isLoading.get() : true
 
     // Determinamos si estamos cargando basado en el tab activo
     const isLoadingContent =
         isLoading ||
         (isAuthenticated && ((activeTab === 'assets' && isLoadingPortfolio) || (activeTab === 'nfts' && isLoadingNFTs)))
+
+    // Show a simple loading state during server rendering or initial client render
+    if (!isClient) {
+        return <div className='flex grow flex-col pt-4'>Loading...</div>
+    }
 
     // Show loading screen while authenticating or loading the content
     if (isLoadingContent) {

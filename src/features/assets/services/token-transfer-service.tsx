@@ -2,6 +2,7 @@
 
 import { useAuth } from '@/features/auth/contexts/auth-context'
 import { useOktoTransactions } from '@/features/shared/hooks/use-okto-transactions'
+import { getExplorerUrl } from '@/lib/utils/explorer'
 import { tokenTransfer, useOkto } from '@okto_web3/react-sdk'
 
 // Define the Transaction type
@@ -58,8 +59,17 @@ export function useTokenTransferService() {
         addPendingTransaction({
             ...pendingTx,
             networkName: params.caip2Id.split(':')[1], // e.g. "ethereum" from "eip155:1"
-            networkSymbol: params.symbol,
-            valueUsd: 0, // Add proper USD value calculation if needed
+            token: params.tokenAddress || '',
+            tokenSymbol: params.symbol,
+            explorerUrl: getExplorerUrl(params.caip2Id.split(':')[1], 'token', params.tokenAddress || '', true),
+            from: params.recipient,
+            to: params.recipient,
+            amount: params.amount.toString(),
+            hash: '',
+            id: pendingTxId,
+            status: 'pending',
+            timestamp: Date.now(),
+            type: 'transfer',
         })
 
         try {

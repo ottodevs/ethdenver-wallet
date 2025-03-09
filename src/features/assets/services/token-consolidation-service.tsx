@@ -4,6 +4,7 @@ import { useAuth } from '@/features/auth/contexts/auth-context'
 import { useOktoAccount } from '@/features/shared/hooks/use-okto-account'
 import { useOktoPortfolio } from '@/features/shared/hooks/use-okto-portfolio'
 import { useOktoTransactions } from '@/features/shared/hooks/use-okto-transactions'
+import { getExplorerUrl } from '@/lib/utils/explorer'
 import { tokenTransfer, useOkto } from '@okto_web3/react-sdk'
 
 // Define the Transaction type
@@ -88,8 +89,17 @@ export function useTokenConsolidationService() {
             addPendingTransaction({
                 ...pendingTx,
                 networkName: token.chain,
-                networkSymbol: token.symbol,
-                valueUsd: token.valueUsd,
+                token: token.contractAddress || '',
+                tokenSymbol: token.symbol,
+                explorerUrl: getExplorerUrl(token.chain, 'token', token.contractAddress || '', true),
+                from: userAddress,
+                to: userAddress,
+                amount: token.balance.toString(),
+                hash: '',
+                id: pendingTxId,
+                timestamp: Date.now(),
+                type: 'other',
+                status: 'pending',
             })
 
             try {
