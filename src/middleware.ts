@@ -15,8 +15,13 @@ export default auth(req => {
         return NextResponse.next()
     }
 
-    // Redirigir a login si no está autenticado
-    if (!req.auth && req.nextUrl.pathname !== '/auth') {
+    // Permitir acceso a la página de autenticación sin estar autenticado
+    if (req.nextUrl.pathname === '/auth') {
+        return NextResponse.next()
+    }
+
+    // Redirigir a login si no está autenticado y no es una ruta pública
+    if (!req.auth && !req.nextUrl.pathname.startsWith('/api/auth')) {
         const newUrl = new URL('/auth', req.nextUrl.origin)
         return Response.redirect(newUrl)
     }

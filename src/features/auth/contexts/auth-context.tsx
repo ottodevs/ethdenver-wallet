@@ -63,6 +63,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             authState$.isAuthenticated.set(false)
             authState$.authStatus.set('')
             console.log('User logged out')
+
+            // Clear any stored session data
+            localStorage.removeItem('okto_session_key')
+            localStorage.removeItem('okto_delegation_enabled')
         }
     }, [oktoClient])
 

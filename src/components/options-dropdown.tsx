@@ -55,7 +55,7 @@ export function OptionsDropdown() {
             // First disconnect from Okto
             disconnect()
 
-            // Then sign out from Next-Auth
+            // Then sign out from Next-Auth with relative URL
             await signOut({ redirect: true, callbackUrl: '/auth' })
         } catch (error) {
             console.error('Logout failed:', error)
