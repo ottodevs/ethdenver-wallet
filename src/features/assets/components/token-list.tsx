@@ -159,7 +159,6 @@ export const TokenList = observer(function TokenList({ animated = true }: { anim
                 </div>
 
                 {tokens.map(token => {
-                    console.log('token', token)
                     return (
                         <TokenComponent
                             key={token.id}

@@ -4,6 +4,8 @@ import { AppProvider } from '@/components/providers'
 import { outfit } from '@/lib/utils/fonts'
 import type { Metadata } from 'next'
 
+console.log('🌟 Aplicación inicializada - Verificando logs')
+
 export const metadata: Metadata = {
     title: 'Aeris Wallet',
     description:

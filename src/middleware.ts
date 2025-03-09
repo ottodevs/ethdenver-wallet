@@ -1,4 +1,5 @@
 import { auth } from '@/features/auth/config'
+import type { NextRequest } from 'next/server'
 import { NextResponse } from 'next/server'
 
 export default auth(req => {
@@ -32,6 +33,22 @@ export default auth(req => {
 
     return response
 })
+
+export function middleware(request: NextRequest) {
+    // Verificar si la clave API de OpenAI está configurada
+    if (!process.env.OPENAI_API_KEY) {
+        console.error(
+            '⚠️ La clave API de OpenAI no está configurada. Por favor, configura OPENAI_API_KEY en tu archivo .env.local',
+        )
+
+        // Si la solicitud es a la API de chat, devolver un error
+        if (request.nextUrl.pathname.startsWith('/api/chat')) {
+            return NextResponse.json({ error: 'OpenAI API key not configured' }, { status: 500 })
+        }
+    }
+
+    return NextResponse.next()
+}
 
 export const config = {
     matcher: ['/((?!api|_next/static|_next/image|favicon.ico).*)'],

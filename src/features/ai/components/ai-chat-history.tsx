@@ -10,12 +10,19 @@ type AIChatHistoryProps = {
 }
 
 export function AIChatHistory({ messages, isLoading }: AIChatHistoryProps) {
+    console.log('🚀 Renderizando AIChatHistory', {
+        messageCount: messages.length,
+        isLoading,
+    })
+
     const containerRef = useRef<HTMLDivElement>(null)
 
     // Scroll to bottom when messages change
     useEffect(() => {
+        console.log('📨 AIChatHistory - Mensajes actualizados:', messages)
         if (containerRef.current) {
             containerRef.current.scrollTop = containerRef.current.scrollHeight
+            console.log('📜 AIChatHistory - Scroll ajustado al fondo')
         }
     }, [messages])
 

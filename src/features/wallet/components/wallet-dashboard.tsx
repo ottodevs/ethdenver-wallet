@@ -48,11 +48,6 @@ export const WalletDashboard = observer(function WalletDashboard() {
         return <LoadingScreen accountLoading={isLoading} isAuthenticated={isAuthenticated} />
     }
 
-    // If not authenticated, don't show anything while redirecting
-    if (!isAuthenticated) {
-        return null
-    }
-
     // Determine which gradient class to use based on theme
     const gradientClass = theme === 'dark' ? 'bg-gradient-card-dark' : 'bg-gradient-card-light'
 

@@ -56,7 +56,7 @@ export function OptionsDropdown() {
             disconnect()
 
             // Then sign out from Next-Auth
-            await signOut({ redirect: true, callbackUrl: '/auth/signin' })
+            await signOut({ redirect: true, callbackUrl: '/auth' })
         } catch (error) {
             console.error('Logout failed:', error)
         }

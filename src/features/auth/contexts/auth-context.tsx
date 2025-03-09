@@ -17,6 +17,7 @@ interface AuthContextType {
     authStatus: string
     handleAuthenticate: () => Promise<unknown>
     checkAuthStatus: () => Promise<boolean>
+    handleLogout: () => void
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -26,6 +27,7 @@ const AuthContext = createContext<AuthContextType>({
     authStatus: '',
     handleAuthenticate: async () => ({ result: false }),
     checkAuthStatus: async () => false,
+    handleLogout: () => {},
 })
 
 export function useAuth() {
@@ -52,6 +54,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (!oktoClient) return { result: false, error: 'Okto client not available' }
         return handleAuthenticate(oktoClient, idToken ?? null)
     }, [idToken, oktoClient])
+
+    // Handle logout with Okto
+    const handleLogout = useCallback(() => {
+        if (oktoClient) {
+            oktoClient.sessionClear()
+            // Actualizar el estado de autenticación
+            authState$.isAuthenticated.set(false)
+            authState$.authStatus.set('')
+            console.log('User logged out')
+        }
+    }, [oktoClient])
 
     // Initial auth check when client and session are available
     useEffect(() => {
@@ -83,8 +96,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             authStatus: authState$.authStatus.get(),
             handleAuthenticate: handleAuthenticateCallback,
             checkAuthStatus: checkAuthStatusCallback,
+            handleLogout,
         }),
-        [handleAuthenticateCallback, checkAuthStatusCallback],
+        [handleAuthenticateCallback, checkAuthStatusCallback, handleLogout],
     )
 
     return <AuthContext.Provider value={contextValue}>{children}</AuthContext.Provider>
