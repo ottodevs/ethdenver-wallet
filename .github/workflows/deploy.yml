@@ -39,48 +39,70 @@ jobs:
                   echo "node-version=$NODE_VERSION" >> $GITHUB_OUTPUT
                   echo "pnpm-version=$PNPM_VERSION" >> $GITHUB_OUTPUT
 
+            # Setup pnpm
+            - name: Setup pnpm
+              uses: pnpm/action-setup@v2
+              with:
+                  version: ${{ steps.versions.outputs.pnpm-version }}
+                  run_install: false
+
+            # Get pnpm store directory for caching
+            - name: Get pnpm store directory
+              id: pnpm-cache
+              shell: bash
+              run: |
+                  echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+
             # Setup Node.js
             - name: Setup Node.js
               uses: actions/setup-node@v4
               with:
                   node-version: ${{ steps.versions.outputs.node-version }}
-
-            # Activar Corepack y usar pnpm
-            - name: Setup pnpm with Corepack
-              run: |
-                  corepack enable
-                  corepack prepare pnpm@${{ steps.versions.outputs.pnpm-version }} --activate
-
-            # Configurar caché para pnpm
-            - name: Setup pnpm cache
-              uses: actions/setup-node@v4
-              with:
-                  node-version: ${{ steps.versions.outputs.node-version }}
                   cache: 'pnpm'
+                  cache-dependency-path: '**/pnpm-lock.yaml'
 
             # Install dependencies
             - name: Install dependencies
               run: pnpm install --frozen-lockfile
 
-            # Install Vercel CLI
+            # Install Vercel CLI locally
             - name: Install Vercel CLI
-              run: pnpm add --global vercel@latest
+              run: pnpm add --save-dev vercel@latest
+
+            # Create Vercel project configuration
+            - name: Create .vercel directory and project.json
+              run: |
+                  mkdir -p .vercel
+                  echo '{"projectId":"${{ secrets.VERCEL_PROJECT_ID }}","orgId":"${{ secrets.VERCEL_ORG_ID }}"}' > .vercel/project.json
 
             # Pull Vercel Environment Information
             - name: Pull Vercel Environment Information
-              run: vercel pull --yes --environment=${{ github.ref == 'refs/heads/main' && 'production' || 'preview' }} --token=${{ secrets.VERCEL_TOKEN }}
+              run: npx vercel pull --yes --environment=${{ github.ref == 'refs/heads/main' && 'production' || 'preview' }} --token=${{ secrets.VERCEL_TOKEN }}
 
             # Build Project Artifacts
             - name: Build Project Artifacts
-              run: vercel build ${{ github.ref == 'refs/heads/main' && '--prod' || '' }} --token=${{ secrets.VERCEL_TOKEN }}
+              run: npx vercel build ${{ github.ref == 'refs/heads/main' && '--prod' || '' }} --token=${{ secrets.VERCEL_TOKEN }}
 
             # Deploy Project Artifacts to Vercel
             - name: Deploy Project Artifacts to Vercel
               id: deploy
               run: |
-                  DEPLOYMENT_URL=$(vercel deploy --prebuilt ${{ github.ref == 'refs/heads/main' && '--prod' || '' }} --token=${{ secrets.VERCEL_TOKEN }})
+                  DEPLOYMENT_URL=$(npx vercel deploy --prebuilt ${{ github.ref == 'refs/heads/main' && '--prod' || '' }} --token=${{ secrets.VERCEL_TOKEN }})
                   echo "PREVIEW_URL=$DEPLOYMENT_URL" >> $GITHUB_OUTPUT
 
-            # Use deployment URL in subsequent steps if needed
-            - name: Use deployment URL
-              run: echo "Deployment URL is ${{ steps.deploy.outputs.PREVIEW_URL }}"
+            # Comment on PR with deployment URL
+            - name: Comment on PR
+              if: github.event_name == 'pull_request'
+              uses: actions/github-script@v6
+              with:
+                  github-token: ${{ secrets.GITHUB_TOKEN }}
+                  script: |
+                      const issue_number = context.issue.number;
+                      const deploymentUrl = '${{ steps.deploy.outputs.PREVIEW_URL }}';
+
+                      github.rest.issues.createComment({
+                        issue_number: issue_number,
+                        owner: context.repo.owner,
+                        repo: context.repo.repo,
+                        body: `🚀 Deployment Preview: [Visit Preview](${deploymentUrl})`
+                      });
