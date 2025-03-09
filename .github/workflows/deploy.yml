@@ -25,6 +25,7 @@ jobs:
         timeout-minutes: 15
         environment:
             name: ${{ github.ref == 'refs/heads/main' && 'production' || 'preview' }}
+            url: ${{ steps.deploy.outputs.url }}
 
         steps:
             # Determine the correct ref and repo to checkout for PRs
@@ -63,7 +64,8 @@ jobs:
             - name: Setup pnpm
               uses: pnpm/action-setup@v4
               with:
-                  run_install: false
+                  run_install: |
+                      args: [--global, vercel]
 
             # Get pnpm store directory for caching
             - name: Get pnpm store directory
@@ -94,21 +96,46 @@ jobs:
             - name: Install dependencies
               run: pnpm install --frozen-lockfile
 
-            # Deploy to Vercel using BetaHuhn/deploy-to-vercel-action
-            - name: Deploy to Vercel
-              uses: BetaHuhn/deploy-to-vercel-action@v1
-              id: deploy
-              with:
-                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+            # Pull Vercel environment variables
+            - name: Pull Vercel environment variables
+              env:
                   VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
                   VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
                   VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
-                  PRODUCTION: ${{ github.ref == 'refs/heads/main' }}
-                  DEPLOY_PR_FROM_FORK: true
-                  GITHUB_DEPLOYMENT: true
-                  GITHUB_DEPLOYMENT_ENV: ${{ github.ref == 'refs/heads/main' && 'production' || 'preview' }}
-                  CREATE_COMMENT: true
-                  ATTACH_COMMIT_METADATA: true
-                  PR_LABELS: deployed
-                  BUILD_ENV: |
-                      NEXT_TELEMETRY_DISABLED=1
+              run: vercel pull --yes --environment=${{ github.ref == 'refs/heads/main' && 'production' || 'preview' }} --token ${{ secrets.VERCEL_TOKEN }}
+
+            # Build the project
+            - name: Build the project
+              env:
+                  VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+                  VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+                  VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+                  NEXT_TELEMETRY_DISABLED: 1
+              run: vercel build --token ${{ secrets.VERCEL_TOKEN }} ${{ github.ref == 'refs/heads/main' && '--prod' || '' }}
+
+            # Deploy to Vercel
+            - name: Deploy to Vercel
+              id: deploy
+              env:
+                  VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+                  VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+                  VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+              run: |
+                  echo "url=$(vercel deploy --prebuilt --token ${{ secrets.VERCEL_TOKEN }} ${{ github.ref == 'refs/heads/main' && '--prod' || '' }})" >> $GITHUB_OUTPUT
+
+            # Add comment to PR with deployment URL
+            - name: Comment on PR
+              if: github.event_name == 'pull_request' || github.event_name == 'pull_request_target'
+              uses: actions/github-script@v7
+              with:
+                  github-token: ${{ secrets.GITHUB_TOKEN }}
+                  script: |
+                      const deployUrl = '${{ steps.deploy.outputs.url }}';
+                      const prNumber = context.payload.pull_request.number;
+
+                      await github.rest.issues.createComment({
+                        owner: context.repo.owner,
+                        repo: context.repo.repo,
+                        issue_number: prNumber,
+                        body: `✅ **Deployment Complete!** 🌐\n\n**Preview URL:** [Visit Site](${deployUrl})`
+                      });
