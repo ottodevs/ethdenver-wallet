@@ -121,64 +121,75 @@ export const TransactionHistory = observer(function TransactionHistory({ animate
             return amount.toFixed(4)
         }
 
-        if (Math.abs(amount) < 100) {
-            return amount.toFixed(2)
-        }
-
-        // For larger numbers, no decimals needed
-        return Math.round(amount).toString()
+        return amount.toFixed(2)
     }
 
-    // Helper function to safely format transaction amounts
-    const formatAmount = (amount: string | number): string => {
+    // Format amount with appropriate precision
+    const formatAmount = (amount: number | string | undefined): string => {
         if (amount === undefined || amount === null) return '0'
 
-        let num: number
-        if (typeof amount === 'number') {
-            num = amount
-        } else if (typeof amount === 'string') {
-            num = parseFloat(amount)
-            if (isNaN(num)) return '0'
-        } else {
-            return '0'
-        }
+        // Convert string to number if needed
+        const numAmount = typeof amount === 'string' ? parseFloat(amount) : amount
 
-        return formatSmallAmount(num)
+        // Handle NaN
+        if (isNaN(numAmount)) return '0'
+
+        return formatSmallAmount(numAmount)
     }
 
-    // Helper function to format USD value
-    const formatUsdValue = (value: string | number | null, symbol: string = ''): string => {
-        // If value is null/undefined, try to find matching transaction by symbol
-        if (value === null || value === undefined) {
-            if (symbol) {
-                const matchingTx = allTransactions.find(tx => tx.tokenSymbol === symbol)
-                if (matchingTx && matchingTx.amount && typeof matchingTx.amount === 'number') {
-                    return `$${parseFloat(matchingTx.amount).toFixed(2)}`
-                }
-            }
-            return '' // Return empty string instead of "$0.00" to match HEAD behavior
-        }
+    // Format USD value
+    const formatUsdValue = (amount: number | string | undefined, symbol: string): string => {
+        if (amount === undefined || amount === null) return ''
 
-        let numValue: number
-        if (typeof value === 'string') {
-            numValue = parseFloat(value)
-            if (isNaN(numValue)) return ''
-        } else if (typeof value === 'number') {
-            numValue = value
+        // Convert string to number if needed
+        const numAmount = typeof amount === 'string' ? parseFloat(amount) : amount
+
+        // Handle NaN
+        if (isNaN(numAmount)) return ''
+
+        // Skip USD value for very small amounts
+        if (Math.abs(numAmount) < 0.01) return ''
+
+        // Estimate USD value based on common token prices (very simplified)
+        let usdValue = 0
+        if (symbol.toUpperCase() === 'ETH') {
+            usdValue = numAmount * 3000 // Simplified ETH price estimate
+        } else if (symbol.toUpperCase() === 'BTC') {
+            usdValue = numAmount * 50000 // Simplified BTC price estimate
+        } else if (
+            symbol.toUpperCase() === 'USDT' ||
+            symbol.toUpperCase() === 'USDC' ||
+            symbol.toUpperCase() === 'DAI'
+        ) {
+            usdValue = numAmount // Stablecoins
         } else {
-            return ''
+            return '' // Skip for unknown tokens
         }
 
-        // Don't show USD value if it's zero or very small
-        if (numValue === 0 || Math.abs(numValue) < 0.01) return ''
+        if (usdValue < 0.01) return ''
 
-        return `$${numValue.toFixed(2)}`
+        return `$${usdValue.toFixed(2)}`
     }
 
-    // Helper function to format timestamp
-    const formatTimestamp = (timestamp: number): string => {
+    // Format timestamp to relative time
+    const formatTimestamp = (timestamp: number | string | undefined): string => {
+        if (!timestamp) return 'Recently'
+
         try {
-            // Validate timestamp is reasonable (not in the future, not too far in the past)
+            // Convert string to number if needed
+            timestamp = typeof timestamp === 'string' ? parseInt(timestamp, 10) : timestamp
+
+            // Handle invalid timestamps
+            if (isNaN(timestamp) || timestamp <= 0) {
+                return 'Recently'
+            }
+
+            // Check if timestamp is in seconds (Unix timestamp) and convert to milliseconds if needed
+            if (timestamp < 1000000000000) {
+                timestamp = timestamp * 1000
+            }
+
+            // Cap future timestamps to now
             const now = Date.now()
             if (timestamp > now) {
                 timestamp = now // Cap at current time if in future
@@ -249,13 +260,14 @@ export const TransactionHistory = observer(function TransactionHistory({ animate
                     <TransactionComponent
                         key={tx.hash || tx.id}
                         variants={animated ? item : undefined}
-                        className='hover:bg-muted/50 mb-4 flex rounded-md border-b border-[#272A3B] p-2 pb-4'>
+                        className='border-border hover:bg-muted/50 mb-4 flex rounded-md border-b p-2 pb-4'>
                         <div className='mr-3'>
-                            <div className={`rounded-full p-2 ${isOutgoing ? 'bg-red-100' : 'bg-green-100'}`}>
+                            <div
+                                className={`rounded-full p-2 ${isOutgoing ? 'bg-red-100 dark:bg-red-900' : 'bg-green-100 dark:bg-green-900'}`}>
                                 {isOutgoing ? (
-                                    <ArrowUpRight className='h-4 w-4 text-red-500' />
+                                    <ArrowUpRight className='h-4 w-4 text-red-500 dark:text-red-400' />
                                 ) : (
-                                    <ArrowDownLeft className='h-4 w-4 text-green-500' />
+                                    <ArrowDownLeft className='h-4 w-4 text-green-500 dark:text-green-400' />
                                 )}
                             </div>
                         </div>
@@ -278,7 +290,8 @@ export const TransactionHistory = observer(function TransactionHistory({ animate
                             </div>
 
                             <div className='flex items-baseline'>
-                                <span className={`font-medium ${isOutgoing ? 'text-red-500' : 'text-green-500'}`}>
+                                <span
+                                    className={`font-medium ${isOutgoing ? 'text-red-500 dark:text-red-400' : 'text-green-500 dark:text-green-400'}`}>
                                     {isOutgoing ? '-' : '+'}
                                     {formattedAmount} {tx.tokenSymbol || ''}
                                 </span>

@@ -7,17 +7,21 @@ type Props = {
 export function TabNavigation({ activeTab, onTabChange, hasPendingTransactions }: Props) {
     return (
         <div className='mb-4 flex justify-center'>
-            <div className='flex w-full max-w-[400px] rounded-full bg-[#1A1A24] p-1'>
+            <div className='bg-muted flex w-full max-w-[400px] rounded-full p-1'>
                 <button
                     className={`flex-1 rounded-full px-4 py-2 text-sm font-medium transition-colors ${
-                        activeTab === 'assets' ? 'bg-[#4364F9] text-white' : 'text-gray-400 hover:text-white'
+                        activeTab === 'assets'
+                            ? 'bg-[#4364F9] text-white'
+                            : 'text-muted-foreground hover:text-foreground'
                     }`}
                     onClick={() => onTabChange('assets')}>
                     Assets
                 </button>
                 <button
                     className={`flex-1 rounded-full px-4 py-2 text-sm font-medium transition-colors ${
-                        activeTab === 'activity' ? 'bg-[#4364F9] text-white' : 'text-gray-400 hover:text-white'
+                        activeTab === 'activity'
+                            ? 'bg-[#4364F9] text-white'
+                            : 'text-muted-foreground hover:text-foreground'
                     }`}
                     onClick={() => onTabChange('activity')}>
                     Activity
@@ -27,7 +31,7 @@ export function TabNavigation({ activeTab, onTabChange, hasPendingTransactions }
                 </button>
                 <button
                     className={`flex-1 rounded-full px-4 py-2 text-sm font-medium transition-colors ${
-                        activeTab === 'nfts' ? 'bg-[#4364F9] text-white' : 'text-gray-400 hover:text-white'
+                        activeTab === 'nfts' ? 'bg-[#4364F9] text-white' : 'text-muted-foreground hover:text-foreground'
                     }`}
                     onClick={() => onTabChange('nfts')}>
                     NFTs

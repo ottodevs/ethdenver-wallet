@@ -9,6 +9,7 @@ import { portfolioState$ } from '@/features/shared/state/portfolio-state'
 import { transactionsState$ } from '@/features/shared/state/transactions-state'
 import { TransactionHistory } from '@/features/transactions/components/transaction-history'
 import { observer } from '@legendapp/state/react'
+import { useTheme } from 'next-themes'
 import { useEffect, useState } from 'react'
 import { ActionButtons } from './action-buttons'
 import { BalanceDisplay } from './balance-display'
@@ -20,6 +21,7 @@ export const WalletDashboard = observer(function WalletDashboard() {
     const { isLoading, isAuthenticated } = useOktoAccount()
     const [activeTab, setActiveTab] = useState('assets')
     const [isClient, setIsClient] = useState(false)
+    const { theme } = useTheme()
 
     // Use useEffect to detect client-side rendering
     useEffect(() => {
@@ -51,6 +53,9 @@ export const WalletDashboard = observer(function WalletDashboard() {
         return null
     }
 
+    // Determine which gradient class to use based on theme
+    const gradientClass = theme === 'dark' ? 'bg-gradient-card-dark' : 'bg-gradient-card-light'
+
     return (
         <div className='flex grow flex-col pt-4'>
             <WalletHeader />
@@ -64,7 +69,7 @@ export const WalletDashboard = observer(function WalletDashboard() {
                 hasPendingTransactions={pendingTransactions?.length > 0}
             />
 
-            <div className='mx-auto w-full grow rounded-t-2xl bg-gradient-to-br from-[#252531] to-[#13121E]'>
+            <div className={`mx-auto w-full grow rounded-t-2xl ${gradientClass}`}>
                 <div className='py-4'>
                     {activeTab === 'assets' ? (
                         <TokenList />

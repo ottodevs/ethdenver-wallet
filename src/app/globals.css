@@ -218,3 +218,12 @@
 .animate-pulse-blue {
     animation: pulse-blue 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
+
+/* Gradient backgrounds for dark/light themes */
+.bg-gradient-card-dark {
+    @apply bg-gradient-to-br from-[#252531] to-[#13121E];
+}
+
+.bg-gradient-card-light {
+    @apply bg-gradient-to-br from-[#f0f4f8] to-[#d9e2ec];
+}

@@ -99,7 +99,7 @@ export const TokenList = observer(function TokenList({ animated = true }: { anim
                 {showRefreshButton && (
                     <button
                         onClick={() => refetch(true)}
-                        className='rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-700'>
+                        className='bg-primary text-primary-foreground hover:bg-primary/90 rounded-md px-4 py-2'>
                         Retry
                     </button>
                 )}
@@ -127,7 +127,7 @@ export const TokenList = observer(function TokenList({ animated = true }: { anim
                 {showRefreshButton && (
                     <button
                         onClick={() => refetch(true)}
-                        className='mt-3 rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-700'>
+                        className='bg-primary text-primary-foreground hover:bg-primary/90 mt-3 rounded-md px-4 py-2'>
                         Refresh
                     </button>
                 )}
@@ -161,7 +161,7 @@ export const TokenList = observer(function TokenList({ animated = true }: { anim
                     <TokenComponent
                         key={token.id}
                         variants={animated ? item : undefined}
-                        className='hover:bg-muted/50 mb-4 flex items-center justify-between rounded-md border-b border-[#272A3B] p-2 pb-4'
+                        className='border-border hover:bg-muted/50 mb-4 flex items-center justify-between rounded-md border-b p-2 pb-4'
                         onClick={() => setShowTokenDetail(token.id)}>
                         <div className='flex items-center gap-3'>
                             <div className='bg-primary/10 flex h-8 w-8 items-center justify-center rounded-full'>
@@ -200,32 +200,34 @@ export const TokenList = observer(function TokenList({ animated = true }: { anim
                                             {smallValueTokens.length} tokens under $10
                                         </h3>
                                         <p className='text-muted-foreground text-xs'>
-                                            Total: {privacyMode ? '••••••' : `$${totalSmallTokensValue.toFixed(2)}`}
+                                            Total value: ${totalSmallTokensValue.toFixed(2)}
                                         </p>
                                     </div>
                                 </div>
                                 <Button
                                     size='sm'
-                                    variant='secondary'
-                                    onClick={handleOpenConsolidateModal}
+                                    onClick={e => {
+                                        e.stopPropagation()
+                                        handleOpenConsolidateModal()
+                                    }}
                                     disabled={isConsolidating}>
-                                    {isConsolidating ? 'Consolidating...' : 'Consolidate to ETH'}
+                                    {isConsolidating ? 'Consolidating...' : 'Consolidate'}
                                 </Button>
                             </div>
                         </CardContent>
                     </Card>
                 )}
-
-                {showTokenDetail && <TokenDetail tokenId={showTokenDetail} onClose={() => setShowTokenDetail(null)} />}
             </ListComponent>
+
+            {showTokenDetail && <TokenDetail tokenId={showTokenDetail} onClose={() => setShowTokenDetail(null)} />}
 
             <ConsolidateConfirmationModal
                 open={showConsolidateModal}
+                onConfirm={handleConsolidate}
+                isLoading={isConsolidating}
                 onOpenChange={setShowConsolidateModal}
                 tokensCount={smallValueTokens.length}
                 totalValue={totalSmallTokensValue}
-                onConfirm={handleConsolidate}
-                isLoading={isConsolidating}
             />
         </>
     )

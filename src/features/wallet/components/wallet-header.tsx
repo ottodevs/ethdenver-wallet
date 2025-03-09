@@ -11,8 +11,12 @@ export function WalletHeader() {
         <div className='mb-4 flex items-center justify-between'>
             <OptionsDropdown />
             <div className='w-8' /> {/* Empty space to maintain layout */}
-            <Button variant='ghost' size='icon' className='h-8 w-8 text-white' onClick={() => router.push('/receive')}>
-                <QrCode className='h-5 w-5' />
+            <Button
+                variant='ghost'
+                size='icon'
+                className='text-foreground size-8'
+                onClick={() => router.push('/receive')}>
+                <QrCode className='size-5' />
             </Button>
         </div>
     )

@@ -16,18 +16,20 @@ import { useWallet } from '@/features/wallet/hooks/use-wallet'
 import { openExplorer } from '@/lib/utils/explorer'
 import { Check, Copy, ExternalLink, LogOut, Moon, MoreVertical, Settings, Shield, Sun } from 'lucide-react'
 import { signOut } from 'next-auth/react'
+import { useTheme } from 'next-themes'
 import { useRouter } from 'next/navigation'
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 
 export function OptionsDropdown() {
-    const [theme, setTheme] = useState('dark')
+    const { theme, setTheme } = useTheme()
     const { disconnect } = useWallet()
     const { selectedAccount } = useOktoAccount()
     const walletAddress = selectedAccount?.address || ''
     const [delegatedApprovalOpen, setDelegatedApprovalOpen] = useState(false)
     const router = useRouter()
-    const { addToast } = useToast()
+    const { addToast, removeToast } = useToast()
     const { copyToClipboard, copying } = useCopyToClipboard()
+    const themeToastIdRef = useRef<string | null>(null)
 
     const handleCopyAddress = () => {
         if (!walletAddress) {
@@ -61,11 +63,21 @@ export function OptionsDropdown() {
     }
 
     const toggleTheme = () => {
-        setTheme(theme === 'dark' ? 'light' : 'dark')
+        const newTheme = theme === 'dark' ? 'light' : 'dark'
+        setTheme(newTheme)
 
-        // Show toast notification
+        // Remove previous theme toast if exists
+        if (themeToastIdRef.current) {
+            removeToast(themeToastIdRef.current)
+        }
+
+        // Show toast notification and store its ID
+        const toastId = Math.random().toString(36).substring(2, 9)
+        themeToastIdRef.current = toastId
+
         addToast({
-            description: `Switched to ${theme === 'dark' ? 'light' : 'dark'} mode`,
+            id: toastId,
+            description: `Switched to ${newTheme} mode`,
             variant: 'default',
         })
     }

@@ -184,9 +184,9 @@ export const NFTGallery = observer(function NFTGallery({ animated = true }: { an
 
                     {transferStatus === 'success' && (
                         <div className='flex flex-col items-center justify-center space-y-4 py-8'>
-                            <div className='flex h-12 w-12 items-center justify-center rounded-full bg-green-100'>
+                            <div className='flex h-12 w-12 items-center justify-center rounded-full bg-green-100 dark:bg-green-900'>
                                 <svg
-                                    className='h-6 w-6 text-green-600'
+                                    className='h-6 w-6 text-green-600 dark:text-green-400'
                                     fill='none'
                                     viewBox='0 0 24 24'
                                     stroke='currentColor'>
@@ -205,8 +205,8 @@ export const NFTGallery = observer(function NFTGallery({ animated = true }: { an
 
                     {transferStatus === 'error' && (
                         <div className='flex flex-col items-center justify-center space-y-4 py-8'>
-                            <div className='flex h-12 w-12 items-center justify-center rounded-full bg-red-100'>
-                                <span className='text-xl font-bold text-red-600'>!</span>
+                            <div className='flex h-12 w-12 items-center justify-center rounded-full bg-red-100 dark:bg-red-900'>
+                                <span className='text-xl font-bold text-red-600 dark:text-red-400'>!</span>
                             </div>
                             <p className='text-center font-medium'>Transfer Failed</p>
                             <p className='text-muted-foreground text-center text-sm'>
@@ -216,7 +216,9 @@ export const NFTGallery = observer(function NFTGallery({ animated = true }: { an
                                 <Button variant='outline' onClick={() => setTransferModalOpen(false)}>
                                     Close
                                 </Button>
-                                <Button onClick={() => setTransferStatus('idle')}>Try Again</Button>
+                                <Button onClick={handleTransfer} disabled={!recipient}>
+                                    Retry
+                                </Button>
                             </div>
                         </div>
                     )}
