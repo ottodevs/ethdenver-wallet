@@ -1,6 +1,9 @@
 import NextAuth from 'next-auth'
 import Google from 'next-auth/providers/google'
 
+// NextAuth will automatically use the NEXTAUTH_URL from process.env
+// which is now set by our next.config.ts
+
 export const { handlers, signIn, signOut, auth } = NextAuth({
     providers: [
         Google({
