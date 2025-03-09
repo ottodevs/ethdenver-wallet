@@ -22,7 +22,6 @@ jobs:
         timeout-minutes: 15 # Set a maximum time to avoid infinite jobs
         environment:
             name: ${{ github.ref == 'refs/heads/main' && 'production' || 'preview' }}
-            url: ${{ steps.vercel-deploy.outputs.preview-url }}
 
         steps:
             - name: Checkout code
@@ -79,11 +78,11 @@ jobs:
             # Deploy to Vercel (with automatic comments on PRs)
             - name: Deploy to Vercel
               id: vercel-deploy
-              uses: amondnet/vercel-action@v25
+              uses: BetaHuhn/deploy-to-vercel-action@v1
               with:
-                  vercel-token: ${{ secrets.VERCEL_TOKEN }}
-                  github-token: ${{ secrets.GITHUB_TOKEN }}
-                  vercel-args: ${{ github.ref == 'refs/heads/main' && '--prod' || '' }}
-                  vercel-org-id: ${{ secrets.ORG_ID }}
-                  vercel-project-id: ${{ secrets.PROJECT_ID }}
-                  working-directory: ./sub-directory
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+                  VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+                  VERCEL_ORG_ID: ${{ secrets.ORG_ID }}
+                  VERCEL_PROJECT_ID: ${{ secrets.PROJECT_ID }}
+                  WORKING_DIRECTORY: ./sub-directory
+                  PRODUCTION: ${{ github.ref == 'refs/heads/main' }}
