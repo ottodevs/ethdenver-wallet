@@ -3,6 +3,5 @@
     "public": false,
     "github": {
         "enabled": false
-    },
-    "buildCommand": "exit 0"
+    }
 }
