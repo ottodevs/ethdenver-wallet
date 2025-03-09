@@ -42,8 +42,6 @@ jobs:
             # Configuración de pnpm con versión extraída del package.json
             - name: Setup pnpm
               uses: pnpm/action-setup@v4
-              with:
-                  version: ${{ steps.versions.outputs.pnpm-version }}
 
             # Setup Node.js with version extracted from package.json
             - name: Setup Node.js
