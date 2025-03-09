@@ -7,7 +7,7 @@ import { useWallet } from '@/features/wallet/hooks/use-wallet'
 export const BalanceDisplay = observer(function BalanceDisplay() {
     const { privacyMode, togglePrivacyMode } = useWallet()
 
-    // Obtenemos los valores directamente del estado observable
+    // Get the values directly from the observable state
     const totalBalanceUsd = portfolioState$.totalBalanceUsd.get()
     const isLoading = portfolioState$.isLoading.get()
 

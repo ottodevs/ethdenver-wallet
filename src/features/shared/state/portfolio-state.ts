@@ -24,7 +24,7 @@ interface PortfolioState {
     lastUpdated: number
 }
 
-// Crear el observable con estado inicial
+// Create the observable with initial state
 export const portfolioState$ = observable<PortfolioState>({
     tokens: [],
     totalBalanceUsd: 0,
@@ -33,7 +33,7 @@ export const portfolioState$ = observable<PortfolioState>({
     lastUpdated: 0,
 })
 
-// Configurar la persistencia local
+// Configure local persistence
 syncObservable(portfolioState$, {
     persist: {
         name: 'okto-portfolio',
@@ -41,16 +41,16 @@ syncObservable(portfolioState$, {
     },
 })
 
-// Estado de sincronización para verificar si los datos están cargados
+// Synchronization state to check if data is loaded
 export const portfolioSyncState$ = syncState(portfolioState$)
 
-// Función para sincronizar el portfolio
+// Function to sync the portfolio
 export async function syncPortfolio(oktoClient: OktoClient, forceRefresh = false) {
     const now = Date.now()
     const lastUpdated = portfolioState$.lastUpdated.get()
     const CACHE_DURATION = 2 * 60 * 1000 // 2 minutos
 
-    // Si no es forzado y los datos son recientes, no actualizar
+    // If not forced and data is recent, do not update
     if (!forceRefresh && lastUpdated && now - lastUpdated < CACHE_DURATION) {
         console.log('[syncPortfolio] Using cached data:', {
             cacheAge: now - lastUpdated,
@@ -59,7 +59,7 @@ export async function syncPortfolio(oktoClient: OktoClient, forceRefresh = false
         return
     }
 
-    // Marcar como cargando solo si no hay datos previos
+    // Mark as loading only if there are no previous data
     if (portfolioState$.tokens.length === 0) {
         portfolioState$.isLoading.set(true)
     }
@@ -69,7 +69,7 @@ export async function syncPortfolio(oktoClient: OktoClient, forceRefresh = false
         const portfolioData = await getPortfolio(oktoClient)
 
         if (portfolioData && portfolioData.groupTokens) {
-            // Transformar los datos de tokens
+            // Transform the token data
             const formattedTokens: TokenBalance[] = portfolioData.groupTokens.map(group => ({
                 id: `${group.networkName}-${group.symbol}`,
                 name: group.name || group.symbol,
@@ -84,7 +84,7 @@ export async function syncPortfolio(oktoClient: OktoClient, forceRefresh = false
 
             const totalUsd = parseFloat(portfolioData.aggregatedData.totalHoldingPriceUsdt)
 
-            // Actualizar el estado en un batch para evitar múltiples renders
+            // Update the state in a batch to avoid multiple renders
             batch(() => {
                 portfolioState$.tokens.set(formattedTokens)
                 portfolioState$.totalBalanceUsd.set(totalUsd)
@@ -113,7 +113,7 @@ export async function syncPortfolio(oktoClient: OktoClient, forceRefresh = false
     }
 }
 
-// Función para limpiar el estado
+// Function to clear the state
 export function clearPortfolioState() {
     batch(() => {
         portfolioState$.tokens.set([])

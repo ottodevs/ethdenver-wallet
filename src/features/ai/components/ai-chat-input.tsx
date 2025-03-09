@@ -10,25 +10,25 @@ type AIChatInputProps = {
 }
 
 export function AIChatInput({ onSendMessage, isLoading }: AIChatInputProps) {
-    console.log('🚀 Renderizando AIChatInput', { isLoading })
+    console.log('🚀 Rendering AIChatInput', { isLoading })
 
     const [input, setInput] = useState('')
 
-    // Log cuando cambia el estado de carga
+    // Log when the loading state changes
     useEffect(() => {
-        console.log('⏳ AIChatInput - Estado de carga:', isLoading)
+        console.log('⏳ AIChatInput - Loading state:', isLoading)
     }, [isLoading])
 
     const handleSubmit = (e: FormEvent) => {
         e.preventDefault()
-        console.log('📤 AIChatInput - Intentando enviar mensaje:', input)
+        console.log('📤 AIChatInput - Trying to send message:', input)
 
         if (input.trim() && !isLoading) {
-            console.log('✅ AIChatInput - Enviando mensaje:', input.trim())
+            console.log('✅ AIChatInput - Sending message:', input.trim())
             onSendMessage(input.trim())
             setInput('')
         } else {
-            console.log('⚠️ AIChatInput - No se envió el mensaje:', {
+            console.log('⚠️ AIChatInput - Message not sent:', {
                 inputEmpty: !input.trim(),
                 isLoading,
             })
@@ -41,14 +41,14 @@ export function AIChatInput({ onSendMessage, isLoading }: AIChatInputProps) {
                 <Textarea
                     value={input}
                     onChange={e => {
-                        console.log('🔄 AIChatInput - Input cambiado:', e.target.value)
+                        console.log('🔄 AIChatInput - Input changed:', e.target.value)
                         setInput(e.target.value)
                     }}
                     placeholder='Ask anything about crypto...'
                     className='min-h-[60px] resize-none'
                     onKeyDown={e => {
                         if (e.key === 'Enter' && !e.shiftKey) {
-                            console.log('⌨️ AIChatInput - Enter presionado (sin Shift)')
+                            console.log('⌨️ AIChatInput - Enter pressed (without Shift)')
                             e.preventDefault()
                             handleSubmit(e)
                         }

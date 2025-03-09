@@ -4,7 +4,7 @@ import { syncObservable } from '@legendapp/state/sync'
 import type { OktoClient } from '@okto_web3/react-sdk'
 import { getPortfolioActivity } from '@okto_web3/react-sdk'
 
-// Definición de la interfaz de transacción
+// Definition of the transaction interface
 export interface Transaction {
     id: string
     type: 'deposit' | 'withdrawal' | 'transfer' | 'swap' | 'other'
@@ -20,7 +20,7 @@ export interface Transaction {
     explorerUrl?: string
 }
 
-// Interfaz para el estado de transacciones
+// Interface for the transactions state
 interface TransactionsState {
     transactions: Transaction[]
     pendingTransactions: Transaction[]
@@ -30,7 +30,7 @@ interface TransactionsState {
     hasInitialized: boolean
 }
 
-// Crear el observable con estado inicial
+// Create the observable with initial state
 export const transactionsState$ = observable<TransactionsState>({
     transactions: [],
     pendingTransactions: [],
@@ -40,7 +40,7 @@ export const transactionsState$ = observable<TransactionsState>({
     hasInitialized: false,
 })
 
-// Configurar la persistencia local
+// Configure local persistence
 syncObservable(transactionsState$, {
     persist: {
         name: 'okto-transactions',
@@ -48,16 +48,16 @@ syncObservable(transactionsState$, {
     },
 })
 
-// Estado de sincronización para verificar si los datos están cargados
+// Synchronization state to check if data is loaded
 export const transactionsSyncState$ = syncState(transactionsState$)
 
-// Función para sincronizar las transacciones
+// Function to synchronize transactions
 export async function syncTransactions(oktoClient: OktoClient, forceRefresh = false) {
     const now = Date.now()
     const lastUpdated = transactionsState$.lastUpdated.get()
-    const CACHE_DURATION = 2 * 60 * 1000 // 2 minutos (más corto para transacciones)
+    const CACHE_DURATION = 2 * 60 * 1000 // 2 minutes (shorter for transactions)
 
-    // Si no es forzado y los datos son recientes, no actualizar
+    // If not forced and data is recent, do not update
     if (!forceRefresh && lastUpdated && now - lastUpdated < CACHE_DURATION) {
         console.log('[syncTransactions] Using cached data:', {
             cacheAge: now - lastUpdated,
@@ -66,7 +66,7 @@ export async function syncTransactions(oktoClient: OktoClient, forceRefresh = fa
         return
     }
 
-    // Marcar como cargando
+    // Mark as loading
     transactionsState$.isLoading.set(true)
 
     try {
@@ -74,11 +74,11 @@ export async function syncTransactions(oktoClient: OktoClient, forceRefresh = fa
         const txHistory = await getPortfolioActivity(oktoClient)
 
         if (txHistory && txHistory.length > 0) {
-            // Generar un ID único para cada transacción
+            // Generate a unique ID for each transaction
             const formattedTransactions = txHistory.map((tx, index) => {
-                // Crear un ID verdaderamente único usando una combinación de campos
-                // Si hay txHash, usarlo junto con timestamp e índice
-                // Si no hay txHash, usar una combinación de otros campos disponibles
+                // Create a truly unique ID using a combination of fields
+                // If there is txHash, use it together with timestamp and index
+                // If there is no txHash, use a combination of other available fields
                 const uniqueId = tx.txHash
                     ? `${tx.txHash}-${tx.timestamp || Date.now()}-${index}`
                     : `tx-${tx.id || ''}-${tx.timestamp || Date.now()}-${index}`
@@ -87,11 +87,11 @@ export async function syncTransactions(oktoClient: OktoClient, forceRefresh = fa
                     id: uniqueId,
                     type: mapTransactionType(tx.transferType),
                     status: mapTransactionStatus(tx.status),
-                    timestamp: tx.timestamp ? tx.timestamp * 1000 : Date.now(), // Convertir a milisegundos
+                    timestamp: tx.timestamp ? tx.timestamp * 1000 : Date.now(), // Convert to milliseconds
                     amount: tx.quantity || '0',
                     token: tx.caipId || '',
                     tokenSymbol: tx.symbol || '',
-                    // No tenemos from/to en la API, pero podemos inferir basado en transferType
+                    // We don't have from/to in the API, but we can infer based on transferType
                     from: tx.transferType?.toLowerCase() === 'send' ? 'Your wallet' : undefined,
                     to: tx.transferType?.toLowerCase() === 'receive' ? 'Your wallet' : undefined,
                     hash: tx.txHash || '',
@@ -100,12 +100,12 @@ export async function syncTransactions(oktoClient: OktoClient, forceRefresh = fa
                 }
             })
 
-            // Verificar que no haya IDs duplicados antes de actualizar el estado
+            // Verify that there are no duplicate IDs before updating the state
             const idSet = new Set()
             const uniqueTransactions = formattedTransactions.filter(tx => {
                 if (idSet.has(tx.id)) {
                     console.warn(`[syncTransactions] Duplicate transaction ID found: ${tx.id}. Creating new unique ID.`)
-                    // Si encontramos un duplicado, generamos un nuevo ID único
+                    // If we find a duplicate, generate a new unique ID
                     tx.id = `${tx.id}-${Math.random().toString(36).substring(2, 9)}`
                 }
                 idSet.add(tx.id)
@@ -143,7 +143,7 @@ export async function syncTransactions(oktoClient: OktoClient, forceRefresh = fa
     }
 }
 
-// Función para añadir una transacción pendiente
+// Function to add a pending transaction
 export function addPendingTransaction(transaction: Transaction) {
     const pendingTx = {
         ...transaction,
@@ -156,7 +156,7 @@ export function addPendingTransaction(transaction: Transaction) {
     console.log('[addPendingTransaction] Added pending transaction:', pendingTx)
 }
 
-// Función para actualizar una transacción pendiente
+// Function to update a pending transaction
 export async function updatePendingTransaction(id: string, oktoClient: OktoClient) {
     const pendingTxs = transactionsState$.pendingTransactions.get()
     const txIndex = pendingTxs.findIndex(tx => tx.id === id)
@@ -168,19 +168,19 @@ export async function updatePendingTransaction(id: string, oktoClient: OktoClien
 
     const tx = pendingTxs[txIndex]
 
-    // Aquí iría la lógica para verificar el estado de la transacción
-    // Por ejemplo, consultando el hash en la blockchain
+    // Here goes the logic to verify the transaction status
+    // For example, querying the hash in the blockchain
 
-    // Por ahora, simplemente simulamos que la transacción se confirma después de un tiempo
+    // For now, we simply simulate that the transaction is confirmed after a time
     const updatedTx = {
         ...tx,
         status: 'confirmed' as const,
     }
 
-    // Actualizar la transacción pendiente
+    // Update the pending transaction
     transactionsState$.pendingTransactions[txIndex].set(updatedTx)
 
-    // Si está confirmada, moverla a transacciones confirmadas y eliminarla de pendientes
+    // If it is confirmed, move it to confirmed transactions and remove it from pending
     if (updatedTx.status === 'confirmed') {
         transactionsState$.transactions.unshift(updatedTx)
         transactionsState$.pendingTransactions.splice(txIndex, 1)
@@ -188,11 +188,11 @@ export async function updatePendingTransaction(id: string, oktoClient: OktoClien
 
     console.log('[updatePendingTransaction] Updated transaction:', updatedTx)
 
-    // Refrescar las transacciones para obtener la versión más actualizada
+    // Refresh the transactions to get the latest version
     await syncTransactions(oktoClient, true)
 }
 
-// Función para limpiar el estado
+// Function to clear the state
 export function clearTransactionsState() {
     batch(() => {
         transactionsState$.transactions.set([])
@@ -204,7 +204,7 @@ export function clearTransactionsState() {
     })
 }
 
-// Funciones auxiliares para mapear tipos y estados
+// Helper functions to map types and statuses
 function mapTransactionType(type?: string): 'deposit' | 'withdrawal' | 'transfer' | 'swap' | 'other' {
     if (!type) return 'other'
 
@@ -223,12 +223,12 @@ function mapTransactionType(type?: string): 'deposit' | 'withdrawal' | 'transfer
 function mapTransactionStatus(status?: boolean | string): 'pending' | 'confirmed' | 'failed' | 'unknown' {
     if (status === undefined || status === null) return 'unknown'
 
-    // Si es booleano, true = confirmado, false = fallido
+    // If it is a boolean, true = confirmed, false = failed
     if (typeof status === 'boolean') {
         return status ? 'confirmed' : 'failed'
     }
 
-    // Si es string
+    // If it is a string
     const statusStr = status.toString().toLowerCase()
 
     if (statusStr.includes('pending') || statusStr.includes('processing')) return 'pending'

@@ -3,7 +3,7 @@ import { ObservablePersistLocalStorage } from '@legendapp/state/persist-plugins/
 import { syncObservable } from '@legendapp/state/sync'
 import type { OktoClient } from '@okto_web3/react-sdk'
 
-// Definición de la interfaz de NFT
+// Definition of the NFT interface
 export interface NFT {
     id: string
     name: string
@@ -16,7 +16,7 @@ export interface NFT {
     networkName: string
 }
 
-// Actualizar el tipo para que coincida con la definición de la librería
+// Update the type to match the library definition
 type UserNFTBalance = {
     caipId: string
     networkName: string
@@ -33,7 +33,7 @@ type UserNFTBalance = {
     collectionImage: string
 }
 
-// Interfaz para el estado de NFTs
+// Interface for the NFTs state
 interface NFTsState {
     nfts: NFT[]
     isLoading: boolean
@@ -42,7 +42,7 @@ interface NFTsState {
     hasInitialized: boolean
 }
 
-// Crear el observable con estado inicial
+// Create the observable with initial state
 export const nftsState$ = observable<NFTsState>({
     nfts: [],
     isLoading: false,
@@ -51,7 +51,7 @@ export const nftsState$ = observable<NFTsState>({
     hasInitialized: false,
 })
 
-// Configurar la persistencia local
+// Configure local persistence
 syncObservable(nftsState$, {
     persist: {
         name: 'okto-nfts',
@@ -59,10 +59,10 @@ syncObservable(nftsState$, {
     },
 })
 
-// Estado de sincronización para verificar si los datos están cargados
+// Synchronization state to check if data is loaded
 export const nftsSyncState$ = syncState(nftsState$)
 
-// Función para obtener NFTs directamente con fetch
+// Function to get NFTs directly with fetch
 async function fetchNFTsDirectly(oktoClient: OktoClient): Promise<UserNFTBalance[]> {
     try {
         const token = await oktoClient.getAuthorizationToken()
@@ -74,37 +74,37 @@ async function fetchNFTsDirectly(oktoClient: OktoClient): Promise<UserNFTBalance
             },
         })
 
-        // Si la respuesta no es exitosa, verificamos si es el error específico
+        // If the response is not successful, check if it is the specific error
         if (!response.ok) {
             const errorData = await response.json().catch(() => null)
 
-            // Verificar si es el error específico de "No Active Collections"
+            // Check if it is the specific error of "No Active Collections"
             if (response.status === 400 && errorData?.error?.errorCode === 'ER-TECH-0001') {
                 console.log('[fetchNFTsDirectly] No NFTs found for this user (No Active Collections)')
-                return [] // Retornar array vacío en caso de no tener NFTs
+                return [] // Return empty array in case of no NFTs
             }
 
-            // Para otros errores, propagamos
+            // For other errors, propagate
             console.warn('[fetchNFTsDirectly] Error fetching NFTs:', errorData)
             return []
         }
 
         const data = await response.json().catch(() => null)
 
-        // Convertir respuesta a camelCase si es necesario
+        // Convert response to camelCase if necessary
         if (data && data.data && data.data.details) {
             return data.data.details
         }
 
         return []
     } catch (error) {
-        // Manejo silencioso sin `console.error`
+        // Silent handling without `console.error`
         console.warn(`[fetchNFTsDirectly] Silent error:`, error instanceof Error ? error.message : error)
         return []
     }
 }
 
-// Alternativa usando syncedFetch (si prefieres este enfoque)
+// Alternative using syncedFetch (if you prefer this approach)
 // const createNFTsFetcher = (oktoClient: OktoClient) => {
 //     return syncedFetch({
 //         get: async () => {
@@ -123,13 +123,13 @@ async function fetchNFTsDirectly(oktoClient: OktoClient): Promise<UserNFTBalance
 //     })
 // }
 
-// Función para sincronizar los NFTs
+// Function to sync NFTs
 export async function syncNFTs(oktoClient: OktoClient, forceRefresh = false) {
     const now = Date.now()
     const lastUpdated = nftsState$.lastUpdated.get()
     const CACHE_DURATION = 5 * 60 * 1000 // 5 minutos
 
-    // Si no es forzado y los datos son recientes, no actualizar
+    // If not forced and data is recent, do not update
     if (!forceRefresh && lastUpdated && now - lastUpdated < CACHE_DURATION) {
         console.log('[syncNFTs] Using cached data:', {
             cacheAge: now - lastUpdated,
@@ -138,7 +138,7 @@ export async function syncNFTs(oktoClient: OktoClient, forceRefresh = false) {
         return
     }
 
-    // Marcar como cargando solo si no hay datos previos o es una carga forzada
+    // Mark as loading only if there are no previous data or it is a forced refresh
     if (nftsState$.nfts.get().length === 0 || forceRefresh) {
         nftsState$.isLoading.set(true)
     }
@@ -146,10 +146,10 @@ export async function syncNFTs(oktoClient: OktoClient, forceRefresh = false) {
     try {
         console.log('[syncNFTs] Fetching NFT data...')
 
-        // Usar nuestra función directa con fetch
+        // Use our direct fetch function
         const nftPortfolio = await fetchNFTsDirectly(oktoClient)
 
-        // Procesar los NFTs con la estructura correcta
+        // Process the NFTs with the correct structure
         const nfts = nftPortfolio.map(nft => ({
             id: nft.nftId,
             name: nft.nftName,
@@ -184,13 +184,13 @@ export async function syncNFTs(oktoClient: OktoClient, forceRefresh = false) {
     }
 }
 
-// Función para transferir un NFT
+// Function to transfer an NFT
 export async function transferNFT(nft: NFT, recipient: string, oktoClient: OktoClient) {
     try {
-        // Aquí iría la lógica para transferir el NFT usando el SDK de Okto
-        // Por ejemplo: await oktoClient.transferNFT(nft.contractAddress, nft.tokenId, recipient)
+        // Here goes the logic to transfer the NFT using the Okto SDK
+        // For example: await oktoClient.transferNFT(nft.contractAddress, nft.tokenId, recipient)
 
-        // Después de la transferencia exitosa, actualizamos los NFTs
+        // After successful transfer, update the NFTs
         await syncNFTs(oktoClient, true)
         return true
     } catch (error) {
@@ -199,7 +199,7 @@ export async function transferNFT(nft: NFT, recipient: string, oktoClient: OktoC
     }
 }
 
-// Función para limpiar el estado
+// Function to clear the state
 export function clearNFTsState() {
     batch(() => {
         nftsState$.nfts.set([])

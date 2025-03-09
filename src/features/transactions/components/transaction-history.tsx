@@ -13,14 +13,14 @@ export const TransactionHistory = observer(function TransactionHistory({ animate
     const { refetch } = useOktoTransactions()
     const [showRefreshButton, setShowRefreshButton] = useState(false)
 
-    // Obtenemos los valores del estado observable
+    // Get the values from the observable state
     const transactions = transactionsState$.transactions.get()
     const pendingTransactions = transactionsState$.pendingTransactions.get()
     const isLoading = transactionsState$.isLoading.get()
     const error = transactionsState$.error.get()
     const hasInitialized = transactionsState$.hasInitialized.get()
 
-    // Combinar transacciones pendientes y confirmadas para la UI usando useMemo
+    // Combine pending and confirmed transactions for the UI using useMemo
     const allTransactions = useMemo(
         () => [...pendingTransactions, ...transactions],
         [pendingTransactions, transactions],

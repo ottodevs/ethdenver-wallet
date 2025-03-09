@@ -14,13 +14,13 @@ export const useOktoNFTs = () => {
     const { selectedAccount } = useOktoAccount()
     const { isAuthenticated } = useAuth()
 
-    // Obtener valores del estado observable
+    // Get values from the observable state
     const nfts = nftsState$.nfts.get()
     const isLoading = nftsState$.isLoading.get()
     const error = nftsState$.error.get()
     const lastUpdated = nftsState$.lastUpdated.get()
 
-    // Sincronizar cuando cambian las dependencias
+    // Sync when dependencies change
     useEffect(() => {
         if (oktoClient && selectedAccount && isAuthenticated) {
             console.log('[useOktoNFTs] Dependencies changed, syncing NFTs')
@@ -28,7 +28,7 @@ export const useOktoNFTs = () => {
         }
     }, [oktoClient, selectedAccount, isAuthenticated])
 
-    // Función para transferir un NFT
+    // Function to transfer an NFT
     const transferNFT = useCallback(
         async (nft: NFT, recipient: string) => {
             if (!oktoClient) throw new Error('Okto client not initialized')

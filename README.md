@@ -42,6 +42,7 @@ pnpm dev
 ### The Problem
 
 Managing multiple crypto wallets is often complicated, requiring users to:
+
 - Juggle different UIs
 - Manually track assets across chains
 - Navigate complex blockchain processes
@@ -50,6 +51,7 @@ Managing multiple crypto wallets is often complicated, requiring users to:
 ### Our Solution
 
 Aeris makes managing crypto assets easy by providing:
+
 - A single, intuitive interface for all tokens
 - Seamless onboarding with Web2-like login
 - One-click functionality for cross-chain transactions

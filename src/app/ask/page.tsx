@@ -16,12 +16,12 @@ import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 
 export default function AskAeris() {
-    console.log('🚀 Renderizando AskAeris')
+    console.log('🚀 Rendering AskAeris')
 
     const router = useRouter()
     const [error, setError] = useState<Error | null>(null)
 
-    // Obtener datos reales del portfolio y cuenta
+    // Get real portfolio and account data
     const { tokens, totalBalanceUsd, refetch: refetchPortfolio } = useOktoPortfolio()
     const { selectedAccount } = useOktoAccount()
     const { handleLogout } = useAuth()
@@ -39,48 +39,48 @@ export default function AskAeris() {
             },
         ],
         onResponse: response => {
-            console.log('🟢 AskAeris - Respuesta recibida:', {
+            console.log('🟢 AskAeris - Response received:', {
                 status: response.status,
                 headers: Object.fromEntries(response.headers.entries()),
             })
 
-            // Resetear cualquier error previo cuando recibimos una respuesta
+            // Reset any previous error when we receive a response
             setError(null)
         },
         onFinish: message => {
-            console.log('✅ AskAeris - Mensaje completado:', message)
-            console.log('📊 AskAeris - Datos adicionales:', data)
+            console.log('✅ AskAeris - Message completed:', message)
+            console.log('📊 AskAeris - Additional data:', data)
 
-            // Verificar si hay anotaciones en el mensaje
+            // Check if there are annotations in the message
             if (message.annotations) {
-                console.log('🔖 AskAeris - Anotaciones:', message.annotations)
+                console.log('🔖 AskAeris - Annotations:', message.annotations)
             }
 
-            // Verificar si hay invocaciones de herramientas
+            // Check if there are tool invocations
             if (message.toolInvocations) {
-                console.log('🔧 AskAeris - Invocaciones de herramientas:', message.toolInvocations)
+                console.log('🔧 AskAeris - Tool invocations:', message.toolInvocations)
             }
         },
         onError: err => {
-            console.error('❌ AskAeris - Error en chat:', err)
+            console.log('❌ AskAeris - Error in chat:', err)
             setError(err)
         },
-        // Implementar herramientas del lado del cliente
+        // Implement tool calls on the client side
         async onToolCall({ toolCall }) {
-            console.log('🔧 AskAeris - Llamada a herramienta:', toolCall)
+            console.log('🔧 AskAeris - Tool call:', toolCall)
 
             if (toolCall.toolName === 'getWalletBalance') {
-                console.log('🔧 Ejecutando herramienta getWalletBalance en cliente')
+                console.log('🔧 AskAeris - Executing getWalletBalance in client')
 
                 // Add type assertion for args
                 const args = toolCall.args as { refresh?: boolean }
 
-                // Si se solicita refrescar, actualizar los datos
+                // If refresh is requested, update the data
                 if (args.refresh) {
                     await refetchPortfolio(true)
                 }
 
-                // Formatear los tokens para una mejor presentación
+                // Format the tokens for a better presentation
                 const formattedTokens = tokens.map(token => ({
                     symbol: token.symbol,
                     balance: token.balance.toFixed(4),
@@ -105,17 +105,17 @@ export default function AskAeris() {
                 // Add type assertion for args
                 const args = toolCall.args as { symbol: string }
 
-                console.log('🔧 Ejecutando herramienta getCryptoPrice en cliente para:', args.symbol)
+                console.log('🔧 AskAeris - Executing getCryptoPrice in client for:', args.symbol)
 
-                // Intentar obtener el precio del token desde nuestro portfolio
+                // Try to get the token price from our portfolio
                 const token = tokens.find(t => t.symbol.toLowerCase() === args.symbol.toLowerCase())
 
                 if (token) {
-                    // Si tenemos el token en nuestro portfolio, usar su valor
+                    // If we have the token in our portfolio, use its value
                     return `${args.symbol.toUpperCase()} price: $${token.valueUsd.toFixed(2)} USD`
                 }
 
-                // Precios de respaldo para tokens comunes
+                // Fallback prices for common tokens
                 const fallbackPrices: Record<string, string> = {
                     BTC: '$64,235.45',
                     ETH: '$2,456.78',
@@ -128,23 +128,23 @@ export default function AskAeris() {
                 return upperSymbol in fallbackPrices ? fallbackPrices[upperSymbol] : 'Price not available'
             }
 
-            // Nueva herramienta para cerrar sesión
+            // New tool to logout
             if (toolCall.toolName === 'logout') {
-                console.log('🔧 Ejecutando herramienta logout en cliente')
+                console.log('🔧 AskAeris - Executing logout in client')
 
                 // Add type assertion for args
                 const args = toolCall.args as { confirm: boolean }
 
                 if (args.confirm) {
-                    // Mostrar toast y programar el logout
+                    // Show toast and schedule the logout
                     addToast({
                         title: 'Logging out',
                         description: "You'll be redirected to the login page in a moment.",
                     })
 
-                    // Programar el logout para que ocurra después de que el chatbot responda
+                    // Schedule the logout to happen after the chatbot responds
                     setTimeout(() => {
-                        console.log('👋 Cerrando sesión por solicitud del usuario vía chatbot')
+                        console.log('👋 Logging out due to user request via chatbot')
                         handleLogout()
                         router.push('/auth')
                     }, 2000)
@@ -159,26 +159,26 @@ export default function AskAeris() {
                 }
             }
 
-            // Nueva herramienta para obtener el índice Fear & Greed
+            // New tool to get the Fear & Greed index
             if (toolCall.toolName === 'getFearGreedIndex') {
-                console.log('🔧 Ejecutando herramienta getFearGreedIndex en cliente')
+                console.log('🔧 AskAeris - Executing getFearGreedIndex in client')
 
                 // Add type assertion for args
                 const args = toolCall.args as { showChart?: boolean; days?: number }
 
                 try {
-                    // Obtener el índice actual
+                    // Get the current index
                     const currentIndex = await getCurrentFearGreedIndex()
 
-                    // Si se solicita mostrar el gráfico, obtener datos históricos
+                    // If chart is requested, get historical data
                     if (args.showChart) {
                         const days = args.days || 30
                         const historyData = await getFearGreedHistory(days)
 
-                        // Crear un ID único para el gráfico
+                        // Create a unique ID for the chart
                         const chartId = `fear-greed-chart-${Date.now()}`
 
-                        // Almacenar los datos para que el componente pueda acceder a ellos
+                        // Store the data so the component can access it
                         window.__fearGreedData = {
                             chartId,
                             currentValue: currentIndex.value,
@@ -186,14 +186,14 @@ export default function AskAeris() {
                             historyData,
                         }
 
-                        // Devolver un marcador especial que será reemplazado por el componente
+                        // Return a special marker that will be replaced by the component
                         return `<fear-greed-chart id="${chartId}" />
                         
 Current Fear & Greed Index: ${currentIndex.value} (${currentIndex.value_classification})
 Last updated: ${new Date(parseInt(currentIndex.timestamp) * 1000).toLocaleString()}`
                     }
 
-                    // Si no se solicita el gráfico, solo devolver el índice actual
+                    // If no chart is requested, return the current index
                     return `Current Fear & Greed Index: ${currentIndex.value} (${currentIndex.value_classification})
 Last updated: ${new Date(parseInt(currentIndex.timestamp) * 1000).toLocaleString()}`
                 } catch (error) {
@@ -202,16 +202,16 @@ Last updated: ${new Date(parseInt(currentIndex.timestamp) * 1000).toLocaleString
                 }
             }
         },
-        maxSteps: 3, // Permitir múltiples pasos de herramientas
+        maxSteps: 3, // Allow multiple tool steps
     })
 
-    // Format current date and time
+    // Current time
     const now = new Date()
     const formattedDateTime = `${format(now, 'EEEE')} ${format(now, 'h:mm a')}`
 
     // Clear chat function
     const clearChat = () => {
-        console.log('🧹 AskAeris - Limpiando chat')
+        console.log('🧹 AskAeris - Clearing chat')
         setMessages([
             {
                 id: 'welcome',
@@ -223,40 +223,40 @@ Last updated: ${new Date(parseInt(currentIndex.timestamp) * 1000).toLocaleString
         setError(null)
     }
 
-    // Log cuando cambian los mensajes
+    // Log when messages change
     useEffect(() => {
-        console.log('📨 AskAeris - Mensajes actualizados:', messages)
+        console.log('📨 AskAeris - Messages updated:', messages)
     }, [messages])
 
-    // Log cuando cambia el estado de carga
+    // Log when the loading state changes
     useEffect(() => {
-        console.log('⏳ AskAeris - Estado de carga:', isLoading)
+        console.log('⏳ AskAeris - Loading state:', isLoading)
     }, [isLoading])
 
-    // Log cuando hay un error
+    // Log when there is an error
     useEffect(() => {
         if (error) {
-            console.log('🚨 AskAeris - Error detectado:', error)
+            console.log('🚨 AskAeris - Error detected:', error)
         }
     }, [error])
 
-    // Función para manejar el envío del formulario con manejo de errores mejorado
+    // Function to handle the form submission with improved error handling
     const handleFormSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault()
-        console.log('📤 AskAeris - Enviando mensaje:', input)
+        console.log('📤 AskAeris - Sending message:', input)
 
         try {
-            await handleSubmit(e)
-            console.log('✅ AskAeris - Formulario enviado correctamente')
+            handleSubmit(e)
+            console.log('✅ AskAeris - Form submitted successfully')
         } catch (err) {
-            console.error('❌ AskAeris - Error al enviar formulario:', err)
+            console.log('❌ AskAeris - Error submitting form:', err)
             setError(err instanceof Error ? err : new Error(String(err)))
         }
     }
 
-    // Función para renderizar el contenido del mensaje con posibles componentes especiales
+    // Function to render the message content with possible special components
     const renderMessageContent = (content: string) => {
-        // Buscar marcadores de gráficos Fear & Greed
+        // Search for Fear & Greed chart markers
         if (content.includes('<fear-greed-chart id="')) {
             const parts = content.split(/<fear-greed-chart id="([^"]+)" \/>/)
 
@@ -282,7 +282,7 @@ Last updated: ${new Date(parseInt(currentIndex.timestamp) * 1000).toLocaleString
             }
         }
 
-        // Si no hay componentes especiales, renderizar como Markdown normal
+        // If there are no special components, render as normal Markdown
         return <Markdown content={content} />
     }
 
@@ -322,7 +322,7 @@ Last updated: ${new Date(parseInt(currentIndex.timestamp) * 1000).toLocaleString
                                 <p>{message.content}</p>
                             )}
 
-                            {/* Mostrar resultados de herramientas */}
+                            {/* Show tool results */}
                             {message.toolInvocations?.map((tool, toolIndex) => (
                                 <div key={toolIndex} className='mt-2 rounded border border-gray-700 p-2'>
                                     <div className='flex items-center gap-1 text-xs text-gray-400'>
@@ -344,7 +344,7 @@ Last updated: ${new Date(parseInt(currentIndex.timestamp) * 1000).toLocaleString
                                 </div>
                             ))}
 
-                            {/* Mostrar errores */}
+                            {/* Show errors */}
                             {message.annotations && 'isError' in message.annotations && (
                                 <div className='mt-2 text-sm text-red-400'>
                                     Error:{' '}
@@ -389,7 +389,7 @@ Last updated: ${new Date(parseInt(currentIndex.timestamp) * 1000).toLocaleString
                             placeholder='Ask about your wallet, crypto prices, or market sentiment...'
                             value={input}
                             onChange={e => {
-                                console.log('🔄 AskAeris - Input cambiado:', e.target.value)
+                                console.log('🔄 AskAeris - Input changed:', e.target.value)
                                 handleInputChange(e)
                             }}
                         />
@@ -407,7 +407,7 @@ Last updated: ${new Date(parseInt(currentIndex.timestamp) * 1000).toLocaleString
     )
 }
 
-// Extender la interfaz Window para incluir los datos de Fear & Greed
+// Extend the Window interface to include Fear & Greed data
 declare global {
     interface Window {
         __fearGreedData?: {

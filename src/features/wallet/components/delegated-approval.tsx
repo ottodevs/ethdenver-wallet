@@ -19,7 +19,7 @@ export function DelegatedApproval({ open, onOpenChange }: DelegatedApprovalProps
     const [errorMessage, setErrorMessage] = useState('')
     const [isDelegationEnabled, setIsDelegationEnabled] = useState(false)
 
-    // Verificar si la delegación ya está habilitada al abrir el diálogo
+    // Check if delegation is already enabled when the dialog opens
     useEffect(() => {
         if (typeof window !== 'undefined' && open) {
             const delegationEnabled = !!localStorage.getItem('okto_delegation_enabled')
@@ -30,7 +30,7 @@ export function DelegatedApproval({ open, onOpenChange }: DelegatedApprovalProps
     const handleApprove = async () => {
         if (!oktoClient) return
 
-        // Verificar autenticación antes de continuar
+        // Check authentication before continuing
         const isAuth = await checkAuthStatus()
         if (!isAuth) {
             setStatus('error')
@@ -42,14 +42,14 @@ export function DelegatedApproval({ open, onOpenChange }: DelegatedApprovalProps
         setErrorMessage('')
 
         try {
-            // Simulamos una llamada a la API de Okto para activar la delegación
+            // Simulate a call to the Okto API to activate delegation
             await new Promise(resolve => setTimeout(resolve, 1500))
 
-            // Almacenamos el indicador de que la delegación está activa
+            // Store the indicator that delegation is active
             localStorage.setItem('okto_delegation_enabled', 'true')
             localStorage.removeItem('okto_delegation_banner_dismissed')
 
-            // También almacenamos la clave de sesión si está disponible
+            // Also store the session key if available
             const sessionKey = localStorage.getItem('okto_session_key')
             if (!sessionKey) {
                 console.warn('No session key found in localStorage')
@@ -70,10 +70,10 @@ export function DelegatedApproval({ open, onOpenChange }: DelegatedApprovalProps
         setStatus('loading')
 
         try {
-            // Simulamos una llamada a la API de Okto para desactivar la delegación
+            // Simulate a call to the Okto API to disable delegation
             await new Promise(resolve => setTimeout(resolve, 1000))
 
-            // Eliminamos el indicador de delegación
+            // Remove the delegation indicator
             localStorage.removeItem('okto_delegation_enabled')
 
             setStatus('idle')
@@ -88,7 +88,7 @@ export function DelegatedApproval({ open, onOpenChange }: DelegatedApprovalProps
     const handleClose = () => {
         if (status !== 'loading') {
             onOpenChange(false)
-            // Reseteamos el estado después de que la animación termine
+            // Reset the state after the animation ends
             setTimeout(() => {
                 if (status === 'success' || status === 'error') {
                     setStatus('idle')

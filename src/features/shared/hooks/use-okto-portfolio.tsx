@@ -11,14 +11,14 @@ export const useOktoPortfolio = () => {
     const { selectedAccount } = useOktoAccount()
     const { isAuthenticated } = useAuth()
 
-    // Obtener valores del estado observable
+    // Get values from the observable state
     const tokens = portfolioState$.tokens.get()
     const totalBalanceUsd = portfolioState$.totalBalanceUsd.get()
     const isLoading = portfolioState$.isLoading.get()
     const error = portfolioState$.error.get()
     const lastUpdated = portfolioState$.lastUpdated.get()
 
-    // Sincronizar cuando cambian las dependencias
+    // Sync when dependencies change
     useEffect(() => {
         if (oktoClient && selectedAccount && isAuthenticated) {
             console.log('[useOktoPortfolio] Dependencies changed, syncing portfolio')

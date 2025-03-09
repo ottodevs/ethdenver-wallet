@@ -11,50 +11,50 @@ import { useEffect, useState } from 'react'
 import { Markdown } from '../components/markdown'
 
 export function AIChatbox() {
-    console.log('🚀 Renderizando AIChatbox')
+    console.log('🚀 Rendering AIChatbox')
 
     const [isOpen, setIsOpen] = useState(false)
     const { messages, input, handleInputChange, handleSubmit, isLoading, error } = useChat({
         api: '/api/chat',
         onResponse: response => {
-            console.log('🟢 AIChatbox - Respuesta recibida:', {
+            console.log('🟢 AIChatbox - Response received:', {
                 status: response.status,
                 headers: Object.fromEntries(response.headers.entries()),
             })
         },
         onFinish: message => {
-            console.log('✅ AIChatbox - Mensaje completado:', message)
+            console.log('✅ AIChatbox - Message completed:', message)
         },
         onError: err => {
-            console.error('❌ AIChatbox - Error en chat:', err)
+            console.log('❌ AIChatbox - Error in chat:', err)
         },
     })
 
-    // Log cuando cambian los mensajes
+    // Log when messages change
     useEffect(() => {
-        console.log('📨 AIChatbox - Mensajes actualizados:', messages)
+        console.log('📨 AIChatbox - Messages updated:', messages)
     }, [messages])
 
-    // Log cuando cambia el estado de carga
+    // Log when the loading state changes
     useEffect(() => {
-        console.log('⏳ AIChatbox - Estado de carga:', isLoading)
+        console.log('⏳ AIChatbox - Loading state:', isLoading)
     }, [isLoading])
 
-    // Log cuando hay un error
+    // Log when there is an error
     useEffect(() => {
         if (error) {
-            console.error('🚨 AIChatbox - Error detectado:', error)
+            console.log('🚨 AIChatbox - Error detected:', error)
         }
     }, [error])
 
-    // Log para el formulario de envío
+    // Log for the submission form
     const handleFormSubmit = async (e: React.FormEvent) => {
-        console.log('📤 AIChatbox - Enviando mensaje:', input)
+        console.log('📤 AIChatbox - Sending message:', input)
         try {
             await handleSubmit(e)
-            console.log('✅ AIChatbox - Formulario enviado correctamente')
+            console.log('✅ AIChatbox - Form submitted successfully')
         } catch (err) {
-            console.error('❌ AIChatbox - Error al enviar formulario:', err)
+            console.log('❌ AIChatbox - Error submitting form:', err)
         }
     }
 
@@ -117,7 +117,7 @@ export function AIChatbox() {
                                 placeholder='Ask about your portfolio...'
                                 value={input}
                                 onChange={e => {
-                                    console.log('🔄 AIChatbox - Input cambiado:', e.target.value)
+                                    console.log('🔄 AIChatbox - Input changed:', e.target.value)
                                     handleInputChange(e)
                                 }}
                             />
@@ -130,7 +130,7 @@ export function AIChatbox() {
             ) : (
                 <Button
                     onClick={() => {
-                        console.log('🔘 AIChatbox - Abriendo chatbox')
+                        console.log('🔘 AIChatbox - Opening chatbox')
                         setIsOpen(true)
                     }}
                     className='h-12 w-12 rounded-full'>

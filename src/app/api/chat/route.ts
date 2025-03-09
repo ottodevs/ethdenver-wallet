@@ -7,23 +7,23 @@ import { z } from 'zod'
 export const maxDuration = 30
 
 export async function POST(req: Request) {
-    console.log('🔍 API /api/chat - Recibida solicitud POST')
+    console.log('🔍 API /api/chat - Received POST request')
 
     try {
         const { messages } = await req.json()
-        console.log('📦 API /api/chat - Cuerpo de la solicitud:', {
+        console.log('📦 API /api/chat - Request body:', {
             messageCount: messages?.length || 0,
             lastMessage: messages?.length ? messages[messages.length - 1] : null,
         })
 
         if (!messages || !Array.isArray(messages)) {
-            console.error('❌ API /api/chat - Formato de mensajes inválido:', messages)
+            console.error('❌ API /api/chat - Invalid messages format:', messages)
             throw new Error('Invalid messages format')
         }
 
-        console.log('🔄 API /api/chat - Iniciando streaming de respuesta')
+        console.log('🔄 API /api/chat - Starting response streaming')
 
-        // Usar streamText con herramientas
+        // Use streamText with tools
         const result = streamText({
             model: openai('gpt-4-turbo'),
             system: 'You are Aeris, a helpful crypto assistant. You can provide information about cryptocurrencies, blockchain technology, and help users with their wallet operations. Be concise, accurate, and friendly.',
@@ -31,7 +31,7 @@ export async function POST(req: Request) {
             temperature: 0.7,
             maxTokens: 1000,
             tools: {
-                // Herramienta para consultar el balance (será reemplazada por la versión cliente)
+                // Tool to query the balance (will be replaced by the client version)
                 getWalletBalance: {
                     description: "Get the current balance of the user's crypto wallet",
                     parameters: z.object({
@@ -39,7 +39,7 @@ export async function POST(req: Request) {
                     }),
                 },
 
-                // Herramienta para obtener precio de criptomonedas (será reemplazada por la versión cliente)
+                // Tool to get cryptocurrency price (will be replaced by the client version)
                 getCryptoPrice: {
                     description: 'Get the current price of a cryptocurrency',
                     parameters: z.object({
@@ -47,7 +47,7 @@ export async function POST(req: Request) {
                     }),
                 },
 
-                // Herramienta para cerrar sesión
+                // Tool to logout
                 logout: {
                     description: 'Log out the current user from their wallet',
                     parameters: z.object({
@@ -55,7 +55,7 @@ export async function POST(req: Request) {
                     }),
                 },
 
-                // Nueva herramienta para obtener el índice Fear & Greed
+                // New tool to get the Fear & Greed index
                 getFearGreedIndex: {
                     description: 'Get the current Fear & Greed index for the crypto market',
                     parameters: z.object({
@@ -64,20 +64,20 @@ export async function POST(req: Request) {
                     }),
                 },
             },
-            maxSteps: 3, // Permitir múltiples pasos de herramientas
+            maxSteps: 3, // Allow multiple steps of tools
         })
 
-        console.log('✅ API /api/chat - Streaming iniciado correctamente')
+        console.log('✅ API /api/chat - Streaming started correctly')
 
-        // Usar toDataStreamResponse con manejo de errores
+        // Use toDataStreamResponse with error handling
         return result.toDataStreamResponse({
             getErrorMessage: error => {
-                console.error('❌ API /api/chat - Error en streaming:', error)
+                console.error('❌ API /api/chat - Error in streaming:', error)
                 return error instanceof Error ? `Error: ${error.message}` : 'An unknown error occurred'
             },
         })
     } catch (error) {
-        console.error('❌ API /api/chat - Error general:', error)
+        console.error('❌ API /api/chat - General error:', error)
         return NextResponse.json({ error: 'Failed to process request' }, { status: 500 })
     }
 }
