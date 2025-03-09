@@ -12,6 +12,7 @@ import { useWallet } from '@/features/wallet/hooks/use-wallet'
 import { observer } from '@legendapp/state/react'
 import { Coins, Eye, EyeOff, Share2 } from 'lucide-react'
 import { motion } from 'motion/react'
+import Image from 'next/image'
 import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
 
@@ -157,40 +158,43 @@ export const TokenList = observer(function TokenList({ animated = true }: { anim
                     </div>
                 </div>
 
-                {tokens.map(token => (
-                    <TokenComponent
-                        key={token.id}
-                        variants={animated ? item : undefined}
-                        className='border-border hover:bg-muted/50 mb-4 flex items-center justify-between rounded-md border-b p-2 pb-4'
-                        onClick={() => setShowTokenDetail(token.id)}>
-                        <div className='flex items-center gap-3'>
-                            <div className='bg-primary/10 flex h-8 w-8 items-center justify-center rounded-full'>
-                                {token.symbol.charAt(0)}
-                            </div>
-                            <div>
-                                <div className='font-medium'>{token.name}</div>
-                                <div className='text-muted-foreground text-xs'>
-                                    {privacyMode ? '••••••' : `${token.balance} ${token.symbol}`}
+                {tokens.map(token => {
+                    console.log('token', token)
+                    return (
+                        <TokenComponent
+                            key={token.id}
+                            variants={animated ? item : undefined}
+                            className='border-border hover:bg-muted/50 mb-4 flex items-center justify-between rounded-md border-b p-2 pb-4'
+                            onClick={() => setShowTokenDetail(token.id)}>
+                            <div className='flex items-center gap-3'>
+                                <div className='flex h-8 w-8 items-center justify-center rounded-full bg-[#EDEFF1]'>
+                                    <Image src={token.icon} alt={token.name} width={32} height={32} />
+                                </div>
+                                <div>
+                                    <div className='font-medium'>{token.name}</div>
+                                    <div className='text-muted-foreground text-xs'>
+                                        {privacyMode ? '••••••' : `${token.balance} ${token.symbol}`}
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                        <div className='text-right'>
-                            <div className='font-medium'>
-                                {privacyMode ? '••••••' : `$${token.valueUsd.toFixed(2)}`}
+                            <div className='text-right'>
+                                <div className='font-medium'>
+                                    {privacyMode ? '••••••' : `$${token.valueUsd.toFixed(2)}`}
+                                </div>
+                                <div className='text-muted-foreground text-xs'>
+                                    {privacyMode ? '••••••' : `$${(token.valueUsd / token.balance).toFixed(2)}`}
+                                </div>
                             </div>
-                            <div className='text-muted-foreground text-xs'>
-                                {privacyMode ? '••••••' : `$${(token.valueUsd / token.balance).toFixed(2)}`}
-                            </div>
-                        </div>
-                    </TokenComponent>
-                ))}
+                        </TokenComponent>
+                    )
+                })}
 
                 {smallValueTokens.length > 0 && (
                     <Card className='bg-muted/30 mb-4 cursor-pointer overflow-hidden border-dashed'>
                         <CardContent className='p-3'>
                             <div className='flex items-center justify-between'>
                                 <div className='flex items-center gap-2'>
-                                    <div className='bg-primary/10 flex h-8 w-8 items-center justify-center rounded-full'>
+                                    <div className='flex h-8 w-8 items-center justify-center rounded-full bg-white'>
                                         <span className='text-primary text-xs font-medium'>
                                             +{smallValueTokens.length}
                                         </span>
