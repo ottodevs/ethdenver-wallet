@@ -16,7 +16,7 @@ export function FearGreedChart({ data, currentValue, currentClassification }: Fe
     const { theme } = useTheme()
     const [mounted, setMounted] = useState(false)
 
-    // Asegurarse de que el componente solo se renderice en el cliente
+    // Ensure the component only renders on the client
     useEffect(() => {
         setMounted(true)
     }, [])
@@ -25,23 +25,23 @@ export function FearGreedChart({ data, currentValue, currentClassification }: Fe
         return null
     }
 
-    // Colores basados en el tema
+    // Colors based on the theme
     const textColor = theme === 'dark' ? '#FFFFFF' : '#000000'
     const gridColor = theme === 'dark' ? '#333333' : '#DDDDDD'
     const tooltipBg = theme === 'dark' ? '#1A1A28' : '#FFFFFF'
 
-    // Determinar el color del índice actual
+    // Determine the color of the current index
     const getIndexColor = (value: number) => {
-        if (value <= 25) return '#E31A1A' // Extreme Fear - Rojo
-        if (value <= 40) return '#FF9500' // Fear - Naranja
-        if (value <= 60) return '#FFCC00' // Neutral - Amarillo
-        if (value <= 75) return '#7CBA01' // Greed - Verde claro
-        return '#009F6B' // Extreme Greed - Verde
+        if (value <= 25) return '#E31A1A' // Extreme Fear - Red
+        if (value <= 40) return '#FF9500' // Fear - Orange
+        if (value <= 60) return '#FFCC00' // Neutral - Yellow
+        if (value <= 75) return '#7CBA01' // Greed - Light Green
+        return '#009F6B' // Extreme Greed - Green
     }
 
     const indexColor = getIndexColor(currentValue)
 
-    // Función para obtener el color del gradiente según el valor
+    // Function to get the gradient color based on the value
     const getGradientColor = (value: number) => {
         if (value <= 25) return ['#E31A1A', '#FF9500'] // Extreme Fear to Fear
         if (value <= 40) return ['#FF9500', '#FFCC00'] // Fear to Neutral
@@ -49,7 +49,7 @@ export function FearGreedChart({ data, currentValue, currentClassification }: Fe
         return ['#7CBA01', '#009F6B'] // Greed to Extreme Greed
     }
 
-    // Obtener el color para el gradiente del gráfico
+    // Get the color for the gradient of the chart
     const gradientColors = getGradientColor(currentValue)
 
     return (
@@ -119,7 +119,7 @@ export function FearGreedChart({ data, currentValue, currentClassification }: Fe
     )
 }
 
-// Función auxiliar para obtener la clasificación según el valor
+// Helper function to get the classification based on the value
 function getClassification(value: number): string {
     if (value <= 25) return 'Extreme Fear'
     if (value <= 40) return 'Fear'

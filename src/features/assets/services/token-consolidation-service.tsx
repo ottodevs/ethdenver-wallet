@@ -30,7 +30,7 @@ export function useTokenConsolidationService() {
             throw new Error('Okto client not initialized')
         }
 
-        // Verificar autenticación antes de continuar
+        // Check authentication before continuing
         const isAuth = await checkAuthStatus()
         if (!isAuth) {
             throw new Error('Authentication required')
@@ -42,7 +42,7 @@ export function useTokenConsolidationService() {
 
         console.log('Starting token consolidation...')
 
-        // Filtrar tokens con valor menor a $10 USD que no sean ETH nativos
+        // Filter tokens with value less than $10 USD that are not native ETH
         const tokensToConsolidate = tokens.filter(
             token => token.valueUsd < 10 && token.symbol !== 'ETH' && token.balance > 0 && !token.isNative,
         )
@@ -54,7 +54,7 @@ export function useTokenConsolidationService() {
 
         console.log('Tokens to consolidate:', tokensToConsolidate)
 
-        // Mapa de CAIP-2 IDs por cadena
+        // Map of CAIP-2 IDs by chain
         const caip2IdMap: Record<string, string> = {
             ethereum: 'eip155:1',
             polygon: 'eip155:137',
@@ -63,18 +63,18 @@ export function useTokenConsolidationService() {
             base: 'eip155:8453',
         }
 
-        // Usar la dirección de la cuenta seleccionada
+        // Use the address of the selected account
         const userAddress = selectedAccount.address
         console.log('User address for consolidation:', userAddress)
 
         const results = []
 
-        // Procesar cada token para consolidación
+        // Process each token for consolidation
         for (const token of tokensToConsolidate) {
             const chain = token.chain
             const caip2Id = caip2IdMap[chain] || 'eip155:1'
 
-            // Crear una transacción pendiente para UI optimista
+            // Create a pending transaction for optimistic UI
             const pendingTxId = `pending-consolidate-${token.id}-${Date.now()}`
             const pendingTx: Transaction = {
                 id: pendingTxId,
@@ -103,23 +103,23 @@ export function useTokenConsolidationService() {
             })
 
             try {
-                // Convertir el balance a BigInt con los decimales adecuados
+                // Convert the balance to BigInt with the correct decimals
                 const amountInSmallestUnit = BigInt(Math.floor(token.balance * 10 ** 18))
 
-                // Preparar parámetros de transferencia
+                // Prepare transfer parameters
                 const transferParams = {
                     amount: amountInSmallestUnit,
-                    recipient: userAddress as `0x${string}`, // Dirección del usuario como destinatario
-                    token: (token.contractAddress || '') as `0x${string}`, // Dirección del token a consolidar
+                    recipient: userAddress as `0x${string}`, // User address as recipient
+                    token: (token.contractAddress || '') as `0x${string}`, // Token address to consolidate
                     caip2Id: caip2Id,
                 }
 
                 console.log(`Consolidating ${token.symbol} to ETH on ${chain}:`, transferParams)
 
-                // Ejecutar la transferencia
+                // Execute the transfer
                 const jobId = await tokenTransfer(oktoClient, transferParams)
                 console.log(`Consolidation of ${token.symbol} submitted with jobId:`, jobId)
-                // Actualizar el estado de la transacción
+                // Update the transaction status
                 updatePendingTransaction(pendingTxId)
 
                 results.push({
@@ -130,7 +130,7 @@ export function useTokenConsolidationService() {
             } catch (error) {
                 console.error(`Failed to consolidate ${token.symbol} on ${chain}:`, error)
 
-                // Actualizar el estado de la transacción a fallido
+                // Update the transaction status to failed
                 updatePendingTransaction(pendingTxId)
 
                 results.push({
@@ -141,7 +141,7 @@ export function useTokenConsolidationService() {
             }
         }
 
-        // Forzar actualización de balances después de todas las transacciones
+        // Force portfolio refresh after all transactions
         setTimeout(async () => {
             try {
                 console.log('Refreshing portfolio after consolidation...')
@@ -149,7 +149,7 @@ export function useTokenConsolidationService() {
             } catch (refreshError) {
                 console.error('Error refreshing portfolio:', refreshError)
             }
-        }, 5000) // Esperar 5 segundos para dar tiempo a que las transacciones se procesen
+        }, 5000) // Wait 5 seconds to give time for transactions to be processed
 
         return results
     }

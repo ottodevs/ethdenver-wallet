@@ -3,7 +3,7 @@ import { ObservablePersistLocalStorage } from '@legendapp/state/persist-plugins/
 import { syncObservable } from '@legendapp/state/sync'
 import type { OktoClient } from '@okto_web3/react-sdk'
 
-// Interfaz para el estado de autenticación
+// Interface for the authentication state
 interface AuthState {
     isAuthenticated: boolean
     isLoading: boolean
@@ -13,7 +13,7 @@ interface AuthState {
     lastChecked: number
 }
 
-// Crear el observable con estado inicial
+// Create the observable with initial state
 export const authState$ = observable<AuthState>({
     isAuthenticated: false,
     isLoading: true,
@@ -23,7 +23,7 @@ export const authState$ = observable<AuthState>({
     lastChecked: 0,
 })
 
-// Configurar la persistencia local
+// Configure local persistence
 syncObservable(authState$, {
     persist: {
         name: 'okto-auth',
@@ -31,13 +31,13 @@ syncObservable(authState$, {
     },
 })
 
-// Estado de sincronización para verificar si los datos están cargados
+// Synchronization state to check if data is loaded
 export const authSyncState$ = syncState(authState$)
 
-// Constantes para los intervalos
-const MIN_CHECK_INTERVAL = 30 * 1000 // 30 segundos
+// Constants for the intervals
+const MIN_CHECK_INTERVAL = 30 * 1000 // 30 seconds
 
-// Función para verificar el estado de autenticación
+// Function to check the authentication status
 export async function checkAuthStatus(oktoClient: OktoClient): Promise<boolean> {
     if (!oktoClient) return false
 
@@ -45,7 +45,7 @@ export async function checkAuthStatus(oktoClient: OktoClient): Promise<boolean> 
         const now = Date.now()
         const lastChecked = authState$.lastChecked.get()
 
-        // Solo verificar si ha pasado suficiente tiempo desde la última verificación
+        // Only check if enough time has passed since the last check
         if (now - lastChecked < MIN_CHECK_INTERVAL) {
             return authState$.isAuthenticated.get()
         }
@@ -74,7 +74,7 @@ export async function checkAuthStatus(oktoClient: OktoClient): Promise<boolean> 
     }
 }
 
-// Función para autenticar con Okto
+// Function to authenticate with Okto
 export async function handleAuthenticate(oktoClient: OktoClient, idToken: string | null): Promise<unknown> {
     if (!idToken || !oktoClient) {
         console.error('Okto client not available')
@@ -82,7 +82,7 @@ export async function handleAuthenticate(oktoClient: OktoClient, idToken: string
         return { result: false, error: 'Okto client not available' }
     }
 
-    // Prevenir múltiples intentos de autenticación
+    // Prevent multiple authentication attempts
     if (authState$.isAuthenticating.get()) {
         return { result: false, error: 'Authentication already in progress' }
     }
@@ -91,7 +91,7 @@ export async function handleAuthenticate(oktoClient: OktoClient, idToken: string
         authState$.isAuthenticating.set(true)
         authState$.authStatus.set('Authenticating with Okto...')
 
-        // Verificar si ya está autenticado
+        // Check if already authenticated
         const isLoggedIn = oktoClient.isLoggedIn()
         if (isLoggedIn) {
             console.log('Already authenticated with Okto')
@@ -103,14 +103,14 @@ export async function handleAuthenticate(oktoClient: OktoClient, idToken: string
             return { result: true }
         }
 
-        // Autenticar con OAuth
+        // Authenticate with OAuth
         const user = await oktoClient.loginUsingOAuth(
             {
                 idToken: idToken,
                 provider: 'google',
             },
             sessionKey => {
-                // Almacenar la clave de sesión de forma segura
+                // Store the session key securely
                 localStorage.setItem('okto_session_key', sessionKey.sessionPrivKey)
             },
         )
@@ -125,7 +125,7 @@ export async function handleAuthenticate(oktoClient: OktoClient, idToken: string
     } catch (error) {
         console.error('Authentication attempt failed:', error)
 
-        // Verificar si ya estamos autenticados a pesar del error
+        // Check if we are already authenticated despite the error
         try {
             const isLoggedIn = oktoClient.isLoggedIn()
             if (isLoggedIn) {
@@ -149,7 +149,7 @@ export async function handleAuthenticate(oktoClient: OktoClient, idToken: string
     }
 }
 
-// Función para limpiar el estado
+// Function to clear the state
 export function clearAuthState() {
     batch(() => {
         authState$.isAuthenticated.set(false)

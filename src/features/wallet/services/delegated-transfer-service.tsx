@@ -87,16 +87,19 @@ export function useDelegatedTransferService() {
             // Execute the transfer using the abstracted flow
             const jobId = await tokenTransfer(oktoClient, transferParams)
 
-            // Update the transaction status - only pass the ID as that's what the function expects
-            updatePendingTransaction(pendingTxId)
+            // Update the transaction status with both ID and oktoClient
+            if (oktoClient) {
+                updatePendingTransaction(pendingTxId)
+            }
 
             return jobId
         } catch (error) {
             console.error('Token transfer failed:', error)
 
-            // We can't pass these additional parameters since the function only accepts one parameter
-            // Just update with the ID
-            updatePendingTransaction(pendingTxId)
+            // Update with the ID and oktoClient
+            if (oktoClient) {
+                updatePendingTransaction(pendingTxId)
+            }
 
             throw error
         }

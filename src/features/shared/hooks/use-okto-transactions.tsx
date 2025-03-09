@@ -19,14 +19,14 @@ export const useOktoTransactions = () => {
     const { selectedAccount } = useOktoAccount()
     const { isAuthenticated } = useAuth()
 
-    // Obtener valores del estado observable
+    // Get values from the observable state
     const transactions = transactionsState$.transactions.get()
     const pendingTransactions = transactionsState$.pendingTransactions.get()
     const isLoading = transactionsState$.isLoading.get()
     const error = transactionsState$.error.get()
     const hasInitialized = transactionsState$.hasInitialized.get()
 
-    // Sincronizar cuando cambian las dependencias
+    // Sync when dependencies change
     useEffect(() => {
         if (oktoClient && selectedAccount && isAuthenticated) {
             console.log('[useOktoTransactions] Dependencies changed, syncing transactions')
@@ -34,12 +34,12 @@ export const useOktoTransactions = () => {
         }
     }, [oktoClient, selectedAccount, isAuthenticated])
 
-    // Función para añadir una transacción pendiente
+    // Function to add a pending transaction
     const addPendingTransaction = useCallback((transaction: Transaction) => {
         addPendingTx(transaction)
     }, [])
 
-    // Función para actualizar una transacción pendiente
+    // Function to update a pending transaction
     const updatePendingTransaction = useCallback(
         (id: string) => {
             if (oktoClient) {
@@ -49,7 +49,7 @@ export const useOktoTransactions = () => {
         [oktoClient],
     )
 
-    // Combinar transacciones pendientes y confirmadas para la UI
+    // Combine pending and confirmed transactions for the UI
     const allTransactions = [...pendingTransactions, ...transactions]
 
     return {

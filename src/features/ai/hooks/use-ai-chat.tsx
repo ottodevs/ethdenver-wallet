@@ -3,14 +3,14 @@ import { useEffect, useState } from 'react'
 import type { Message } from '../types'
 
 export function useAiChat() {
-    console.log('🔄 useAiChat hook inicializado')
+    console.log('🔄 useAiChat hook initialized')
 
     const [initialMessage] = useState<Message>({
         role: 'assistant',
         content: "Hi there! I'm your crypto assistant. How can I help you today?",
     })
 
-    console.log('📝 Mensaje inicial configurado:', initialMessage)
+    console.log('📝 Initial message configured:', initialMessage)
 
     const {
         messages: aiMessages,
@@ -30,63 +30,63 @@ export function useAiChat() {
             },
         ],
         onResponse: response => {
-            console.log('🟢 Respuesta recibida del API:', {
+            console.log('🟢 Received API response:', {
                 status: response.status,
                 headers: Object.fromEntries(response.headers.entries()),
             })
         },
         onFinish: message => {
-            console.log('✅ Mensaje completado:', message)
+            console.log('✅ Message completed:', message)
         },
         onError: error => {
-            console.error('❌ Error en el chat:', error)
+            console.error('❌ Chat error:', error)
         },
     })
 
-    // Log cuando cambian los mensajes
+    // Log when messages change
     useEffect(() => {
-        console.log('📨 aiMessages actualizados:', aiMessages)
+        console.log('📨 aiMessages updated:', aiMessages)
     }, [aiMessages])
 
-    // Log cuando cambia el estado de carga
+    // Log when the loading state changes
     useEffect(() => {
-        console.log('⏳ Estado de carga:', isLoading)
+        console.log('⏳ Loading state:', isLoading)
     }, [isLoading])
 
-    // Log cuando hay un error
+    // Log when there is an error
     useEffect(() => {
         if (error) {
-            console.error('🚨 Error detectado:', error)
+            console.error('🚨 Error detected:', error)
         }
     }, [error])
 
-    // Convertir el formato de mensajes de la biblioteca ai/react al formato de tu aplicación
+    // Convert the format of messages from the ai/react library to the format of your application
     const messages: Message[] = aiMessages.map(msg => ({
         role: msg.role as 'user' | 'assistant' | 'system',
         content: msg.content,
     }))
 
     const sendMessage = async (content: string) => {
-        console.log('📤 Enviando mensaje:', content)
+        console.log('📤 Sending message:', content)
 
         try {
-            // Crear un evento de formulario simulado
+            // Create a simulated form event
             const formEvent = new Event('submit') as unknown as React.FormEvent<HTMLFormElement>
 
-            console.log('🔄 Actualizando input con:', content)
+            console.log('🔄 Updating input with:', content)
             handleInputChange({ target: { value: content } } as React.ChangeEvent<HTMLInputElement>)
 
-            console.log('🔄 Enviando formulario...')
+            console.log('🔄 Sending form...')
             await handleSubmit(formEvent)
 
-            console.log('✅ Mensaje enviado correctamente')
+            console.log('✅ Message sent correctly')
         } catch (error) {
-            console.error('❌ Error al enviar mensaje:', error)
+            console.error('❌ Error sending message:', error)
         }
     }
 
     const clearChat = () => {
-        console.log('🧹 Limpiando chat...')
+        console.log('🧹 Clearing chat...')
 
         setMessages([
             {
@@ -96,23 +96,23 @@ export function useAiChat() {
             },
         ])
 
-        console.log('✅ Chat limpiado')
+        console.log('✅ Chat cleared')
     }
 
-    // Verificar que la API esté configurada correctamente
+    // Check that the API is configured correctly
     useEffect(() => {
         fetch('/api/chat', {
             method: 'HEAD',
         })
             .then(response => {
-                console.log('🔍 Verificación de endpoint /api/chat:', {
+                console.log('🔍 Checking /api/chat endpoint:', {
                     status: response.status,
                     ok: response.ok,
                     headers: Object.fromEntries(response.headers.entries()),
                 })
             })
             .catch(error => {
-                console.error('❌ Error al verificar endpoint /api/chat:', error)
+                console.error('❌ Error checking /api/chat endpoint:', error)
             })
     }, [])
 

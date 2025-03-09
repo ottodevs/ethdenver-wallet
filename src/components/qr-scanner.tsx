@@ -107,14 +107,14 @@ export function QrScanner({ onDecodeAction, onErrorAction, className, active = t
 
                 scannerRef.current = qrScanner
 
-                // Silenciar el warning de HTTPS
+                // Silence the HTTPS warning
                 const originalWarn = console.warn
                 console.warn = function (message, ...args) {
                     if (
                         typeof message === 'string' &&
                         message.includes('camera stream is only accessible if the page is transferred via https')
                     ) {
-                        // Ignorar este warning específico
+                        // Ignore this specific warning
                         return
                     }
                     originalWarn.call(console, message, ...args)
@@ -124,7 +124,7 @@ export function QrScanner({ onDecodeAction, onErrorAction, className, active = t
                 qrScanner
                     .start()
                     .then(() => {
-                        // Restaurar console.warn
+                        // Restore console.warn
                         console.warn = originalWarn
 
                         if (mountedRef.current) {
@@ -133,7 +133,7 @@ export function QrScanner({ onDecodeAction, onErrorAction, className, active = t
                         }
                     })
                     .catch(err => {
-                        // Restaurar console.warn
+                        // Restore console.warn
                         console.warn = originalWarn
 
                         if (mountedRef.current) {
@@ -152,7 +152,7 @@ export function QrScanner({ onDecodeAction, onErrorAction, className, active = t
                     onErrorAction(err instanceof Error ? err : String(err))
                 }
             }
-        }, 300) // Pequeño retraso para evitar problemas de montaje/desmontaje rápido
+        }, 300) // Small delay to avoid rapid mount/unmount issues
 
         // Cleanup function
         return () => {

@@ -3,7 +3,7 @@ import type { NextRequest } from 'next/server'
 import { NextResponse } from 'next/server'
 
 export default auth(req => {
-    // No aplicar autenticación a recursos estáticos
+    // Do not apply authentication to static resources
     const isStaticResource =
         req.nextUrl.pathname.startsWith('/_next') ||
         req.nextUrl.pathname.includes('.svg') ||
@@ -15,18 +15,18 @@ export default auth(req => {
         return NextResponse.next()
     }
 
-    // Permitir acceso a la página de autenticación sin estar autenticado
+    // Allow access to the authentication page without being authenticated
     if (req.nextUrl.pathname === '/auth') {
         return NextResponse.next()
     }
 
-    // Redirigir a login si no está autenticado y no es una ruta pública
+    // Redirect to login if not authenticated and not a public route
     if (!req.auth && !req.nextUrl.pathname.startsWith('/api/auth')) {
         const newUrl = new URL('/auth', req.nextUrl.origin)
         return Response.redirect(newUrl)
     }
 
-    // Configurar headers CORS
+    // Configure CORS headers
     const response = NextResponse.next()
     response.headers.set('Access-Control-Allow-Credentials', 'true')
     response.headers.set('Access-Control-Allow-Origin', '*')
@@ -40,13 +40,13 @@ export default auth(req => {
 })
 
 export function middleware(request: NextRequest) {
-    // Verificar si la clave API de OpenAI está configurada
+    // Check if the OpenAI API key is configured
     if (!process.env.OPENAI_API_KEY) {
         console.error(
-            '⚠️ La clave API de OpenAI no está configurada. Por favor, configura OPENAI_API_KEY en tu archivo .env.local',
+            '⚠️ The OpenAI API key is not configured. Please configure OPENAI_API_KEY in your .env.local file',
         )
 
-        // Si la solicitud es a la API de chat, devolver un error
+        // If the request is to the chat API, return an error
         if (request.nextUrl.pathname.startsWith('/api/chat')) {
             return NextResponse.json({ error: 'OpenAI API key not configured' }, { status: 500 })
         }

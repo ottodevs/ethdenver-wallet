@@ -13,7 +13,7 @@ export type FearGreedHistoryData = {
 }
 
 /**
- * Obtiene el índice actual de Fear & Greed
+ * Gets the current Fear & Greed index
  */
 export async function getCurrentFearGreedIndex(): Promise<FearGreedData> {
     try {
@@ -29,7 +29,7 @@ export async function getCurrentFearGreedIndex(): Promise<FearGreedData> {
         throw new Error('No data available')
     } catch (error) {
         console.error('Error fetching Fear & Greed index:', error)
-        // Datos de respaldo en caso de error
+        // Backup data in case of error
         return {
             value: 45,
             value_classification: 'Neutral',
@@ -40,8 +40,8 @@ export async function getCurrentFearGreedIndex(): Promise<FearGreedData> {
 }
 
 /**
- * Obtiene el historial del índice Fear & Greed
- * @param days Número de días para obtener el historial
+ * Gets the Fear & Greed history
+ * @param days Number of days to get the history
  */
 export async function getFearGreedHistory(days: number = 30): Promise<FearGreedHistoryData[]> {
     try {
@@ -61,7 +61,7 @@ export async function getFearGreedHistory(days: number = 30): Promise<FearGreedH
     } catch (error) {
         console.error('Error fetching Fear & Greed history:', error)
 
-        // Datos de respaldo en caso de error
+        // Backup data in case of error
         const backupData: FearGreedHistoryData[] = []
         const today = new Date()
 
@@ -69,7 +69,7 @@ export async function getFearGreedHistory(days: number = 30): Promise<FearGreedH
             const date = new Date(today)
             date.setDate(date.getDate() - i)
 
-            // Generar un valor aleatorio entre 25 y 75 para simular datos
+            // Generate a random value between 25 and 75 to simulate data
             const value = Math.floor(Math.random() * 50) + 25
             let classification = 'Neutral'
 

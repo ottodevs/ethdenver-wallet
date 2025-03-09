@@ -15,7 +15,7 @@ export const useOktoAccount = () => {
     const oktoClient = useOkto()
     const { isAuthenticated } = useAuth()
 
-    // Sincronizar cuando cambian las dependencias
+    // Sync when dependencies change
     useEffect(() => {
         if (oktoClient && isAuthenticated) {
             console.log('[useOktoAccount] Dependencies changed, syncing accounts')

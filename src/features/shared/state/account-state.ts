@@ -4,14 +4,14 @@ import { syncObservable } from '@legendapp/state/sync'
 import type { OktoClient } from '@okto_web3/react-sdk'
 import { getAccount } from '@okto_web3/react-sdk'
 
-// Definición de la interfaz de cuenta
+// Definition of the account interface
 export interface OktoAccount {
     address: string
     networkName: string
     networkId: string
 }
 
-// Interfaz para el estado de cuentas
+// Interface for the accounts state
 interface AccountState {
     accounts: OktoAccount[]
     selectedAccount: OktoAccount | null
@@ -20,7 +20,7 @@ interface AccountState {
     lastUpdated: number
 }
 
-// Crear el observable con estado inicial
+// Create the observable with initial state
 export const accountState$ = observable<AccountState>({
     accounts: [],
     selectedAccount: null,
@@ -29,7 +29,7 @@ export const accountState$ = observable<AccountState>({
     lastUpdated: 0,
 })
 
-// Configurar la persistencia local
+// Configure local persistence
 syncObservable(accountState$, {
     persist: {
         name: 'okto-accounts',
@@ -37,16 +37,16 @@ syncObservable(accountState$, {
     },
 })
 
-// Estado de sincronización para verificar si los datos están cargados
+// Synchronization state to check if data is loaded
 export const accountSyncState$ = syncState(accountState$)
 
-// Función para sincronizar las cuentas
+// Function to sync accounts
 export async function syncAccounts(oktoClient: OktoClient, forceRefresh = false) {
     const now = Date.now()
     const lastUpdated = accountState$.lastUpdated.get()
     const CACHE_DURATION = 5 * 60 * 1000 // 5 minutos
 
-    // Si no es forzado y los datos son recientes, no actualizar
+    // If not forced and data is recent, do not update
     if (!forceRefresh && lastUpdated && now - lastUpdated < CACHE_DURATION) {
         console.log('[syncAccounts] Using cached data:', {
             cacheAge: now - lastUpdated,
@@ -55,7 +55,7 @@ export async function syncAccounts(oktoClient: OktoClient, forceRefresh = false)
         return
     }
 
-    // Marcar como cargando
+    // Mark as loading
     accountState$.isLoading.set(true)
 
     try {
@@ -71,7 +71,7 @@ export async function syncAccounts(oktoClient: OktoClient, forceRefresh = false)
 
             batch(() => {
                 accountState$.accounts.set(formattedAccounts)
-                // Si no hay cuenta seleccionada o la cuenta seleccionada ya no existe, seleccionar la primera
+                // If there is no selected account or the selected account no longer exists, select the first one
                 if (
                     !accountState$.selectedAccount.get() ||
                     !formattedAccounts.some(acc => acc.address === accountState$.selectedAccount.get()?.address)
@@ -105,7 +105,7 @@ export async function syncAccounts(oktoClient: OktoClient, forceRefresh = false)
     }
 }
 
-// Función para seleccionar una cuenta
+// Function to select an account
 export function selectAccount(address: string) {
     const accounts = accountState$.accounts.get()
     const account = accounts.find(acc => acc.address === address)
@@ -116,7 +116,7 @@ export function selectAccount(address: string) {
     return false
 }
 
-// Función para limpiar el estado
+// Function to clear the state
 export function clearAccountState() {
     batch(() => {
         accountState$.accounts.set([])

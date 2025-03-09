@@ -33,7 +33,7 @@ export const WalletDashboard = observer(function WalletDashboard() {
     const isLoadingPortfolio = isClient ? portfolioState$.isLoading.get() : true
     const isLoadingNFTs = isClient ? nftsState$.isLoading.get() : true
 
-    // Determinamos si estamos cargando basado en el tab activo
+    // Determine if we are loading based on the active tab
     const isLoadingContent =
         isLoading ||
         (isAuthenticated && ((activeTab === 'assets' && isLoadingPortfolio) || (activeTab === 'nfts' && isLoadingNFTs)))

@@ -36,7 +36,7 @@ export function useTokenTransferService() {
             throw new Error('Okto client not initialized')
         }
 
-        // Verificar autenticación antes de continuar
+        // Check authentication before continuing
         const isAuth = await checkAuthStatus()
         if (!isAuth) {
             throw new Error('Authentication required')
@@ -86,11 +86,11 @@ export function useTokenTransferService() {
 
             console.log('Transfer params:', transferParams)
 
-            // Usar el flujo abstracto directamente - Okto maneja internamente la creación y ejecución del UserOp
+            // Use the abstract flow directly - Okto handles internally the creation and execution of the UserOp
             const result = await tokenTransfer(oktoClient, transferParams)
             console.log('Token transfer result:', result)
 
-            // El resultado es un jobId (string)
+            // The result is a jobId (string)
             const jobId = result
             console.log('Transaction submitted with jobId:', jobId)
 

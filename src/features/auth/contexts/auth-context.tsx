@@ -7,7 +7,7 @@ import { useSession } from 'next-auth/react'
 import type { ReactNode } from 'react'
 import { createContext, useCallback, useContext, useEffect, useMemo } from 'react'
 
-// Constante para el intervalo de verificación (5 minutos en ms)
+// Constant for the verification interval (5 minutes in ms)
 const AUTH_CHECK_INTERVAL = 5 * 60 * 1000
 
 interface AuthContextType {
@@ -59,7 +59,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const handleLogout = useCallback(() => {
         if (oktoClient) {
             oktoClient.sessionClear()
-            // Actualizar el estado de autenticación
+            // Update the authentication state
             authState$.isAuthenticated.set(false)
             authState$.authStatus.set('')
             console.log('User logged out')

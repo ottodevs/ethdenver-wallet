@@ -25,13 +25,13 @@ export const TokenList = observer(function TokenList({ animated = true }: { anim
     const [showConsolidateModal, setShowConsolidateModal] = useState(false)
     const [showRefreshButton, setShowRefreshButton] = useState(false)
 
-    // Obtenemos los valores del estado observable
+    // Get the values from the observable state
     const tokens = portfolioState$.tokens.get()
     const isLoading = portfolioState$.isLoading.get()
     const error = portfolioState$.error.get()
     const hasInitialized = portfolioState$.lastUpdated.get() > 0 || !!error
 
-    // Calculamos los tokens de bajo valor
+    // Calculate the low-value tokens
     const smallValueTokens = tokens.filter(token => token.valueUsd < 10 && !token.isNative)
     const totalSmallTokensValue = smallValueTokens.reduce((sum, t) => sum + t.valueUsd, 0)
 
