@@ -195,6 +195,9 @@ importers:
       eslint-plugin-storybook:
         specifier: 0.11.4
         version: 0.11.4(eslint@9.22.0(jiti@2.4.2))(typescript@5.8.2)
+      husky:
+        specifier: ^9.1.7
+        version: 9.1.7
       playwright:
         specifier: 1.51.0
         version: 1.51.0
@@ -207,6 +210,9 @@ importers:
       storybook:
         specifier: 8.6.4
         version: 8.6.4(prettier@3.5.3)
+      sync-versions:
+        specifier: node scripts/sync-versions.js
+        version: link:node scripts/sync-versions.js
       tailwindcss:
         specifier: 4.0.12
         version: 4.0.12
@@ -2917,6 +2923,11 @@ packages:
 
   html-void-elements@3.0.0:
     resolution: {integrity: sha512-bEqo66MRXsUGxWHV5IP0PUiAWwoEjba4VCzg0LjFJBpchPaTfyfCKTG6bc5F8ucKec3q5y6qOdGyYTSBEvhCrg==}
+
+  husky@9.1.7:
+    resolution: {integrity: sha512-5gs5ytaNjBrh5Ow3zrvdUUY+0VxIuWVL4i9irt6friV+BqdCfmV11CQTWMiBYWHbXhco+J1kHfTOUkePhCDvMA==}
+    engines: {node: '>=18'}
+    hasBin: true
 
   ignore@5.3.2:
     resolution: {integrity: sha512-hsBTNUqQTDwkWtcdYI2i06Y/nUBEsNEDJKjWdigLvegy8kDuJAS8uRlpkkcQpyEXL0Z/pjDy5HBmMjRCJ2gq+g==}
@@ -7560,6 +7571,8 @@ snapshots:
   html-url-attributes@3.0.1: {}
 
   html-void-elements@3.0.0: {}
+
+  husky@9.1.7: {}
 
   ignore@5.3.2: {}
 
