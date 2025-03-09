@@ -1,24 +1,33 @@
+import { cn } from '@/lib/utils/tailwind'
 import ReactMarkdown from 'react-markdown'
-import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
-import { vscDarkPlus } from 'react-syntax-highlighter/dist/cjs/styles/prism'
+import SyntaxHighlighter from 'react-syntax-highlighter'
+import { docco } from 'react-syntax-highlighter/dist/esm/styles/hljs'
+import rehypeRaw from 'rehype-raw'
 
-type MarkdownProps = {
+interface MarkdownProps {
     content: string
+    className?: string
 }
 
-export function Markdown({ content }: MarkdownProps) {
+export function Markdown({ content, className }: MarkdownProps) {
     return (
-        <div className='prose prose-invert max-w-none'>
+        <div className={cn('prose prose-sm dark:prose-invert max-w-none', className)}>
             <ReactMarkdown
+                rehypePlugins={[rehypeRaw]}
                 components={{
-                    code({ node, inline, className, children, ...props }) {
+                    code(props) {
+                        const { className, children, ...rest } = props
                         const match = /language-(\w+)/.exec(className || '')
-                        return !inline && match ? (
-                            <SyntaxHighlighter style={vscDarkPlus} language={match[1]} PreTag='div' {...props}>
+                        return match ? (
+                            <SyntaxHighlighter
+                                language={match[1]}
+                                style={docco}
+                                // {...rest}
+                            >
                                 {String(children).replace(/\n$/, '')}
                             </SyntaxHighlighter>
                         ) : (
-                            <code className={className} {...props}>
+                            <code className={className} {...rest}>
                                 {children}
                             </code>
                         )
