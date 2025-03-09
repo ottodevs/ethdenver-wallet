@@ -1,18 +1,74 @@
-name: deploy website
-on: [pull_request]
+name: Deploy Website
+
+on:
+    push:
+        branches: ['main']
+    pull_request:
+        types: [opened, synchronize, reopened]
+    workflow_dispatch:
+
+permissions:
+    contents: read
+    pull-requests: write
+
+# Prevent concurrent executions and cancel builds in progress except on main
+concurrency:
+    group: ${{ github.workflow }}-${{ github.ref }}
+    cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
 jobs:
     deploy:
         runs-on: ubuntu-latest
+        timeout-minutes: 15 # Set a maximum time to avoid infinite jobs
+        environment:
+            name: ${{ github.ref == 'refs/heads/main' && 'production' || 'preview' }}
+            url: ${{ steps.vercel-deploy.outputs.preview-url }}
+
         steps:
-            - uses: actions/checkout@v2
-            #  your build commands
-            # - run: |
-            #    ng build --prod
-            - uses: amondnet/vercel-action@v25 #deploy
+            - name: Checkout code
+              uses: actions/checkout@v4
               with:
-                  vercel-token: ${{ secrets.VERCEL_TOKEN }} # Required
-                  github-token: ${{ secrets.GITHUB_TOKEN }} #Optional
-                  vercel-args: '--prod' #Optional
-                  vercel-org-id: ${{ secrets.ORG_ID}} #Required
-                  vercel-project-id: ${{ secrets.PROJECT_ID}} #Required
+                  fetch-depth: 1 # Optimization: clone only the last commit
+
+            # Optimized pnpm setup with cache
+            - name: Setup pnpm
+              uses: pnpm/action-setup@v4
+              with:
+                  version: '10.6.1'
+
+            - name: Setup Node.js
+              uses: actions/setup-node@v4
+              with:
+                  node-version: '22'
+                  cache: 'pnpm'
+
+            # Additional cache for dependencies
+            - name: Cache pnpm store
+              uses: actions/cache@v4
+              with:
+                  path: ~/.pnpm-store
+                  key: ${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}
+                  restore-keys: |
+                      ${{ runner.os }}-pnpm-
+
+            - name: Install dependencies
+              run: pnpm install --frozen-lockfile
+
+            # Optional: Run linting/tests before deployment
+            # - name: Run linting
+            #   run: pnpm lint
+
+            # - name: Run tests
+            #   run: pnpm test
+
+            # Deploy to Vercel (with automatic comments on PRs)
+            - name: Deploy to Vercel
+              id: vercel-deploy
+              uses: amondnet/vercel-action@v25
+              with:
+                  vercel-token: ${{ secrets.VERCEL_TOKEN }}
+                  github-token: ${{ secrets.GITHUB_TOKEN }}
+                  vercel-args: ${{ github.ref == 'refs/heads/main' && '--prod' || '' }}
+                  vercel-org-id: ${{ secrets.ORG_ID }}
+                  vercel-project-id: ${{ secrets.PROJECT_ID }}
                   working-directory: ./sub-directory
