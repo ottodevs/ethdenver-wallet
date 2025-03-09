@@ -1,42 +1,34 @@
-import "@/app/globals.css";
-import { ThemeProvider } from "@/components/theme-provider";
-import { ToastContextProvider } from "@/components/ui/toast-context";
-import type { Metadata } from "next";
-import { Inter, Outfit } from "next/font/google";
-import type React from "react";
+import '@/app/globals.css'
 
-const inter = Inter({ subsets: ["latin"] });
-const outfit = Outfit({
-  subsets: ["latin"],
-  variable: "--font-outfit",
-  display: "swap",
-});
+import AppProvider from '@/components/providers'
+import { outfit } from '@/lib/utils/fonts'
+import type { Metadata } from 'next'
+import { ThemeProvider } from 'next-themes'
 
 export const metadata: Metadata = {
-  title: "Blockchain Wallet",
-  description:
-    "A modern blockchain wallet with optimistic UI and chain abstraction",
-};
+    title: 'Aeris Wallet',
+    description:
+        'Effortless login, seamless wallet management, and reliable transactions across the most popular blockchains—combining simplicity with interoperability.',
+}
 
-export default function RootLayout({
-  children,
+export default async function RootLayout({
+    children,
 }: Readonly<{
-  children: React.ReactNode;
+    children: React.ReactNode
 }>) {
-  return (
-    <html lang="en" suppressHydrationWarning>
-      <body className={`${inter.className} ${outfit.variable}`}>
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="system"
-          enableSystem
-          disableTransitionOnChange
-        >
-          <ToastContextProvider>
-            {children}
-          </ToastContextProvider>
-        </ThemeProvider>
-      </body>
-    </html>
-  );
+    // const session = await auth()
+
+    // if (!session) {
+    //     redirect('/auth')
+    // }
+
+    return (
+        <html lang='en' suppressHydrationWarning>
+            <body className={`${outfit.className} antialiased`}>
+                <ThemeProvider attribute='class' defaultTheme='system' enableSystem disableTransitionOnChange>
+                    <AppProvider>{children}</AppProvider>
+                </ThemeProvider>
+            </body>
+        </html>
+    )
 }

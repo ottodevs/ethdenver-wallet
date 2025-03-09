@@ -1,16 +1,34 @@
-import { dirname } from "path";
-import { fileURLToPath } from "url";
-import { FlatCompat } from "@eslint/eslintrc";
+import { FlatCompat } from '@eslint/eslintrc'
+import { dirname } from 'path'
+import { fileURLToPath } from 'url'
+// Comment temporarily until Tailwind 4 support is added
+// import tailwind from 'eslint-plugin-tailwindcss'
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = dirname(__filename)
 
 const compat = new FlatCompat({
-  baseDirectory: __dirname,
-});
+    baseDirectory: __dirname,
+})
 
 const eslintConfig = [
-  ...compat.extends("next/core-web-vitals", "next/typescript"),
-];
+    ...compat.config({
+        extends: ['next/core-web-vitals', 'next/typescript', 'prettier'],
+    }),
+    {
+        files: ['**/*.{js,jsx,ts,tsx}'],
+        rules: {
+            'react/self-closing-comp': 'warn',
+            '@typescript-eslint/no-unused-vars': [
+                'error',
+                {
+                    argsIgnorePattern: '^_',
+                    varsIgnorePattern: '^_',
+                },
+            ],
+            '@typescript-eslint/consistent-type-imports': 'warn',
+        },
+    },
+]
 
-export default eslintConfig;
+export default eslintConfig
