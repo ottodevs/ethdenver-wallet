@@ -39,19 +39,19 @@ jobs:
                   echo "node-version=$NODE_VERSION" >> $GITHUB_OUTPUT
                   echo "pnpm-version=$PNPM_VERSION" >> $GITHUB_OUTPUT
 
-            # Setup Node.js (without configuring cache yet)
+            # Setup Node.js
             - name: Setup Node.js
               uses: actions/setup-node@v4
               with:
                   node-version: ${{ steps.versions.outputs.node-version }}
 
-            # Activate Corepack and configure pnpm
+            # Activar Corepack y usar pnpm
             - name: Setup pnpm with Corepack
               run: |
                   corepack enable
                   corepack prepare pnpm@${{ steps.versions.outputs.pnpm-version }} --activate
 
-            # Configure pnpm cache
+            # Configurar caché para pnpm
             - name: Setup pnpm cache
               uses: actions/setup-node@v4
               with:
@@ -64,17 +64,15 @@ jobs:
 
             # Install Vercel CLI
             - name: Install Vercel CLI
-              run: npm install --global vercel@latest
+              run: pnpm add --global vercel@latest
 
             # Pull Vercel Environment Information
             - name: Pull Vercel Environment Information
               run: vercel pull --yes --environment=${{ github.ref == 'refs/heads/main' && 'production' || 'preview' }} --token=${{ secrets.VERCEL_TOKEN }}
-              working-directory: ./sub-directory
 
             # Build Project Artifacts
             - name: Build Project Artifacts
               run: vercel build ${{ github.ref == 'refs/heads/main' && '--prod' || '' }} --token=${{ secrets.VERCEL_TOKEN }}
-              working-directory: ./sub-directory
 
             # Deploy Project Artifacts to Vercel
             - name: Deploy Project Artifacts to Vercel
@@ -82,7 +80,6 @@ jobs:
               run: |
                   DEPLOYMENT_URL=$(vercel deploy --prebuilt ${{ github.ref == 'refs/heads/main' && '--prod' || '' }} --token=${{ secrets.VERCEL_TOKEN }})
                   echo "PREVIEW_URL=$DEPLOYMENT_URL" >> $GITHUB_OUTPUT
-              working-directory: ./sub-directory
 
             # Use deployment URL in subsequent steps if needed
             - name: Use deployment URL
