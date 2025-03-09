@@ -20,7 +20,7 @@ concurrency:
 jobs:
     deploy:
         runs-on: ubuntu-latest
-        timeout-minutes: 15 # Set a maximum time to avoid infinite jobs
+        timeout-minutes: 15
         environment:
             name: ${{ github.ref == 'refs/heads/main' && 'production' || 'preview' }}
 
@@ -28,7 +28,7 @@ jobs:
             - name: Checkout code
               uses: actions/checkout@v4
               with:
-                  fetch-depth: 1 # Optimization: clone only the last commit
+                  fetch-depth: 1
 
             # Extract Node.js and pnpm versions from package.json
             - name: Extract versions from package.json
@@ -39,47 +39,27 @@ jobs:
                   echo "node-version=$NODE_VERSION" >> $GITHUB_OUTPUT
                   echo "pnpm-version=$PNPM_VERSION" >> $GITHUB_OUTPUT
 
-            # Configuración de pnpm con versión extraída del package.json
+            # Setup pnpm
             - name: Setup pnpm
               uses: pnpm/action-setup@v4
+              with:
+                  version: ${{ steps.versions.outputs.pnpm-version }}
 
-            # Setup Node.js with version extracted from package.json
+            # Setup Node.js
             - name: Setup Node.js
               uses: actions/setup-node@v4
               with:
                   node-version: ${{ steps.versions.outputs.node-version }}
                   cache: 'pnpm'
 
-            - name: Install npm explicitly to provide npx
-              run: corepack prepare npm@latest --activate
-
-            # Additional cache for dependencies
-            - name: Cache pnpm store
-              uses: actions/cache@v4
-              with:
-                  path: ~/.pnpm-store
-                  key: ${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}
-                  restore-keys: |
-                      ${{ runner.os }}-pnpm-
-
+            # Install dependencies
             - name: Install dependencies
               run: pnpm install --frozen-lockfile
 
-            # Ad"
-            - name: Enable Corepack
-              run: corepack enable
-
-            # Optional: Run linting/tests before deployment
-            # - name: Run linting
-            #   run: pnpm lint
-
-            # - name: Run tests
-            #   run: pnpm test
-
-            # Deploy to Vercel (with automatic comments on PRs)
+            # Deploy to Vercel
             - name: Deploy to Vercel
               id: vercel-deploy
-              uses: BetaHuhn/deploy-to-vercel-action@v1
+              uses: EvanNotFound/vercel-deployment-for-github-actions@v1
               with:
                   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
                   VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
