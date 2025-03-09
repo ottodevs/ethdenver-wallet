@@ -167,8 +167,16 @@ export const TokenList = observer(function TokenList({ animated = true }: { anim
                             className='border-border hover:bg-muted/50 mb-4 flex items-center justify-between rounded-md border-b p-2 pb-4'
                             onClick={() => setShowTokenDetail(token.id)}>
                             <div className='flex items-center gap-3'>
-                                <div className='flex h-8 w-8 items-center justify-center rounded-full bg-[#EDEFF1]'>
-                                    <Image src={token.icon} alt={token.name} width={32} height={32} />
+                                <div className='flex h-8 w-8 items-center justify-center overflow-hidden rounded-full bg-white'>
+                                    <div className='relative flex h-6 w-6 items-center justify-center'>
+                                        <Image
+                                            src={token.icon}
+                                            alt={token.name}
+                                            width={24}
+                                            height={24}
+                                            className='object-contain'
+                                        />
+                                    </div>
                                 </div>
                                 <div>
                                     <div className='font-medium'>{token.name}</div>
