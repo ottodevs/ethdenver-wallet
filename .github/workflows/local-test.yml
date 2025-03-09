@@ -12,13 +12,11 @@ jobs:
 
             - name: Setup pnpm
               uses: pnpm/action-setup@v4
-              with:
-                  run_install: false
 
             - name: Setup Node.js
               uses: actions/setup-node@v4
               with:
-                  node-version: '18'
+                  node-version: '22'
                   cache: 'pnpm'
 
             # Cache Next.js build
@@ -34,8 +32,6 @@ jobs:
             - name: Install dependencies
               run: pnpm install --frozen-lockfile
 
+            # Build Project using Next.js directly
             - name: Build Project
               run: pnpm build
-              env:
-                  NEXT_PUBLIC_CLIENT_PRIVATE_KEY: '0x555357496d024bbc995c6304213637c4f69fe0bbd044ea103b61957962571699'
-                  NEXT_PUBLIC_CLIENT_SWA: '0x6abff94c633ab6F6FE5422d7494D517970105719'
