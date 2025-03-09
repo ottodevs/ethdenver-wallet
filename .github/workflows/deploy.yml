@@ -3,9 +3,7 @@ name: Deploy Website
 on:
     push:
         branches: ['main']
-    pull_request_target: # For forks
-        types: [opened, synchronize, reopened]
-    pull_request: # For same-repo PRs
+    pull_request:
         types: [opened, synchronize, reopened]
     workflow_dispatch:
 
@@ -28,30 +26,8 @@ jobs:
             url: ${{ steps.deploy.outputs.url }}
 
         steps:
-            # Determine the correct ref and repo to checkout for PRs
-            - name: Determine checkout parameters
-              id: checkout-params
-              uses: actions/github-script@v7
-              with:
-                  script: |
-                      const isPr = ['pull_request', 'pull_request_target'].includes(context.eventName)
-                      const ref = isPr ? context.payload.pull_request.head.ref : context.ref
-                      const repo = isPr ? context.payload.pull_request.head.repo.full_name : context.repo.full_name
-
-                      console.log(`Setting ref to: ${ref}`)
-                      console.log(`Setting repo to: ${repo}`)
-
-                      core.setOutput('ref', ref)
-                      core.setOutput('repo', repo)
-
-                      return { ref, repo }
-
             - name: Checkout code
               uses: actions/checkout@v4
-              with:
-                  ref: ${{ steps.checkout-params.outputs.result.ref || github.ref }}
-                  repository: ${{ steps.checkout-params.outputs.result.repo || github.repository }}
-                  fetch-depth: 1
 
             # Extract Node.js version from package.json
             - name: Extract versions from package.json
@@ -82,50 +58,46 @@ jobs:
                   cache: 'pnpm'
                   cache-dependency-path: '**/pnpm-lock.yaml'
 
-            # Cache Next.js build
-            - name: Cache Next.js build
-              uses: actions/cache@v4
-              with:
-                  path: |
-                      ${{ github.workspace }}/.next/cache
-                  key: ${{ runner.os }}-nextjs-${{ hashFiles('**/pnpm-lock.yaml') }}-${{ hashFiles('**/*.js', '**/*.jsx', '**/*.ts', '**/*.tsx') }}
-                  restore-keys: |
-                      ${{ runner.os }}-nextjs-${{ hashFiles('**/pnpm-lock.yaml') }}-
-
-            # Install dependencies
             - name: Install dependencies
               run: pnpm install --frozen-lockfile
 
-            # Pull Vercel environment variables
-            - name: Pull Vercel environment variables
+            - name: Create pnpm store directory if needed
+              run: mkdir -p ~/.pnpm-store
+
+            - name: Cache pnpm store
+              uses: actions/cache@v4
+              with:
+                  path: ~/.pnpm-store
+                  key: ${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}
+                  restore-keys: |
+                      ${{ runner.os }}-pnpm-
+
+            - name: Pull environment variables
               env:
-                  VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-                  VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-                  VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+                  VERCEL_ORG_ID: ${{ secrets.ORG_ID }}
+                  VERCEL_PROJECT_ID: ${{ secrets.PROJECT_ID }}
               run: vercel pull --yes --environment=${{ github.ref == 'refs/heads/main' && 'production' || 'preview' }} --token ${{ secrets.VERCEL_TOKEN }}
 
-            # Build the project
             - name: Build the project
               env:
-                  VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-                  VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-                  VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+                  VERCEL_ORG_ID: ${{ secrets.ORG_ID }}
+                  VERCEL_PROJECT_ID: ${{ secrets.PROJECT_ID }}
                   NEXT_TELEMETRY_DISABLED: 1
-              run: vercel build --token ${{ secrets.VERCEL_TOKEN }} ${{ github.ref == 'refs/heads/main' && '--prod' || '' }}
+              run: |
+                  echo "Building the project"
+                  vercel build --token ${{ secrets.VERCEL_TOKEN }} ${{ github.ref == 'refs/heads/main' && '--prod' || '' }}
 
-            # Deploy to Vercel
-            - name: Deploy to Vercel
+            - name: Deploy the project
               id: deploy
               env:
-                  VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-                  VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-                  VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+                  VERCEL_ORG_ID: ${{ secrets.ORG_ID }}
+                  VERCEL_PROJECT_ID: ${{ secrets.PROJECT_ID }}
               run: |
+                  echo "Deploying the project"
                   echo "url=$(vercel deploy --prebuilt --token ${{ secrets.VERCEL_TOKEN }} ${{ github.ref == 'refs/heads/main' && '--prod' || '' }})" >> $GITHUB_OUTPUT
 
-            # Add comment to PR with deployment URL
             - name: Comment on PR
-              if: github.event_name == 'pull_request' || github.event_name == 'pull_request_target'
+              if: github.event_name == 'pull_request'
               uses: actions/github-script@v7
               with:
                   github-token: ${{ secrets.GITHUB_TOKEN }}
