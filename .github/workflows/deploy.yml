@@ -62,6 +62,10 @@ jobs:
             - name: Install dependencies
               run: pnpm install --frozen-lockfile
 
+            # Ad"
+            - name: Enable Corepack
+              run: corepack enable
+
             # Optional: Run linting/tests before deployment
             # - name: Run linting
             #   run: pnpm lint
