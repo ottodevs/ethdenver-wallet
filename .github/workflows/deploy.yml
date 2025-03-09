@@ -3,7 +3,9 @@ name: Deploy Website
 on:
     push:
         branches: ['main']
-    pull_request_target: # Using pull_request_target to support deployments from forks
+    pull_request_target: # For forks
+        types: [opened, synchronize, reopened]
+    pull_request: # For same-repo PRs
         types: [opened, synchronize, reopened]
     workflow_dispatch:
 
