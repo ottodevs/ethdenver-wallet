@@ -12,11 +12,20 @@ jobs:
 
             - name: Setup pnpm
               uses: pnpm/action-setup@v4
+              with:
+                  run_install: false
+
+            # Extract Node.js version from package.json
+            - name: Extract versions from package.json
+              id: versions
+              run: |
+                  NODE_VERSION=$(node -p "require('./package.json').engines?.node || '22'")
+                  echo "node-version=$NODE_VERSION" >> $GITHUB_OUTPUT
 
             - name: Setup Node.js
               uses: actions/setup-node@v4
               with:
-                  node-version: '22'
+                  node-version: ${{ steps.versions.outputs.node-version }}
                   cache: 'pnpm'
 
             # Cache Next.js build
@@ -32,6 +41,7 @@ jobs:
             - name: Install dependencies
               run: pnpm install --frozen-lockfile
 
-            # Build Project using Next.js directly
             - name: Build Project
               run: pnpm build
+              env:
+                  NEXT_TELEMETRY_DISABLED: 1

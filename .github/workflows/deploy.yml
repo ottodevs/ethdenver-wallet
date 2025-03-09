@@ -3,7 +3,7 @@ name: Deploy Website
 on:
     push:
         branches: ['main']
-    pull_request:
+    pull_request_target: # Using pull_request_target to support deployments from forks
         types: [opened, synchronize, reopened]
     workflow_dispatch:
 
@@ -25,12 +25,32 @@ jobs:
             name: ${{ github.ref == 'refs/heads/main' && 'production' || 'preview' }}
 
         steps:
+            # Determine the correct ref and repo to checkout for PRs
+            - name: Determine checkout parameters
+              id: checkout-params
+              uses: actions/github-script@v7
+              with:
+                  script: |
+                      const isPr = ['pull_request', 'pull_request_target'].includes(context.eventName)
+                      const ref = isPr ? context.payload.pull_request.head.ref : context.ref
+                      const repo = isPr ? context.payload.pull_request.head.repo.full_name : context.repo.full_name
+
+                      console.log(`Setting ref to: ${ref}`)
+                      console.log(`Setting repo to: ${repo}`)
+
+                      core.setOutput('ref', ref)
+                      core.setOutput('repo', repo)
+
+                      return { ref, repo }
+
             - name: Checkout code
               uses: actions/checkout@v4
               with:
+                  ref: ${{ steps.checkout-params.outputs.result.ref || github.ref }}
+                  repository: ${{ steps.checkout-params.outputs.result.repo || github.repository }}
                   fetch-depth: 1
 
-            # Extract Node.js and pnpm versions from package.json
+            # Extract Node.js version from package.json
             - name: Extract versions from package.json
               id: versions
               run: |
@@ -41,8 +61,7 @@ jobs:
             - name: Setup pnpm
               uses: pnpm/action-setup@v4
               with:
-                  run_install: |
-                      args: [--global, vercel]
+                  run_install: false
 
             # Get pnpm store directory for caching
             - name: Get pnpm store directory
@@ -51,8 +70,8 @@ jobs:
               run: |
                   echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
 
-            # Cache Node.js
-            - name: Cache pnpm in Node.js
+            # Setup Node.js with pnpm cache
+            - name: Setup Node.js with pnpm cache
               uses: actions/setup-node@v4
               with:
                   node-version: ${{ steps.versions.outputs.node-version }}
@@ -69,50 +88,25 @@ jobs:
                   restore-keys: |
                       ${{ runner.os }}-nextjs-${{ hashFiles('**/pnpm-lock.yaml') }}-
 
+            # Install dependencies
             - name: Install dependencies
               run: pnpm install --frozen-lockfile
 
-            # Pull environment variables from Vercel
-            - name: Pull environment variables
-              run: vercel pull --yes --environment=${{ github.ref == 'refs/heads/main' && 'production' || 'preview' }} --token ${{ secrets.VERCEL_TOKEN }}
-              env:
-                  VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-                  VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
-
-            # Build Project Artifacts using Vercel CLI
-            - name: Build Project
-              run: vercel build ${{ github.ref == 'refs/heads/main' && '--prod' || '' }} --token ${{ secrets.VERCEL_TOKEN }}
-              env:
-                  VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-                  VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
-
-            # Deploy to Vercel using Vercel CLI
+            # Deploy to Vercel using BetaHuhn/deploy-to-vercel-action
             - name: Deploy to Vercel
+              uses: BetaHuhn/deploy-to-vercel-action@v1
               id: deploy
-              run: |
-                  echo "preview-url=$(vercel deploy --prebuilt --token ${{ secrets.VERCEL_TOKEN }} ${{ github.ref == 'refs/heads/main' && '--prod' || '' }})" >> $GITHUB_OUTPUT
-              env:
+              with:
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+                  VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
                   VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
                   VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
-
-            # Comment on PR with deployment URL - only when running in GitHub Actions and on a PR
-            - name: Comment on PR
-              if: github.event_name == 'pull_request' && github.event.pull_request.number != ''
-              uses: actions/github-script@v6
-              with:
-                  github-token: ${{ secrets.GITHUB_TOKEN }}
-                  script: |
-                      const issue_number = context.issue.number;
-                      if (!issue_number) {
-                        console.log('No issue/PR number found. Skipping comment.');
-                        return;
-                      }
-
-                      const deploymentUrl = '${{ steps.deploy.outputs.preview-url }}';
-
-                      github.rest.issues.createComment({
-                        issue_number: issue_number,
-                        owner: context.repo.owner,
-                        repo: context.repo.repo,
-                        body: `🚀 Deployment Preview: [Visit Preview](${deploymentUrl})`
-                      });
+                  PRODUCTION: ${{ github.ref == 'refs/heads/main' }}
+                  DEPLOY_PR_FROM_FORK: true
+                  GITHUB_DEPLOYMENT: true
+                  GITHUB_DEPLOYMENT_ENV: ${{ github.ref == 'refs/heads/main' && 'production' || 'preview' }}
+                  CREATE_COMMENT: true
+                  ATTACH_COMMIT_METADATA: true
+                  PR_LABELS: deployed
+                  BUILD_ENV: |
+                      NEXT_TELEMETRY_DISABLED=1
