@@ -35,15 +35,12 @@ jobs:
               id: versions
               run: |
                   NODE_VERSION=$(node -p "require('./package.json').engines?.node || '22'")
-                  PNPM_VERSION=$(node -p "require('./package.json').packageManager?.split('@')[1]?.split('+')[0] || '10.6.1'")
                   echo "node-version=$NODE_VERSION" >> $GITHUB_OUTPUT
-                  echo "pnpm-version=$PNPM_VERSION" >> $GITHUB_OUTPUT
 
             # Setup pnpm
             - name: Setup pnpm
-              uses: pnpm/action-setup@v2
+              uses: pnpm/action-setup@v4
               with:
-                  version: ${{ steps.versions.outputs.pnpm-version }}
                   run_install: false
 
             # Get pnpm store directory for caching
@@ -53,52 +50,62 @@ jobs:
               run: |
                   echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
 
-            # Setup Node.js
-            - name: Setup Node.js
+            # Cache Node.js
+            - name: Cache pnpm in Node.js
               uses: actions/setup-node@v4
               with:
                   node-version: ${{ steps.versions.outputs.node-version }}
                   cache: 'pnpm'
                   cache-dependency-path: '**/pnpm-lock.yaml'
 
-            # Install dependencies
+            # Cache Next.js build
+            - name: Cache Next.js build
+              uses: actions/cache@v4
+              with:
+                  path: |
+                      ${{ github.workspace }}/.next/cache
+                  key: ${{ runner.os }}-nextjs-${{ hashFiles('**/pnpm-lock.yaml') }}-${{ hashFiles('**/*.js', '**/*.jsx', '**/*.ts', '**/*.tsx') }}
+                  restore-keys: |
+                      ${{ runner.os }}-nextjs-${{ hashFiles('**/pnpm-lock.yaml') }}-
+
             - name: Install dependencies
               run: pnpm install --frozen-lockfile
 
-            # Install Vercel CLI locally
-            - name: Install Vercel CLI
-              run: pnpm add --save-dev vercel@latest
-
-            # Create Vercel project configuration
-            - name: Create .vercel directory and project.json
-              run: |
-                  mkdir -p .vercel
-                  echo '{"projectId":"${{ secrets.VERCEL_PROJECT_ID }}","orgId":"${{ secrets.VERCEL_ORG_ID }}"}' > .vercel/project.json
-
-            # Pull Vercel Environment Information
-            - name: Pull Vercel Environment Information
-              run: npx vercel pull --yes --environment=${{ github.ref == 'refs/heads/main' && 'production' || 'preview' }} --token=${{ secrets.VERCEL_TOKEN }}
-
             # Build Project Artifacts
-            - name: Build Project Artifacts
-              run: npx vercel build ${{ github.ref == 'refs/heads/main' && '--prod' || '' }} --token=${{ secrets.VERCEL_TOKEN }}
+            - name: Build Project
+              run: pnpm build
 
-            # Deploy Project Artifacts to Vercel
-            - name: Deploy Project Artifacts to Vercel
-              id: deploy
+            # Check if running in GitHub Actions or locally with act
+            - name: Check if running in GitHub Actions
+              id: check_github_actions
               run: |
-                  DEPLOYMENT_URL=$(npx vercel deploy --prebuilt ${{ github.ref == 'refs/heads/main' && '--prod' || '' }} --token=${{ secrets.VERCEL_TOKEN }})
-                  echo "PREVIEW_URL=$DEPLOYMENT_URL" >> $GITHUB_OUTPUT
+                  if [ "$GITHUB_ACTIONS" = "true" ] && [ -n "$GITHUB_HEAD_REF" ]; then
+                    echo "is_github_actions=true" >> $GITHUB_OUTPUT
+                  else
+                    echo "is_github_actions=false" >> $GITHUB_OUTPUT
+                  fi
 
-            # Comment on PR with deployment URL
+            # Deploy to Vercel using amondnet/vercel-action (only in GitHub Actions, not locally)
+            - name: Deploy to Vercel
+              if: steps.check_github_actions.outputs.is_github_actions == 'true'
+              uses: amondnet/vercel-action@v25
+              id: deploy
+              with:
+                  vercel-token: ${{ secrets.VERCEL_TOKEN }}
+                  github-token: ${{ secrets.GITHUB_TOKEN }}
+                  vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+                  vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+                  vercel-args: ${{ github.ref == 'refs/heads/main' && '--prod' || '' }}
+
+            # Comment on PR with deployment URL (only in GitHub Actions, not locally)
             - name: Comment on PR
-              if: github.event_name == 'pull_request'
+              if: github.event_name == 'pull_request' && steps.check_github_actions.outputs.is_github_actions == 'true'
               uses: actions/github-script@v6
               with:
                   github-token: ${{ secrets.GITHUB_TOKEN }}
                   script: |
                       const issue_number = context.issue.number;
-                      const deploymentUrl = '${{ steps.deploy.outputs.PREVIEW_URL }}';
+                      const deploymentUrl = '${{ steps.deploy.outputs.preview-url }}';
 
                       github.rest.issues.createComment({
                         issue_number: issue_number,
