@@ -39,18 +39,24 @@ jobs:
                   echo "node-version=$NODE_VERSION" >> $GITHUB_OUTPUT
                   echo "pnpm-version=$PNPM_VERSION" >> $GITHUB_OUTPUT
 
-            # Setup Node.js
+            # Setup Node.js (without configuring cache yet)
             - name: Setup Node.js
               uses: actions/setup-node@v4
               with:
                   node-version: ${{ steps.versions.outputs.node-version }}
-                  cache: 'pnpm' # Esto configura la caché para pnpm
 
-            # Activar Corepack y usar pnpm
+            # Activate Corepack and configure pnpm
             - name: Setup pnpm with Corepack
               run: |
                   corepack enable
                   corepack prepare pnpm@${{ steps.versions.outputs.pnpm-version }} --activate
+
+            # Configure pnpm cache
+            - name: Setup pnpm cache
+              uses: actions/setup-node@v4
+              with:
+                  node-version: ${{ steps.versions.outputs.node-version }}
+                  cache: 'pnpm'
 
             # Install dependencies
             - name: Install dependencies
