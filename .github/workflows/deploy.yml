@@ -10,6 +10,7 @@ on:
 permissions:
     contents: read
     pull-requests: write
+    deployments: write
 
 # Prevent concurrent executions and cancel builds in progress except on main
 concurrency:
