@@ -1,10 +1,20 @@
 import type { NextConfig } from 'next'
 
+import './src/lib/env/client'
+import './src/lib/env/server'
+
+const NEXT_PUBLIC_SERVER_URL = process.env.VERCEL_PROJECT_PRODUCTION_URL
+    ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
+    : process.env.NEXT_PUBLIC_SERVER_URL
+
+const NEXTAUTH_URL = process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : process.env.NEXTAUTH_URL
+
+console.log('NEXT_PUBLIC_SERVER_URL', NEXT_PUBLIC_SERVER_URL)
+
 const nextConfig: NextConfig = {
     env: {
-        NEXTAUTH_URL: process.env.VERCEL_URL
-            ? `https://${process.env.VERCEL_URL}`
-            : process.env.NEXTAUTH_URL || 'http://localhost:3000',
+        NEXTAUTH_URL,
+        NEXT_PUBLIC_SERVER_URL,
     },
     images: {
         remotePatterns: [
@@ -41,6 +51,7 @@ const nextConfig: NextConfig = {
             },
         ]
     },
+    // reactStrictMode: true,
 }
 
 export default nextConfig
