@@ -39,19 +39,7 @@ export default auth(req => {
     return response
 })
 
-export function middleware(request: NextRequest) {
-    // Check if the OpenAI API key is configured
-    if (!process.env.OPENAI_API_KEY) {
-        console.error(
-            '⚠️ The OpenAI API key is not configured. Please configure OPENAI_API_KEY in your .env.local file',
-        )
-
-        // If the request is to the chat API, return an error
-        if (request.nextUrl.pathname.startsWith('/api/chat')) {
-            return NextResponse.json({ error: 'OpenAI API key not configured' }, { status: 500 })
-        }
-    }
-
+export function middleware(_request: NextRequest) {
     return NextResponse.next()
 }
 
