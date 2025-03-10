@@ -20,5 +20,6 @@
         "source.organizeImports": "explicit"
     },
     "eslint.format.enable": true,
-    "eslint.validate": ["javascript", "typescript", "typescriptreact"]
+    "eslint.validate": ["javascript", "typescript", "typescriptreact"],
+    "typescript.tsdk": "node_modules/typescript/lib"
 }
