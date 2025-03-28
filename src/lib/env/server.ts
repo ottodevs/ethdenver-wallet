@@ -19,7 +19,7 @@ export const env = createEnv({
     },
     shared: {
         // Node environment
-        NODE_ENV: z.enum(['development', 'production']).default('development').describe('Node environment'),
+        NODE_ENV: z.enum(['development', 'production', 'test']).default('development').describe('Node environment'),
 
         // Vercel deployment URLs
         VERCEL_URL: z.string().optional(),

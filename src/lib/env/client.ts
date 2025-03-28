@@ -17,11 +17,13 @@ export const env = createEnv({
             .transform((val): Hex => val as Hex),
         NEXT_PUBLIC_ENVIRONMENT: z.enum(['sandbox', 'staging']).describe('Okto environment'),
         NEXT_PUBLIC_SERVER_URL: z.string().url().describe('Server URL'),
+        NEXT_PUBLIC_GOOGLE_CLIENT_ID: z.string().min(1).describe('Google OAuth client ID'),
     },
     runtimeEnv: {
         NEXT_PUBLIC_CLIENT_PRIVATE_KEY: process.env.NEXT_PUBLIC_CLIENT_PRIVATE_KEY,
         NEXT_PUBLIC_CLIENT_SWA: process.env.NEXT_PUBLIC_CLIENT_SWA,
         NEXT_PUBLIC_ENVIRONMENT: process.env.NEXT_PUBLIC_ENVIRONMENT,
         NEXT_PUBLIC_SERVER_URL: process.env.NEXT_PUBLIC_SERVER_URL,
+        NEXT_PUBLIC_GOOGLE_CLIENT_ID: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID,
     },
 })
