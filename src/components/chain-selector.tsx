@@ -1,82 +1,73 @@
 'use client'
 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { useAuth } from '@/features/auth/contexts/auth-context'
-import { getChains, useOkto } from '@okto_web3/react-sdk'
+import { useOktoNetworks } from '@/features/shared/hooks/use-okto-networks'
 import Image from 'next/image'
 import { useEffect, useState } from 'react'
 
-interface Chain {
-    id: string
-    name: string
-    icon: string
+interface ChainSelectorProps {
+    value?: string
+    onValueChange?: (value: string) => void
+    disabled?: boolean
+    placeholder?: string
+    className?: string
 }
 
-export function ChainSelector() {
-    const oktoClient = useOkto()
-    const { isAuthenticated } = useAuth()
-    const [chains, setChains] = useState<Chain[]>([])
-    const [selectedChain, setSelectedChain] = useState('')
-    const [isLoading, setIsLoading] = useState(true)
+export function ChainSelector({
+    value,
+    onValueChange,
+    disabled = false,
+    placeholder = 'Select network',
+    className = 'w-[180px]',
+}: ChainSelectorProps) {
+    const { networks, isLoading } = useOktoNetworks()
+    const [selectedChain, setSelectedChain] = useState(value || '')
 
+    // Update selected chain when value prop changes
     useEffect(() => {
-        async function fetchChains() {
-            if (!oktoClient || !isAuthenticated) return
-
-            try {
-                setIsLoading(true)
-                const chainsData = await getChains(oktoClient)
-
-                // Transform the chains data
-                const formattedChains: Chain[] = chainsData.map(chain => ({
-                    id: chain.chainId,
-                    name: chain.networkName,
-                    icon: chain.logo || '/chain-icons/ethereum.svg', // Fallback icon
-                }))
-
-                setChains(formattedChains)
-
-                // Set default selected chain
-                if (formattedChains.length > 0) {
-                    setSelectedChain(formattedChains[0].id)
-                }
-            } catch (error) {
-                console.error('Error fetching chains:', error)
-            } finally {
-                setIsLoading(false)
+        if (value) {
+            setSelectedChain(value)
+        } else if (networks.length > 0 && !selectedChain) {
+            // Set default selected chain if none provided
+            // Convert chain_id to string since our state expects a string
+            setSelectedChain(String(networks[0].chain_id))
+            if (onValueChange) {
+                onValueChange(String(networks[0].chain_id))
             }
         }
-
-        fetchChains()
-    }, [oktoClient, isAuthenticated])
+    }, [value, networks, selectedChain, onValueChange])
 
     const handleChainChange = (value: string) => {
         setSelectedChain(value)
-        // You might want to trigger other actions when chain changes
+        if (onValueChange) {
+            onValueChange(value)
+        }
     }
 
-    if (isLoading || chains.length === 0) {
+    if (isLoading || networks.length === 0) {
         return null
     }
 
     return (
-        <Select value={selectedChain} onValueChange={handleChainChange}>
-            <SelectTrigger className='w-[180px]'>
-                <SelectValue placeholder='Select network' />
+        <Select value={selectedChain} onValueChange={handleChainChange} disabled={disabled}>
+            <SelectTrigger className={className}>
+                <SelectValue placeholder={placeholder} />
             </SelectTrigger>
             <SelectContent>
-                {chains.map(chain => (
-                    <SelectItem key={chain.id} value={chain.id}>
+                {networks.map(chain => (
+                    <SelectItem key={chain.chain_id} value={String(chain.chain_id)}>
                         <div className='flex items-center'>
                             <Image
-                                src={chain.icon}
-                                alt={chain.name}
+                                src={chain.logo}
+                                alt={chain.network_name}
+                                width={16}
+                                height={16}
                                 className='mr-2 h-4 w-4'
                                 onError={e => {
                                     e.currentTarget.src = '/chain-icons/default.svg'
                                 }}
                             />
-                            {chain.name}
+                            {chain.network_name}
                         </div>
                     </SelectItem>
                 ))}
