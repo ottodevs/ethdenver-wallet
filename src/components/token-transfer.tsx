@@ -4,8 +4,8 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { useAuth } from '@/features/auth/contexts/auth-context'
 import { useWallet } from '@/features/wallet/hooks/use-wallet'
+import { useAuth } from '@/hooks/use-auth'
 import type { UserOp } from '@okto_web3/react-sdk'
 import { tokenTransfer, useOkto } from '@okto_web3/react-sdk'
 import { useState } from 'react'
@@ -19,13 +19,13 @@ type TokenTransferParams = {
 
 export function TokenTransfer() {
     const oktoClient = useOkto()
-    const { /*isAuthenticated,*/ checkAuthStatus } = useAuth()
     const { tokens } = useWallet()
     const [recipient, setRecipient] = useState('')
     const [amount, setAmount] = useState('')
     const [selectedToken, setSelectedToken] = useState('')
     const [status, setStatus] = useState('')
     const [isLoading, setIsLoading] = useState(false)
+    const { isAuthenticated } = useAuth()
 
     async function handleTransfer() {
         if (!recipient || !amount || !selectedToken) {
@@ -33,8 +33,7 @@ export function TokenTransfer() {
             return
         }
 
-        const isAuth = await checkAuthStatus()
-        if (!isAuth) {
+        if (!isAuthenticated) {
             setStatus('Authentication required')
             return
         }

@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { useWallet } from '@/features/wallet/hooks/use-wallet'
+import { settings$ } from '@/lib/stores/app.store'
 import { cn } from '@/lib/utils/tailwind'
 import { Check, Copy } from 'lucide-react'
 import Image from 'next/image'
@@ -16,7 +17,8 @@ interface TokenDetailProps {
 }
 
 export function TokenDetail({ tokenId, onClose }: TokenDetailProps) {
-    const { tokens, getTokenDistribution, privacyMode } = useWallet()
+    const { tokens, getTokenDistribution } = useWallet()
+    const privacyMode = settings$.privacyMode.get()
     const token = tokens.find(t => t.id === tokenId)
     const [copied, setCopied] = useState(false)
 
