@@ -1,0 +1,9 @@
+---
+description: TypeScript coding standards and type safety guidelines
+globs: **/*.{ts,tsx}
+---
+- Enable strict mode in tsconfig.json for better type checking
+- Use interfaces for object shapes and types for unions and intersections
+- Implement proper type guards and type assertions for runtime type checking
+- Utilize generics for reusable components and functions
+- Use readonly properties and readonly arrays when appropriate

@@ -1,0 +1,9 @@
+---
+description: Best practices for using Storybook for component development and testing
+globs: **/*.{ts,tsx,stories.{ts,tsx}}
+---
+- Write stories for all components to showcase different states and props
+- Use Storybook addons like `addon-essentials` for better development experience
+- Implement proper argTypes for component props in stories
+- Use Storybook's testing capabilities for visual regression testing
+- Utilize Storybook's theming capabilities for dark mode and custom themes

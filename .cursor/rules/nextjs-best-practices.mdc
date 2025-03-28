@@ -1,0 +1,9 @@
+---
+description: Best practices for Next.js applications and routing
+globs: **/*.{ts,tsx}
+---
+- Use the App Router for improved performance and easier data fetching
+- Implement proper error boundaries to handle runtime errors gracefully
+- Utilize Next.js built-in optimizations like code splitting and image optimization
+- Use `getStaticProps` and `getServerSideProps` appropriately for data fetching
+- Implement internationalization using Next.js i18n support

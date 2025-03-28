@@ -1,0 +1,408 @@
+---
+description: architecture rules
+globs: 
+---
+### Crypto Wallet MVP: Engineering Implementation Guide
+
+## Architecture & Data Flow Patterns
+
+```mermaid
+Data Flow Architecture.download-icon {
+            cursor: pointer;
+            transform-origin: center;
+        }
+        .download-icon .arrow-part {
+            transition: transform 0.35s cubic-bezier(0.35, 0.2, 0.14, 0.95);
+             transform-origin: center;
+        }
+        button:has(.download-icon):hover .download-icon .arrow-part, button:has(.download-icon):focus-visible .download-icon .arrow-part {
+          transform: translateY(-1.5px);
+        }
+        #mermaid-diagram-r2p3{font-family:var(--font-geist-sans);font-size:12px;fill:#000000;}#mermaid-diagram-r2p3 .error-icon{fill:#552222;}#mermaid-diagram-r2p3 .error-text{fill:#552222;stroke:#552222;}#mermaid-diagram-r2p3 .edge-thickness-normal{stroke-width:1px;}#mermaid-diagram-r2p3 .edge-thickness-thick{stroke-width:3.5px;}#mermaid-diagram-r2p3 .edge-pattern-solid{stroke-dasharray:0;}#mermaid-diagram-r2p3 .edge-thickness-invisible{stroke-width:0;fill:none;}#mermaid-diagram-r2p3 .edge-pattern-dashed{stroke-dasharray:3;}#mermaid-diagram-r2p3 .edge-pattern-dotted{stroke-dasharray:2;}#mermaid-diagram-r2p3 .marker{fill:#666;stroke:#666;}#mermaid-diagram-r2p3 .marker.cross{stroke:#666;}#mermaid-diagram-r2p3 svg{font-family:var(--font-geist-sans);font-size:12px;}#mermaid-diagram-r2p3 p{margin:0;}#mermaid-diagram-r2p3 .label{font-family:var(--font-geist-sans);color:#000000;}#mermaid-diagram-r2p3 .cluster-label text{fill:#333;}#mermaid-diagram-r2p3 .cluster-label span{color:#333;}#mermaid-diagram-r2p3 .cluster-label span p{background-color:transparent;}#mermaid-diagram-r2p3 .label text,#mermaid-diagram-r2p3 span{fill:#000000;color:#000000;}#mermaid-diagram-r2p3 .node rect,#mermaid-diagram-r2p3 .node circle,#mermaid-diagram-r2p3 .node ellipse,#mermaid-diagram-r2p3 .node polygon,#mermaid-diagram-r2p3 .node path{fill:#eee;stroke:#999;stroke-width:1px;}#mermaid-diagram-r2p3 .rough-node .label text,#mermaid-diagram-r2p3 .node .label text{text-anchor:middle;}#mermaid-diagram-r2p3 .node .katex path{fill:#000;stroke:#000;stroke-width:1px;}#mermaid-diagram-r2p3 .node .label{text-align:center;}#mermaid-diagram-r2p3 .node.clickable{cursor:pointer;}#mermaid-diagram-r2p3 .arrowheadPath{fill:#333333;}#mermaid-diagram-r2p3 .edgePath .path{stroke:#666;stroke-width:2.0px;}#mermaid-diagram-r2p3 .flowchart-link{stroke:#666;fill:none;}#mermaid-diagram-r2p3 .edgeLabel{background-color:white;text-align:center;}#mermaid-diagram-r2p3 .edgeLabel p{background-color:white;}#mermaid-diagram-r2p3 .edgeLabel rect{opacity:0.5;background-color:white;fill:white;}#mermaid-diagram-r2p3 .labelBkg{background-color:rgba(255, 255, 255, 0.5);}#mermaid-diagram-r2p3 .cluster rect{fill:hsl(0, 0%, 98.9215686275%);stroke:#707070;stroke-width:1px;}#mermaid-diagram-r2p3 .cluster text{fill:#333;}#mermaid-diagram-r2p3 .cluster span{color:#333;}#mermaid-diagram-r2p3 div.mermaidTooltip{position:absolute;text-align:center;max-width:200px;padding:2px;font-family:var(--font-geist-sans);font-size:12px;background:hsl(-160, 0%, 93.3333333333%);border:1px solid #707070;border-radius:2px;pointer-events:none;z-index:100;}#mermaid-diagram-r2p3 .flowchartTitleText{text-anchor:middle;font-size:18px;fill:#000000;}#mermaid-diagram-r2p3 .flowchart-link{stroke:hsl(var(--gray-400));stroke-width:1px;}#mermaid-diagram-r2p3 .marker,#mermaid-diagram-r2p3 marker,#mermaid-diagram-r2p3 marker *{fill:hsl(var(--gray-400))!important;stroke:hsl(var(--gray-400))!important;}#mermaid-diagram-r2p3 .label,#mermaid-diagram-r2p3 text,#mermaid-diagram-r2p3 text>tspan{fill:hsl(var(--black))!important;color:hsl(var(--black))!important;}#mermaid-diagram-r2p3 .background,#mermaid-diagram-r2p3 rect.relationshipLabelBox{fill:hsl(var(--white))!important;}#mermaid-diagram-r2p3 .entityBox,#mermaid-diagram-r2p3 .attributeBoxEven{fill:hsl(var(--gray-150))!important;}#mermaid-diagram-r2p3 .attributeBoxOdd{fill:hsl(var(--white))!important;}#mermaid-diagram-r2p3 .label-container,#mermaid-diagram-r2p3 rect.actor{fill:hsl(var(--white))!important;stroke:hsl(var(--gray-400))!important;}#mermaid-diagram-r2p3 line{stroke:hsl(var(--gray-400))!important;}#mermaid-diagram-r2p3 :root{--mermaid-font-family:var(--font-geist-sans);}User EventsAPI CallsResponse DataInitial PropsClient-side CacheUI StateClient ComponentsServer ActionsOkto APIServer ComponentsTanStack QueryLegend State
+```
+
+## Core Patterns
+
+### 1. Data Access Pattern
+
+Use React Server Components (RSC) for initial data loading and Server Actions for mutations:
+
+```typescriptreact
+// Server Component (app/wallet/page.tsx)
+export default async function WalletPage() {
+  // Fetch initial data on the server
+  const wallets = await getWallets();
+  
+  return <WalletClient initialWallets={wallets} />;
+}
+
+// Data fetching function (lib/wallet.ts)
+export async function getWallets() {
+  const response = await fetch('https://sandbox-api.okto.tech/api/oc/v1/wallets', {
+    headers: {
+      'Authorization': `Bearer ${process.env.OKTO_API_TOKEN}`
+    },
+    next: { revalidate: 60 } // Revalidate every 60 seconds
+  });
+  
+  if (!response.ok) throw new Error('Failed to fetch wallets');
+  
+  const data = await response.json();
+  return data.data;
+}
+```
+
+### 2. Server vs Client Components
+
+- **Server Components**: Use for data fetching, SEO, and initial rendering
+- **Client Components**: Use for interactivity and real-time updates
+
+
+```typescriptreact
+// Client Component (components/wallet-client.tsx)
+'use client';
+
+import { useQuery } from '@tanstack/react-query';
+import { useObservable } from '@legendapp/state/react';
+import { walletState } from '@/state/wallet';
+
+export function WalletClient({ initialWallets }) {
+  // Initialize state with server data
+  useEffect(() => {
+    if (initialWallets) {
+      walletState.wallets.set(initialWallets);
+    }
+  }, [initialWallets]);
+  
+  // Real-time updates with TanStack Query
+  const { data } = useQuery({
+    queryKey: ['wallets'],
+    queryFn: async () => {
+      const response = await fetch('/api/wallets');
+      return response.json();
+    },
+    initialData: initialWallets,
+    refetchInterval: 30000 // Refetch every 30 seconds
+  });
+  
+  return (
+    <div>
+      {data.map(wallet => (
+        <WalletCard key={wallet.address} wallet={wallet} />
+      ))}
+    </div>
+  );
+}
+```
+
+### 3. State Management
+
+- **Server State**: Use TanStack Query for API data
+- **UI State**: Use Legend State for reactive UI state
+
+
+```typescriptreact
+// State definition (state/wallet.ts)
+import { observable } from '@legendapp/state';
+
+export const walletState = observable({
+  wallets: [],
+  selectedWallet: null,
+  balances: {},
+  portfolio: {
+    activity: [],
+    totalValue: 0
+  }
+});
+
+// Computed values
+export const selectedWalletAddress = walletState.selectedWallet.get()?.address;
+export const totalPortfolioValue = walletState.portfolio.totalValue;
+```
+
+## Implementation Examples
+
+### 1. Fetching Wallet Addresses
+
+```typescriptreact
+// API Route (app/api/wallets/route.ts)
+import { NextResponse } from 'next/server';
+import { getServerSession } from 'next-auth/next';
+import { authOptions } from '@/lib/auth';
+
+export async function GET() {
+  const session = await getServerSession(authOptions);
+  
+  if (!session) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+  
+  try {
+    const response = await fetch('https://sandbox-api.okto.tech/api/oc/v1/wallets', {
+      headers: {
+        'Authorization': `Bearer ${session.accessToken}`
+      }
+    });
+    
+    if (!response.ok) throw new Error('Failed to fetch wallets');
+    
+    const data = await response.json();
+    return NextResponse.json(data.data);
+  } catch (error) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+}
+```
+
+### 2. Displaying Portfolio Activity
+
+```typescriptreact
+// Server Component (app/portfolio/page.tsx)
+export default async function PortfolioPage() {
+  const session = await getServerSession(authOptions);
+  
+  if (!session) {
+    redirect('/login');
+  }
+  
+  // Fetch initial data on the server
+  const activity = await getPortfolioActivity(session.accessToken);
+  
+  return <PortfolioClient initialActivity={activity} />;
+}
+
+// Data fetching function (lib/portfolio.ts)
+export async function getPortfolioActivity(token: string, page = 1, size = 10) {
+  const response = await fetch(
+    `https://sandbox-api.okto.tech/api/oc/v1/portfolio/activity?page=${page}&size=${size}`, 
+    {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      },
+      next: { revalidate: 300 } // Revalidate every 5 minutes
+    }
+  );
+  
+  if (!response.ok) throw new Error('Failed to fetch portfolio activity');
+  
+  const data = await response.json();
+  return data.data.activity;
+}
+```
+
+### 3. Real-time Balance Updates
+
+```typescriptreact
+// Client Component (components/balance-display.tsx)
+'use client';
+
+import { useQuery } from '@tanstack/react-query';
+import { useObservable } from '@legendapp/state/react';
+import { walletState } from '@/state/wallet';
+
+export function BalanceDisplay() {
+  const selectedWallet = useObservable(walletState.selectedWallet);
+  
+  const { data, isLoading } = useQuery({
+    queryKey: ['balance', selectedWallet?.address],
+    queryFn: async () => {
+      if (!selectedWallet) return null;
+      
+      const response = await fetch(`/api/balance?address=${selectedWallet.address}`);
+      return response.json();
+    },
+    enabled: !!selectedWallet,
+    refetchInterval: 15000 // Refetch every 15 seconds
+  });
+  
+  if (isLoading) return <BalanceSkeleton />;
+  
+  return (
+    <div className="balance-card">
+      <h2>Current Balance</h2>
+      <div className="amount">${data?.totalValue.toFixed(2)}</div>
+      <div className="tokens">
+        {data?.tokens.map(token => (
+          <TokenRow key={token.symbol} token={token} />
+        ))}
+      </div>
+    </div>
+  );
+}
+```
+
+## Performance Optimization
+
+1. **Server Components for Initial Load**
+
+1. Use RSC for initial data fetching to reduce client-side JavaScript
+2. Pass data as props to client components
+
+
+
+2. **Streaming for Large Data Sets**
+
+1. Use React Suspense and streaming for large data sets
+
+
+
+
+
+```typescriptreact
+// Streaming example (app/portfolio/page.tsx)
+export default function PortfolioPage() {
+  return (
+    <div>
+      <PortfolioHeader />
+      <Suspense fallback={<BalanceSkeleton />}>
+        <BalanceSection />
+      </Suspense>
+      <Suspense fallback={<ActivitySkeleton />}>
+        <ActivitySection />
+      </Suspense>
+    </div>
+  );
+}
+```
+
+3. **Optimistic Updates**
+
+1. Update UI immediately before API confirmation
+
+
+
+
+
+```typescriptreact
+// Optimistic update example (components/send-form.tsx)
+const sendTransaction = async (data) => {
+  // Optimistically update UI
+  const previousTokens = walletState.tokens.get();
+  const updatedTokens = previousTokens.map(token => 
+    token.symbol === data.token 
+      ? { ...token, balance: (parseFloat(token.balance) - parseFloat(data.amount)).toString() }
+      : token
+  );
+  
+  walletState.tokens.set(updatedTokens);
+  
+  try {
+    // Actual API call
+    await fetch('/api/send-transaction', {
+      method: 'POST',
+      body: JSON.stringify(data)
+    });
+  } catch (error) {
+    // Revert on error
+    walletState.tokens.set(previousTokens);
+    throw error;
+  }
+};
+```
+
+## Authentication Flow
+
+```typescriptreact
+// Authentication flow (components/login-button.tsx)
+'use client';
+
+import { signIn } from 'next-auth/react';
+
+export function LoginButton() {
+  const handleLogin = async () => {
+    await signIn('google', { callbackUrl: '/dashboard' });
+  };
+  
+  return <button onClick={handleLogin}>Sign in with Google</button>;
+}
+```
+
+## API Integration Pattern
+
+```typescriptreact
+// API client (lib/okto-client.ts)
+export class OktoClient {
+  private baseUrl = 'https://sandbox-api.okto.tech/api/oc/v1';
+  private token: string;
+  
+  constructor(token: string) {
+    this.token = token;
+  }
+  
+  async getWallets() {
+    return this.request('/wallets');
+  }
+  
+  async getPortfolioActivity(page = 1, size = 10) {
+    return this.request(`/portfolio/activity?page=${page}&size=${size}`);
+  }
+  
+  private async request(endpoint: string, options = {}) {
+    const response = await fetch(`${this.baseUrl}${endpoint}`, {
+      ...options,
+      headers: {
+        ...options.headers,
+        'Authorization': `Bearer ${this.token}`
+      }
+    });
+    
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || 'API request failed');
+    }
+    
+    return response.json();
+  }
+}
+```
+
+## Key Technical Decisions
+
+1. **SSR vs CSR**:
+
+1. Use SSR (Server Components) for:
+
+1. Initial page load
+2. SEO-critical content
+3. Data that doesn't change frequently
+
+
+
+2. Use CSR (Client Components) for:
+
+1. Interactive elements
+2. Real-time updates
+3. User-specific content
+
+
+
+
+
+
+2. **Data Fetching Strategy**:
+
+1. Initial data: Server Components
+2. Updates: TanStack Query
+3. Mutations: Server Actions
+
+
+
+3. **State Management**:
+
+1. Server state: TanStack Query
+2. UI state: Legend State
+3. Auth state: NextAuth.js
+
+
+
+4. **Component Structure**:
+
+1. Page components: Server Components
+2. Interactive UI: Client Components
+3. Layout components: Server Components
+
+
+
+
+
+This architecture ensures optimal performance, maintainability, and scalability for the Crypto Wallet MVP.

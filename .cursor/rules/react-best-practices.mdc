@@ -1,0 +1,9 @@
+---
+description: Best practices for React component development and state management
+globs: **/*.{ts,tsx,js,jsx}
+---
+- Use functional components with hooks instead of class components
+- Implement proper prop type validation using PropTypes or TypeScript
+- Utilize React.memo for performance optimization of functional components
+- Use context API or state management libraries for global state management
+- Implement proper error boundaries to catch and handle errors in components

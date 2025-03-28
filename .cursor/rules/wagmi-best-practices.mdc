@@ -1,0 +1,9 @@
+---
+description: Best practices for using Wagmi for Ethereum wallet integration
+globs: **/*.{ts,tsx}
+---
+- Use `useAccount` hook to manage user's wallet connection
+- Implement proper error handling for wallet-related operations
+- Utilize `useNetwork` hook to handle network changes
+- Use `useSigner` hook for signing messages and transactions
+- Implement proper gas estimation and error handling for transactions

@@ -1,0 +1,40 @@
+---
+description: Best practices for using Vitest for unit and integration testing
+globs: **/*.{test,spec}.{ts,tsx}
+---
+To ensure high-quality testing of React components using Vitest, adhere to the following best practices:
+
+Write Unit Tests for Pure Functions and Components:
+
+Focus on testing individual functions and components in isolation to ensure they work as intended. This approach simplifies debugging and enhances code reliability.​
+Use Mocking Libraries to Isolate Dependencies:
+
+Utilize vi.mock to mock dependencies, preventing external factors from affecting test outcomes. For example, when testing a component that relies on a context or a service, mock those dependencies to control their behavior during the test.​
+Implement Comprehensive Test Coverage:
+
+Leverage Vitest's coverage reporting to identify untested parts of your codebase. Aim for high coverage to ensure that most, if not all, of your code is tested. This practice helps in catching edge cases and potential bugs.​
+Use Async/Await Syntax for Asynchronous Code:
+
+When testing asynchronous operations, such as API calls or timers, employ async/await syntax to handle promises. This approach leads to cleaner and more readable tests. For instance, when testing a function that fetches data, await the fetch call and then assert the expected outcome.​
+Utilize Snapshot Testing for UI Components:
+
+Implement snapshot testing to capture the rendered output of components and detect unintended changes over time. This method is particularly useful for tracking UI changes and ensuring consistency.​
+Employ React Testing Library for User-Centric Testing:
+
+Use React Testing Library alongside Vitest to simulate user interactions and verify component behavior from the user's perspective. This practice ensures your components function correctly in real-world scenarios.​
+Structure Tests Using the Arrange-Act-Assert Pattern:
+
+Organize your tests into three distinct phases:​
+Arrange: Set up the testing environment and prepare necessary data or mocks.
+Act: Execute the functionality or simulate user interactions.
+Assert: Verify that the outcomes match the expected results.
+Maintain Clear and Concise Test Descriptions:
+
+Write descriptive test names that clearly convey the purpose and expected outcome of each test. This practice enhances readability and aids in understanding test failures.​
+Clean Up After Each Test:
+
+Ensure that tests do not interfere with each other by cleaning up any side effects after each test run. Utilize hooks like afterEach to reset mocks or clear data.​
+Integrate Tests into Continuous Integration (CI) Pipelines:
+
+Incorporate your test suite into CI pipelines to automatically run tests on code changes. This integration helps in early detection of issues and maintains code quality over time.
+By following these guidelines, you can establish a robust testing strategy that enhances the reliability and maintainability of your React applications.
