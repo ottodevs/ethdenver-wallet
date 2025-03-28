@@ -125,6 +125,22 @@
     }
 }
 
+/* Ensure that dropdowns respect the dark theme */
+.dark [data-radix-popper-content-wrapper] {
+    --tw-bg-opacity: 1;
+    --tw-border-opacity: 1;
+    --tw-text-opacity: 1;
+    background-color: oklch(0.145 0 0);
+    border-color: oklch(0.269 0 0);
+    color: oklch(0.985 0 0);
+}
+
+/* @media (prefers-color-scheme: dark) {
+    html {
+        color-scheme: dark;
+    }
+} */
+
 /* Add these custom animations to your existing CSS */
 @keyframes reverse-spin {
     from {
