@@ -1,5 +1,6 @@
 import { oktoState } from '@/okto/state'
 import { PortfolioService } from '@/services/portfolio.service'
+import type { OktoPortfolioData } from '@/types/okto'
 import { useObservable } from '@legendapp/state/react'
 import { useCallback, useEffect, useRef, useState } from 'react'
 
@@ -31,6 +32,15 @@ export function usePortfolio() {
             return false
         }
     }, [isAuthenticated])
+
+    // Function to set initial portfolio data from server-side rendering
+    const setInitialPortfolioData = useCallback((data: OktoPortfolioData) => {
+        if (!data) return
+
+        console.log('💼 [use-portfolio] Setting initial portfolio data from server')
+        PortfolioService.setPortfolioData(data)
+        initialLoadAttemptedRef.current = true
+    }, [])
 
     // Function to load portfolio data with proper error handling and state management
     const loadPortfolioData = useCallback(
@@ -111,6 +121,7 @@ export function usePortfolio() {
         isLoading,
         error,
         loadPortfolioData,
+        setInitialPortfolioData,
         hasValidData: PortfolioService.isValidPortfolioData(portfolio),
     }
 }
