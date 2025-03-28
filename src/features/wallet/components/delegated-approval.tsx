@@ -2,37 +2,49 @@
 
 import { Button } from '@/components/ui/button'
 import { ResponsiveDialog } from '@/components/ui/responsive-dialog'
-import { useAuth } from '@/features/auth/contexts/auth-context'
-import { useOkto } from '@okto_web3/react-sdk'
+import { useAuth } from '@/hooks/use-auth'
+import { appState$ } from '@/lib/stores/app.store'
+import { observer } from '@legendapp/state/react'
 import { Check, Clock, Loader2, Lock, Shield, Zap } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 
 interface DelegatedApprovalProps {
     open: boolean
     onOpenChange: (open: boolean) => void
 }
 
-export function DelegatedApproval({ open, onOpenChange }: DelegatedApprovalProps) {
-    const oktoClient = useOkto()
-    const { checkAuthStatus } = useAuth()
+export const DelegatedApproval = observer(function DelegatedApproval({ open, onOpenChange }: DelegatedApprovalProps) {
+    const { isAuthenticated } = useAuth()
     const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle')
     const [errorMessage, setErrorMessage] = useState('')
-    const [isDelegationEnabled, setIsDelegationEnabled] = useState(false)
 
-    // Check if delegation is already enabled when the dialog opens
+    // Force re-render when open state changes
+    const [forceRender, setForceRender] = useState(0)
+
     useEffect(() => {
-        if (typeof window !== 'undefined' && open) {
-            const delegationEnabled = !!localStorage.getItem('okto_delegation_enabled')
-            setIsDelegationEnabled(delegationEnabled)
+        if (open) {
+            setForceRender(prev => prev + 1)
         }
     }, [open])
 
-    const handleApprove = async () => {
-        if (!oktoClient) return
+    // Get delegation state from app state
+    const delegationEnabled = appState$.ui.delegationEnabled.get()
 
+    // Check if delegation is already enabled when the dialog opens
+    useEffect(() => {
+        if (open) {
+            // Sync with localStorage for backward compatibility
+            const localDelegationEnabled = localStorage.getItem('okto_delegation_enabled')
+            if (localDelegationEnabled && !delegationEnabled) {
+                appState$.ui.delegationEnabled.set(true)
+            }
+        }
+    }, [open, delegationEnabled])
+
+    // Memoize handlers to prevent recreation on every render
+    const handleApprove = useCallback(async () => {
         // Check authentication before continuing
-        const isAuth = await checkAuthStatus()
-        if (!isAuth) {
+        if (!isAuthenticated) {
             setStatus('error')
             setErrorMessage('Authentication required')
             return
@@ -43,11 +55,14 @@ export function DelegatedApproval({ open, onOpenChange }: DelegatedApprovalProps
 
         try {
             // Simulate a call to the Okto API to activate delegation
-            await new Promise(resolve => setTimeout(resolve, 1500))
+            // Use a shorter timeout to improve performance
+            await new Promise(resolve => setTimeout(resolve, 500))
 
-            // Store the indicator that delegation is active
+            // Update app state
+            appState$.ui.delegationEnabled.set(true)
+
+            // Store in localStorage for backward compatibility
             localStorage.setItem('okto_delegation_enabled', 'true')
-            localStorage.removeItem('okto_delegation_banner_dismissed')
 
             // Also store the session key if available
             const sessionKey = localStorage.getItem('okto_session_key')
@@ -56,36 +71,36 @@ export function DelegatedApproval({ open, onOpenChange }: DelegatedApprovalProps
             }
 
             setStatus('success')
-            setIsDelegationEnabled(true)
         } catch (error) {
             console.error('Failed to enable delegation:', error)
             setStatus('error')
             setErrorMessage(error instanceof Error ? error.message : 'Failed to enable automatic approvals')
         }
-    }
+    }, [isAuthenticated])
 
-    const handleDisable = async () => {
-        if (!oktoClient) return
-
+    const handleDisable = useCallback(async () => {
         setStatus('loading')
 
         try {
             // Simulate a call to the Okto API to disable delegation
-            await new Promise(resolve => setTimeout(resolve, 1000))
+            // Use a shorter timeout to improve performance
+            await new Promise(resolve => setTimeout(resolve, 300))
 
-            // Remove the delegation indicator
+            // Update app state
+            appState$.ui.delegationEnabled.set(false)
+
+            // Update localStorage for backward compatibility
             localStorage.removeItem('okto_delegation_enabled')
 
             setStatus('idle')
-            setIsDelegationEnabled(false)
         } catch (error) {
             console.error('Failed to disable delegation:', error)
             setStatus('error')
             setErrorMessage(error instanceof Error ? error.message : 'Failed to disable automatic approvals')
         }
-    }
+    }, [])
 
-    const handleClose = () => {
+    const handleClose = useCallback(() => {
         if (status !== 'loading') {
             onOpenChange(false)
             // Reset the state after the animation ends
@@ -96,16 +111,18 @@ export function DelegatedApproval({ open, onOpenChange }: DelegatedApprovalProps
                 }
             }, 300)
         }
-    }
+    }, [status, onOpenChange])
 
     return (
         <ResponsiveDialog
+            key={`delegated-approval-${forceRender}`}
             open={open}
             onOpenChange={handleClose}
             title='Automatic Approvals'
-            description='Streamline your transaction experience'>
+            description='Streamline your transaction experience'
+            contentClassName='bg-background border-border'>
             <div className='py-4'>
-                {!isDelegationEnabled ? (
+                {!delegationEnabled ? (
                     <>
                         <div className='mb-6 space-y-6'>
                             <div className='grid grid-cols-1 gap-4'>
@@ -207,4 +224,4 @@ export function DelegatedApproval({ open, onOpenChange }: DelegatedApprovalProps
             </div>
         </ResponsiveDialog>
     )
-}
+})

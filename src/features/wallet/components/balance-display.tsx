@@ -1,49 +1,53 @@
 import { observer } from '@legendapp/state/react'
 import { Eye, EyeOff } from 'lucide-react'
+import { memo, useEffect, useState } from 'react'
 
-import { portfolioState$ } from '@/features/shared/state/portfolio-state'
-import { useWallet } from '@/features/wallet/hooks/use-wallet'
+import { settings$, togglePrivacyMode } from '@/lib/stores/app.store'
+import type { OktoPortfolioData } from '@/types/okto'
+import { BalanceAmount } from './balance-amount'
 
-export const BalanceDisplay = observer(function BalanceDisplay() {
-    const { privacyMode, togglePrivacyMode } = useWallet()
+// Updated to avoid hydration errors by only rendering on the client side
+const PrivacyToggleIcon = observer(() => {
+    const privacyMode = settings$.privacyMode.get()
+    const [mounted, setMounted] = useState(false)
 
-    // Get the values directly from the observable state
-    const totalBalanceUsd = portfolioState$.totalBalanceUsd.get()
-    const isLoading = portfolioState$.isLoading.get()
+    // Only render after component is mounted on client
+    useEffect(() => {
+        setMounted(true)
+    }, [])
 
-    // Format the balance properly, handling zero, undefined, or NaN values
-    const formattedBalance =
-        typeof totalBalanceUsd === 'number' && !isNaN(totalBalanceUsd)
-            ? totalBalanceUsd.toLocaleString('en-US', {
-                  minimumFractionDigits: 2,
-                  maximumFractionDigits: 2,
-              })
-            : '0.00'
+    // During SSR or before client-side hydration, render a placeholder
+    if (!mounted) {
+        return <div className='text-foreground/60 *:size-4' />
+    }
 
+    return <div className='text-foreground/60 *:size-4'>{privacyMode ? <EyeOff /> : <Eye />}</div>
+})
+
+// Memoized PrivacyToggle to prevent unnecessary re-renders on each click
+const PrivacyToggle = memo(function PrivacyToggle() {
+    return (
+        <button
+            onClick={togglePrivacyMode}
+            className='flex items-center justify-center'
+            aria-label='Toggle balance visibility'>
+            <PrivacyToggleIcon />
+        </button>
+    )
+})
+
+interface BalanceDisplayProps {
+    initialPortfolio?: OktoPortfolioData | null
+}
+
+export const BalanceDisplay = memo(function BalanceDisplayUI({ initialPortfolio }: BalanceDisplayProps) {
     return (
         <div className='mt-14 mb-10 flex flex-col items-center'>
             <div className='flex items-center gap-2'>
                 <div className='font-outfit text-muted-foreground text-[16px]'>TOTAL BALANCE</div>
-                <button onClick={togglePrivacyMode} className='flex h-5 w-5 items-center justify-center'>
-                    {privacyMode ? (
-                        <EyeOff className='text-foreground/60 h-4 w-4' />
-                    ) : (
-                        <Eye className='text-foreground/60 h-4 w-4' />
-                    )}
-                </button>
+                <PrivacyToggle />
             </div>
-            <div className='text-foreground mt-2 text-[42px] font-medium'>
-                {privacyMode ? (
-                    '••••••'
-                ) : isLoading ? (
-                    <span className='animate-pulse'>Loading...</span>
-                ) : (
-                    <>
-                        <span className='mr-2'>$</span>
-                        {formattedBalance}
-                    </>
-                )}
-            </div>
+            <BalanceAmount initialPortfolio={initialPortfolio} />
         </div>
     )
 })

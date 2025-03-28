@@ -3,62 +3,107 @@
 import { BuyModal } from '@/components/buy-modal'
 import { SendModal } from '@/components/send-modal'
 import { SwapInterface } from '@/components/swap-interface'
-import { AnimatePresence } from 'motion/react'
-import Image from 'next/image'
+import { observer } from '@legendapp/state/react'
+import { AnimatePresence } from 'framer-motion'
+import { RepeatIcon, SendIcon, SparklesIcon, WalletIcon } from 'lucide-react'
 import { useRouter } from 'next/navigation'
-import { useState } from 'react'
+import { memo, useCallback, useMemo, useState } from 'react'
 
-export function ActionButtons() {
+// Type for action configuration
+type ActionConfig = {
+    icon: React.ReactNode
+    label: string
+    onClick: () => void
+}
+
+// Memoized action button component
+const ActionButton = memo(function ActionButton({ icon, label, onClick }: ActionConfig) {
+    return (
+        <div className='flex cursor-pointer flex-col items-center' onClick={onClick}>
+            <div className='dark:text-foreground text-background relative flex size-12 items-center justify-center overflow-hidden rounded-full bg-[#2D52EC]'>
+                {icon}
+            </div>
+            <span className='text-muted-foreground mt-2 text-sm font-medium'>{label.toUpperCase()}</span>
+        </div>
+    )
+})
+
+// Memoized modal wrapper component
+const ModalWrapper = memo(function ModalWrapper({
+    isOpen,
+    children,
+}: {
+    isOpen: boolean
+    onOpenChange: (open: boolean) => void
+    children: React.ReactNode
+}) {
+    return <AnimatePresence>{isOpen && children}</AnimatePresence>
+})
+
+// Main component using observer for state management
+export const ActionButtons = observer(function ActionButtons() {
     const router = useRouter()
+
+    // Memoized state handlers
     const [buyModalOpen, setBuyModalOpen] = useState(false)
     const [swapInterfaceOpen, setSwapInterfaceOpen] = useState(false)
     const [sendModalOpen, setSendModalOpen] = useState(false)
+
+    // Memoized action handlers
+    const handleBuyClick = useCallback(() => setBuyModalOpen(true), [])
+    const handleSwapClick = useCallback(() => setSwapInterfaceOpen(true), [])
+    const handleSendClick = useCallback(() => setSendModalOpen(true), [])
+    const handleAskClick = useCallback(() => router.push('/ask'), [router])
+
+    // Action buttons configuration
+    const actions = useMemo<ActionConfig[]>(
+        () => [
+            {
+                icon: <WalletIcon className='size-6' />,
+                label: 'Buy',
+                onClick: handleBuyClick,
+            },
+            {
+                icon: <RepeatIcon className='size-6' />,
+                label: 'Swap',
+                onClick: handleSwapClick,
+            },
+            {
+                icon: <SendIcon className='size-6' />,
+                label: 'Send',
+                onClick: handleSendClick,
+            },
+            {
+                icon: <SparklesIcon className='size-6' />,
+                label: 'Ask',
+                onClick: handleAskClick,
+            },
+        ],
+        [handleBuyClick, handleSwapClick, handleSendClick, handleAskClick],
+    )
 
     return (
         <>
             <div className='mb-6 flex items-center justify-center'>
                 <div className='flex w-full max-w-[400px] justify-around'>
-                    <div className='flex cursor-pointer flex-col items-center' onClick={() => setBuyModalOpen(true)}>
-                        <div className='flex h-[48px] w-[48px] items-center justify-center rounded-full bg-[#4364F9]'>
-                            <Image src='/buy.svg' alt='Buy' width={48} height={48} />
-                        </div>
-                        <span className='mt-2 text-[14px] text-gray-400'>BUY</span>
-                    </div>
-                    <div
-                        className='flex cursor-pointer flex-col items-center'
-                        onClick={() => setSwapInterfaceOpen(true)}>
-                        <div className='flex h-[48px] w-[48px] items-center justify-center rounded-full bg-[#4364F9]'>
-                            <Image src='/swap.svg' alt='Swap' width={48} height={48} />
-                        </div>
-                        <span className='mt-2 text-[14px] text-gray-400'>SWAP</span>
-                    </div>
-                    <div className='flex cursor-pointer flex-col items-center' onClick={() => setSendModalOpen(true)}>
-                        <div className='flex h-[48px] w-[48px] items-center justify-center rounded-full bg-[#4364F9]'>
-                            <Image src='/send.svg' alt='Send' width={48} height={48} />
-                        </div>
-                        <span className='mt-2 text-[14px] text-gray-400'>SEND</span>
-                    </div>
-                    <div className='flex cursor-pointer flex-col items-center' onClick={() => router.push('/ask')}>
-                        <div className='flex h-[48px] w-[48px] items-center justify-center rounded-full bg-[#4364F9]'>
-                            <Image src='/ask.svg' alt='Ask' width={48} height={48} />
-                        </div>
-                        <span className='mt-2 text-[14px] text-gray-400'>ASK</span>
-                    </div>
+                    {actions.map(action => (
+                        <ActionButton key={action.label} {...action} />
+                    ))}
                 </div>
             </div>
 
             {/* Modals */}
-            <AnimatePresence>
-                {swapInterfaceOpen && <SwapInterface open={swapInterfaceOpen} onOpenChange={setSwapInterfaceOpen} />}
-            </AnimatePresence>
+            <ModalWrapper isOpen={swapInterfaceOpen} onOpenChange={setSwapInterfaceOpen}>
+                <SwapInterface open={swapInterfaceOpen} onOpenChange={setSwapInterfaceOpen} />
+            </ModalWrapper>
 
-            <AnimatePresence>
-                {sendModalOpen && <SendModal open={sendModalOpen} onOpenChange={setSendModalOpen} />}
-            </AnimatePresence>
+            <ModalWrapper isOpen={sendModalOpen} onOpenChange={setSendModalOpen}>
+                <SendModal open={sendModalOpen} onOpenChange={setSendModalOpen} />
+            </ModalWrapper>
 
-            <AnimatePresence>
-                {buyModalOpen && <BuyModal open={buyModalOpen} onOpenChange={setBuyModalOpen} />}
-            </AnimatePresence>
+            <ModalWrapper isOpen={buyModalOpen} onOpenChange={setBuyModalOpen}>
+                <BuyModal open={buyModalOpen} onOpenChange={setBuyModalOpen} />
+            </ModalWrapper>
         </>
     )
-}
+})
