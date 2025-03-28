@@ -1,0 +1,31 @@
+/* Estilos específicos para los componentes de dropdown */
+
+/* Asegurar que los dropdowns respeten el tema oscuro */
+.dark [data-radix-popper-content-wrapper] {
+    --tw-bg-opacity: 1;
+    --tw-border-opacity: 1;
+    --tw-text-opacity: 1;
+    background-color: oklch(0.145 0 0) !important;
+    border-color: oklch(0.269 0 0) !important;
+    color: oklch(0.985 0 0) !important;
+}
+
+/* Estilos para los elementos del dropdown en modo oscuro */
+.dark [data-radix-popper-content-wrapper] [role='menuitem'] {
+    color: oklch(0.985 0 0) !important;
+}
+
+.dark [data-radix-popper-content-wrapper] [role='menuitem']:focus,
+.dark [data-radix-popper-content-wrapper] [role='menuitem']:hover {
+    background-color: oklch(0.269 0 0) !important;
+}
+
+/* Estilos para los separadores del dropdown en modo oscuro */
+.dark [data-radix-popper-content-wrapper] [role='separator'] {
+    background-color: oklch(0.269 0 0) !important;
+}
+
+/* Estilos para las etiquetas del dropdown en modo oscuro */
+.dark [data-radix-popper-content-wrapper] [role='menuitem'] {
+    color: oklch(0.985 0 0) !important;
+}
