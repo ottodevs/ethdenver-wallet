@@ -1,6 +1,7 @@
 'use client'
 
 import { Button } from '@/components/ui/button'
+import Link from 'next/link'
 import { useEffect } from 'react'
 
 export default function Error({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {
@@ -21,6 +22,7 @@ export default function Error({ error, reset }: { error: Error & { digest?: stri
                     }>
                     Try again
                 </Button>
+                <Link href='/'>Go to Home</Link>
             </div>
         </div>
     )
