@@ -4,7 +4,6 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { ResponsiveDialog } from '@/components/ui/responsive-dialog'
-import { useOktoPortfolio } from '@/features/shared/hooks/use-okto-portfolio'
 // import { useChainService } from "@/services/chain-service"
 import { ArrowDown, Check } from 'lucide-react'
 import { useState } from 'react'
@@ -15,7 +14,7 @@ interface SwapInterfaceProps {
 }
 
 export function SwapInterface({ open, onOpenChange }: SwapInterfaceProps) {
-    const { tokens } = useOktoPortfolio()
+    // const { tokens } = useOktoPortfolio()
     // const { chains } = useChainService()
 
     const [fromToken, setFromToken] = useState('')
@@ -24,13 +23,13 @@ export function SwapInterface({ open, onOpenChange }: SwapInterfaceProps) {
     const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle')
     const [errorMessage, setErrorMessage] = useState('')
 
-    const fromTokenData = tokens.find(t => t.id === fromToken)
-    const toTokenData = tokens.find(t => t.id === toToken)
+    // const fromTokenData = tokens.find(t => t.id === fromToken)
+    // const toTokenData = tokens.find(t => t.id === toToken)
 
     // This is a placeholder for swap functionality
     // In a real implementation, you would integrate with a DEX or swap service
     const handleSwap = async () => {
-        if (!fromTokenData || !toTokenData || !amount) return
+        // if (!fromTokenData || !toTokenData || !amount) return
 
         setStatus('loading')
         setErrorMessage('')
@@ -75,11 +74,11 @@ export function SwapInterface({ open, onOpenChange }: SwapInterfaceProps) {
                             value={fromToken}
                             onChange={e => setFromToken(e.target.value)}>
                             <option value=''>Select a token</option>
-                            {tokens.map(token => (
+                            {/* {tokens.map(token => (
                                 <option key={token.id} value={token.id}>
                                     {token.symbol} - {token.balance.toFixed(4)}
                                 </option>
-                            ))}
+                            ))} */}
                         </select>
                     </div>
 
@@ -92,11 +91,11 @@ export function SwapInterface({ open, onOpenChange }: SwapInterfaceProps) {
                             value={amount}
                             onChange={e => setAmount(e.target.value)}
                         />
-                        {fromTokenData && (
+                        {/* {fromTokenData && (
                             <p className='text-muted-foreground text-xs'>
                                 Available: {fromTokenData.balance.toFixed(4)} {fromTokenData.symbol}
                             </p>
-                        )}
+                        )} */}
                     </div>
 
                     <div className='flex justify-center'>
@@ -113,17 +112,17 @@ export function SwapInterface({ open, onOpenChange }: SwapInterfaceProps) {
                             value={toToken}
                             onChange={e => setToToken(e.target.value)}>
                             <option value=''>Select a token</option>
-                            {tokens
+                            {/* {tokens
                                 .filter(t => t.id !== fromToken)
                                 .map(token => (
                                     <option key={token.id} value={token.id}>
                                         {token.symbol}
                                     </option>
-                                ))}
+                                ))} */}
                         </select>
                     </div>
 
-                    {fromTokenData && toTokenData && amount && (
+                    {/* {fromTokenData && toTokenData && amount && (
                         <div className='rounded-md bg-[#181723] p-3'>
                             <p className='text-sm'>
                                 Estimated: {parseFloat(amount) * 0.98} {toTokenData.symbol}
@@ -133,7 +132,7 @@ export function SwapInterface({ open, onOpenChange }: SwapInterfaceProps) {
                                 {toTokenData.symbol}
                             </p>
                         </div>
-                    )}
+                    )} */}
 
                     <div className='flex space-x-2'>
                         <Button variant='outline' className='flex-1' onClick={handleClose}>

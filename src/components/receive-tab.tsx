@@ -10,7 +10,7 @@ import { useEffect, useState } from 'react'
 export function ReceiveTab() {
     const { selectedAccount } = useOktoAccount()
     const {
-        chains,
+        chains = [],
         selectedChain,
         setSelectedChain,
         selectedToken,
@@ -37,10 +37,10 @@ export function ReceiveTab() {
             const optimismChain = chains.find(chain => chain.name.toLowerCase() === 'optimism')
 
             if (optimismChain) {
-                setSelectedChain(optimismChain.id)
+                setSelectedChain(String(optimismChain.id))
             } else if (chains.length > 0) {
                 // Fallback to first chain if Optimism not available
-                setSelectedChain(chains[0].id)
+                setSelectedChain(String(chains[0].id))
             }
         }
     }, [chains, selectedChain, setSelectedChain])
@@ -76,7 +76,7 @@ export function ReceiveTab() {
             // Different format based on token type
             if (selectedTokenData.contractAddress) {
                 // For ERC20 tokens
-                const chainData = chains.find(c => c.id === selectedChain)
+                const chainData = chains.find(c => String(c.id) === selectedChain)
                 const chainId = chainData?.id || '1' // Default to Ethereum mainnet
 
                 // Calculate amount in token's smallest units based on its decimals
@@ -94,7 +94,7 @@ export function ReceiveTab() {
                 qrData = `ethereum:${selectedTokenData.contractAddress}@${chainId}/transfer?address=${walletAddress}&uint256=${amountInSmallestUnits}`
             } else {
                 // For native currency (ETH, MATIC, etc.)
-                const chainData = chains.find(c => c.id === selectedChain)
+                const chainData = chains.find(c => String(c.id) === selectedChain)
                 const chainId = chainData?.id || '1' // Default to Ethereum mainnet
 
                 // Format: ethereum:<address>@<chainId>?value=<amountInWei>
@@ -169,8 +169,8 @@ export function ReceiveTab() {
 
     // Get current network name from selected chain
     const getSelectedNetwork = () => {
-        if (!selectedChain) return 'Select Network'
-        const chain = chains.find(c => c.id === selectedChain)
+        if (!selectedChain || !chains || chains.length === 0) return 'Select Network'
+        const chain = chains.find(c => String(c.id) === selectedChain)
         return chain ? chain.name : 'Select Network'
     }
 
@@ -204,11 +204,13 @@ export function ReceiveTab() {
                                 key={chain.id}
                                 className='flex cursor-pointer items-center justify-between px-4 py-3 text-white hover:bg-[#252531]'
                                 onClick={() => {
-                                    setSelectedChain(chain.id)
+                                    setSelectedChain(String(chain.id))
                                     setShowNetworkDropdown(false)
                                 }}>
                                 <span>{chain.name}</span>
-                                {selectedChain === chain.id && <div className='h-2.5 w-2.5 rounded-full bg-white' />}
+                                {selectedChain === String(chain.id) && (
+                                    <div className='h-2.5 w-2.5 rounded-full bg-white' />
+                                )}
                             </div>
                         ))}
                     </div>

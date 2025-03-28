@@ -93,10 +93,10 @@ export function ReceiveModal({ open, onOpenChange }: ReceiveModalProps) {
     // Update available tokens when chain changes
     useEffect(() => {
         if (selectedChain && tokenList) {
-            const chainData = chains.find(c => c.id === selectedChain)
+            const chainData = chains.find(c => c.id.toString() === selectedChain)
             if (chainData) {
                 // Convert chain ID to number for comparison with token list
-                const chainIdNumber = parseInt(chainData.id)
+                const chainIdNumber = chainData.id
 
                 // Filter tokens by chain ID
                 const tokensForChain = tokenList.tokens
@@ -173,7 +173,7 @@ export function ReceiveModal({ open, onOpenChange }: ReceiveModalProps) {
             if (selectedTokenData.contractAddress) {
                 // For ERC20 tokens
                 // Format that works with most wallets: ethereum:<tokenAddress>@<chainId>/transfer?address=<recipientAddress>&uint256=<amountInSmallestUnits>
-                const chainData = chains.find(c => c.id === selectedChain)
+                const chainData = chains.find(c => c.id.toString() === selectedChain)
                 const chainId = chainData?.id || '1' // Default to Ethereum mainnet
 
                 // Calculate amount in token's smallest units based on its decimals
@@ -189,7 +189,7 @@ export function ReceiveModal({ open, onOpenChange }: ReceiveModalProps) {
                 qrData = `ethereum:${selectedTokenData.contractAddress}@${chainId}/transfer?address=${walletAddress}&uint256=${amountInSmallestUnits}`
             } else {
                 // For native currency (ETH, MATIC, etc.)
-                const chainData = chains.find(c => c.id === selectedChain)
+                const chainData = chains.find(c => c.id.toString() === selectedChain)
                 const chainId = chainData?.id || '1' // Default to Ethereum mainnet
 
                 // Format: ethereum:<address>@<chainId>?value=<amountInWei>

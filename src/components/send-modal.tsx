@@ -4,9 +4,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { ResponsiveDialog } from '@/components/ui/responsive-dialog'
-import { useTokenTransferService } from '@/features/assets/services/token-transfer-service'
-import { useOktoPortfolio } from '@/features/shared/hooks/use-okto-portfolio'
-import { useChainService } from '@/features/shared/services/chain-service'
+// import { useChainService } from '@/features/shared/services/chain-service'
 import { Check } from 'lucide-react'
 import { useState } from 'react'
 
@@ -16,9 +14,9 @@ interface SendModalProps {
 }
 
 export function SendModal({ open, onOpenChange }: SendModalProps) {
-    const { tokens } = useOktoPortfolio()
-    const { sendToken } = useTokenTransferService()
-    const { chains } = useChainService()
+    // const { tokens } = useOktoPortfolio()
+    // const { sendToken } = useTokenTransferService()
+    // const { chains } = useChainService()
 
     const [recipient, setRecipient] = useState('')
     const [amount, setAmount] = useState('')
@@ -27,32 +25,32 @@ export function SendModal({ open, onOpenChange }: SendModalProps) {
     const [errorMessage, setErrorMessage] = useState('')
     const [txHash, setTxHash] = useState('')
 
-    const selectedTokenData = tokens.find(t => t.id === selectedToken)
+    // const selectedTokenData = tokens.find(t => t.id === selectedToken)
 
     const handleSend = async () => {
-        if (!selectedTokenData || !recipient || !amount) return
+        // if (!selectedTokenData || !recipient || !amount) return
 
         setStatus('loading')
         setErrorMessage('')
 
         try {
             // Find the chain for the selected token
-            const tokenChain = selectedTokenData.chain
-            const chainData = chains.find(c => c.name.toLowerCase() === tokenChain)
+            // const tokenChain = selectedTokenData.chain
+            // const chainData = chains.find(c => c.name.toLowerCase() === tokenChain)
 
-            if (!chainData) {
-                throw new Error('Chain not found for selected token')
-            }
+            // if (!chainData) {
+            //     throw new Error('Chain not found for selected token')
+            // }
 
-            const result = await sendToken({
-                tokenId: selectedTokenData.id,
-                symbol: selectedTokenData.symbol,
-                recipient,
-                amount: parseFloat(amount),
-                caip2Id: chainData.caip2Id,
-            })
+            // const result = await sendToken({
+            //     tokenId: selectedTokenData.id,
+            //     symbol: selectedTokenData.symbol,
+            //     recipient,
+            //     amount: parseFloat(amount),
+            //     caip2Id: chainData.caip2Id,
+            // })
 
-            setTxHash(result)
+            // setTxHash(result)
             setStatus('success')
         } catch (error) {
             console.error('Send transaction failed:', error)
@@ -94,11 +92,11 @@ export function SendModal({ open, onOpenChange }: SendModalProps) {
                                 value={selectedToken}
                                 onChange={e => setSelectedToken(e.target.value)}>
                                 <option value=''>Select a token</option>
-                                {tokens.map(token => (
-                                    <option key={token.id} value={token.id}>
-                                        {token.symbol} - {token.balance.toFixed(4)}
-                                    </option>
-                                ))}
+                                {/* {tokens.map(token => (
+                                        <option key={token.id} value={token.id}>
+                                            {token.symbol} - {token.balance.toFixed(4)}
+                                        </option>
+                                    ))} */}
                             </select>
                         </div>
 
@@ -121,11 +119,11 @@ export function SendModal({ open, onOpenChange }: SendModalProps) {
                                 value={amount}
                                 onChange={e => setAmount(e.target.value)}
                             />
-                            {selectedTokenData && (
+                            {/* {selectedTokenData && (
                                 <p className='text-muted-foreground text-xs'>
                                     Available: {selectedTokenData.balance.toFixed(4)} {selectedTokenData.symbol}
                                 </p>
-                            )}
+                            )} */}
                         </div>
 
                         <div className='flex space-x-2'>
