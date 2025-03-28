@@ -4,27 +4,20 @@ import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { useOktoNFTs } from '@/features/shared/hooks/use-okto-nfts'
-import { nftsState$ } from '@/features/shared/state/nfts-state'
 import { observer } from '@legendapp/state/react'
+import { motion } from 'framer-motion'
 import { ImageIcon } from 'lucide-react'
-import { motion } from 'motion/react'
 import Image from 'next/image'
 import { useState } from 'react'
+import { useNftService } from '../services/nft-service'
 
 export const NFTGallery = observer(function NFTGallery({ animated = true }: { animated?: boolean }) {
-    const { transferNFT, refetch } = useOktoNFTs()
+    const { transferNFT, refetch, nfts, isLoading, error } = useNftService()
     const [selectedNft, setSelectedNft] = useState<string | null>(null)
     const [transferModalOpen, setTransferModalOpen] = useState(false)
     const [recipient, setRecipient] = useState('')
     const [transferStatus, setTransferStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle')
     const [errorMessage, setErrorMessage] = useState('')
-
-    // Obtenemos los valores del estado observable
-    const nfts = nftsState$.nfts.get()
-    const isLoading = nftsState$.isLoading.get()
-    const error = nftsState$.error.get()
-    const hasInitialized = nftsState$.hasInitialized.get() || nftsState$.lastUpdated.get() > 0
 
     const container = {
         hidden: { opacity: 0 },
@@ -68,7 +61,7 @@ export const NFTGallery = observer(function NFTGallery({ animated = true }: { an
         setErrorMessage('')
     }
 
-    if (isLoading && !hasInitialized) {
+    if (isLoading) {
         return (
             <div className='flex h-[300px] items-center justify-center'>
                 <p className='text-muted-foreground text-sm'>Loading NFTs...</p>
@@ -80,7 +73,7 @@ export const NFTGallery = observer(function NFTGallery({ animated = true }: { an
         return (
             <div className='flex h-[300px] items-center justify-center'>
                 <p className='text-sm text-red-500'>{error}</p>
-                <Button onClick={() => refetch(true)} className='mt-4'>
+                <Button onClick={() => refetch()} className='mt-4'>
                     Retry
                 </Button>
             </div>
@@ -92,8 +85,8 @@ export const NFTGallery = observer(function NFTGallery({ animated = true }: { an
             <div className='flex h-[300px] flex-col items-center justify-center'>
                 <ImageIcon className='text-muted-foreground mb-2 h-8 w-8' />
                 <p className='text-muted-foreground text-sm'>No NFTs found</p>
-                {hasInitialized && (
-                    <Button onClick={() => refetch(true)} className='mt-4'>
+                {!isLoading && !error && (
+                    <Button onClick={() => refetch()} className='mt-4'>
                         Refresh
                     </Button>
                 )}
