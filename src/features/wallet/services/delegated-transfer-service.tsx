@@ -1,8 +1,8 @@
 'use client'
 
-import { useAuth } from '@/features/auth/contexts/auth-context'
 import type { Transaction } from '@/features/shared/hooks/use-okto-transactions'
 import { useOktoTransactions } from '@/features/shared/hooks/use-okto-transactions'
+import { useAuth } from '@/hooks/use-auth'
 import { tokenTransfer, useOkto } from '@okto_web3/react-sdk'
 import { useEffect, useState } from 'react'
 
@@ -18,7 +18,7 @@ interface DelegatedTokenTransferParams {
 
 export function useDelegatedTransferService() {
     const oktoClient = useOkto()
-    const { checkAuthStatus } = useAuth()
+    const { isAuthenticated } = useAuth()
     const { addPendingTransaction, updatePendingTransaction } = useOktoTransactions()
     const [sessionKey, setSessionKey] = useState<string | null>(null)
     const [delegationEnabled, setDelegationEnabled] = useState(false)
@@ -48,8 +48,7 @@ export function useDelegatedTransferService() {
         }
 
         // Verify authentication before continuing
-        const isAuth = await checkAuthStatus()
-        if (!isAuth) {
+        if (!isAuthenticated) {
             throw new Error('Authentication required')
         }
 
@@ -89,7 +88,10 @@ export function useDelegatedTransferService() {
 
             // Update the transaction status with both ID and oktoClient
             if (oktoClient) {
-                updatePendingTransaction(pendingTxId)
+                updatePendingTransaction(pendingTxId, {
+                    status: 'success',
+                    hash: jobId,
+                })
             }
 
             return jobId
@@ -98,7 +100,10 @@ export function useDelegatedTransferService() {
 
             // Update with the ID and oktoClient
             if (oktoClient) {
-                updatePendingTransaction(pendingTxId)
+                updatePendingTransaction(pendingTxId, {
+                    status: 'error',
+                    hash: '',
+                })
             }
 
             throw error
