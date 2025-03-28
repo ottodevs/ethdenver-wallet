@@ -1,0 +1,105 @@
+import { Meta } from '@storybook/blocks'
+
+<Meta title='Design System/Borders & Radii' />
+
+# Borders and Radii
+
+Our application uses a consistent system of borders and radii for interface elements.
+
+## Border Radii
+
+<div className='flex flex-wrap gap-8'>
+    <div className='flex flex-col items-center'>
+        <div className='flex h-24 w-24 items-center justify-center rounded-sm bg-blue-500 text-white'>sm</div>
+        <p className='mt-2 text-sm'>--radius-sm</p>
+    </div>
+
+    <div className='flex flex-col items-center'>
+        <div className='flex h-24 w-24 items-center justify-center rounded-md bg-blue-500 text-white'>md</div>
+        <p className='mt-2 text-sm'>--radius-md</p>
+    </div>
+
+    <div className='flex flex-col items-center'>
+        <div className='flex h-24 w-24 items-center justify-center rounded-lg bg-blue-500 text-white'>lg</div>
+        <p className='mt-2 text-sm'>--radius-lg</p>
+    </div>
+
+    <div className='flex flex-col items-center'>
+        <div className='flex h-24 w-24 items-center justify-center rounded-xl bg-blue-500 text-white'>xl</div>
+        <p className='mt-2 text-sm'>--radius-xl</p>
+    </div>
+
+</div>
+
+## Radius Values
+
+```css
+:root {
+    --radius: 0.625rem;
+    --radius-sm: calc(var(--radius) - 4px);
+    --radius-md: calc(var(--radius) - 2px);
+    --radius-lg: var(--radius);
+    --radius-xl: calc(var(--radius) + 4px);
+}
+```
+
+## Border Styles
+
+<div className='mt-8 flex flex-wrap gap-8'>
+    <div className='flex flex-col items-center'>
+        <div className='flex h-32 w-32 items-center justify-center rounded-lg border bg-white'>border</div>
+        <p className='mt-2 text-sm'>border</p>
+    </div>
+
+    <div className='flex flex-col items-center'>
+        <div className='flex h-32 w-32 items-center justify-center rounded-lg border-2 bg-white'>border-2</div>
+        <p className='mt-2 text-sm'>border-2</p>
+    </div>
+
+    <div className='flex flex-col items-center'>
+        <div className='flex h-32 w-32 items-center justify-center rounded-lg border border-blue-500 bg-white'>
+            border-color
+        </div>
+        <p className='mt-2 text-sm'>border-color</p>
+    </div>
+
+    <div className='flex flex-col items-center'>
+        <div className='flex h-32 w-32 items-center justify-center rounded-lg bg-white outline outline-blue-500'>
+            outline
+        </div>
+        <p className='mt-2 text-sm'>outline</p>
+    </div>
+
+</div>
+
+## Usage
+
+To use these radii and borders, you can use the corresponding Tailwind classes:
+
+```jsx
+<div className="rounded-sm">Small radius</div>
+<div className="rounded-md">Medium radius</div>
+<div className="rounded-lg">Large radius</div>
+<div className="rounded-xl">Extra large radius</div>
+
+<div className="border">Normal border</div>
+<div className="border-2">Thick border</div>
+<div className="border border-blue-500">Colored border</div>
+```
+
+## Base Configuration
+
+In our application, all elements have the following applied by default:
+
+```css
+@layer base {
+    * {
+        @apply border-border outline-ring/50;
+    }
+    body {
+        @apply bg-background text-foreground;
+    }
+}
+```
+
+This ensures that all borders and outlines use the colors defined in our CSS variables.

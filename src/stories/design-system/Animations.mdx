@@ -1,0 +1,144 @@
+import { Meta } from '@storybook/blocks'
+
+<Meta title='Design System/Animations' />
+
+# Animations
+
+Our application includes several custom animations to enhance the user experience.
+
+## Basic Animations
+
+<div className='flex flex-wrap gap-8'>
+    <div className='flex flex-col items-center'>
+        <div className='animate-in fade-in h-16 w-16 rounded-lg bg-blue-500 duration-300'></div>
+        <p className='mt-2 text-sm'>fade-in</p>
+    </div>
+
+    <div className='flex flex-col items-center'>
+        <div className='animate-in slide-in-from-top-5 h-16 w-16 rounded-lg bg-blue-500 duration-300'></div>
+        <p className='mt-2 text-sm'>slide-in-from-top</p>
+    </div>
+
+    <div className='flex flex-col items-center'>
+        <div className='animate-pulse-blue h-16 w-16 rounded-lg bg-blue-500'></div>
+        <p className='mt-2 text-sm'>pulse-blue</p>
+    </div>
+
+    <div className='flex flex-col items-center'>
+        <div className='animate-reverse h-16 w-16 rounded-lg bg-blue-500'></div>
+        <p className='mt-2 text-sm'>reverse-spin</p>
+    </div>
+
+</div>
+
+## Fade-in Sequence
+
+<div className='mt-8 flex flex-wrap gap-8'>
+    <div className='flex flex-col items-center'>
+        <div className='animate-fade-in-1 h-16 w-16 rounded-lg bg-blue-500'></div>
+        <p className='mt-2 text-sm'>fade-in-1</p>
+    </div>
+
+    <div className='flex flex-col items-center'>
+        <div className='animate-fade-in-2 h-16 w-16 rounded-lg bg-blue-500'></div>
+        <p className='mt-2 text-sm'>fade-in-2</p>
+    </div>
+
+    <div className='flex flex-col items-center'>
+        <div className='animate-fade-in-3 h-16 w-16 rounded-lg bg-blue-500'></div>
+        <p className='mt-2 text-sm'>fade-in-3</p>
+    </div>
+
+</div>
+
+## CSS Code
+
+```css
+/* Reverse rotation animation */
+@keyframes reverse-spin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(-360deg);
+    }
+}
+
+/* Sequential fade-in animations */
+@keyframes fade-in-1 {
+    0% {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    30% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes fade-in-2 {
+    0% {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    30% {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    60% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes fade-in-3 {
+    0% {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    60% {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    90% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Blue pulse animation */
+@keyframes pulse-blue {
+    0%,
+    100% {
+        opacity: 0.6;
+    }
+    50% {
+        opacity: 1;
+    }
+}
+```
+
+## Usage
+
+To use these animations, simply add the corresponding class to your element:
+
+```jsx
+<div className="animate-in fade-in">Fade in</div>
+<div className="animate-reverse">Rotate in reverse</div>
+<div className="animate-fade-in-1">Appears first</div>
+<div className="animate-fade-in-2">Appears second</div>
+<div className="animate-fade-in-3">Appears third</div>
+<div className="animate-pulse-blue">Pulse in blue</div>
+```

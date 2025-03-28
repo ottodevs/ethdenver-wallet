@@ -1,0 +1,183 @@
+import { ColorItem, ColorPalette, Meta } from '@storybook/blocks'
+
+<Meta title='Design System/Colors' />
+
+# Color Palette
+
+Our application uses a light and dark theme system with custom CSS variables.
+
+## Light Theme
+
+<ColorPalette>
+    <ColorItem title='Background' subtitle='--background' colors={{ Background: 'oklch(1 0 0)' }} />
+    <ColorItem title='Foreground' subtitle='--foreground' colors={{ Foreground: 'oklch(0.145 0 0)' }} />
+    <ColorItem
+        title='Primary'
+        subtitle='--primary / --primary-foreground'
+        colors={{
+            'Primary': 'oklch(0.205 0 0)',
+            'Primary Foreground': 'oklch(0.985 0 0)',
+        }}
+    />
+    <ColorItem
+        title='Secondary'
+        subtitle='--secondary / --secondary-foreground'
+        colors={{
+            'Secondary': 'oklch(0.97 0 0)',
+            'Secondary Foreground': 'oklch(0.205 0 0)',
+        }}
+    />
+    <ColorItem
+        title='Muted'
+        subtitle='--muted / --muted-foreground'
+        colors={{
+            'Muted': 'oklch(0.97 0 0)',
+            'Muted Foreground': 'oklch(0.556 0 0)',
+        }}
+    />
+    <ColorItem
+        title='Accent'
+        subtitle='--accent / --accent-foreground'
+        colors={{
+            'Accent': 'oklch(0.97 0 0)',
+            'Accent Foreground': 'oklch(0.205 0 0)',
+        }}
+    />
+    <ColorItem
+        title='Destructive'
+        subtitle='--destructive / --destructive-foreground'
+        colors={{
+            'Destructive': 'oklch(0.577 0.245 27.325)',
+            'Destructive Foreground': 'oklch(0.577 0.245 27.325)',
+        }}
+    />
+    <ColorItem
+        title='Border & Input'
+        subtitle='--border / --input / --ring'
+        colors={{
+            Border: 'oklch(0.922 0 0)',
+            Input: 'oklch(0.922 0 0)',
+            Ring: 'oklch(0.708 0 0)',
+        }}
+    />
+</ColorPalette>
+
+## Dark Theme
+
+<ColorPalette>
+    <ColorItem title='Background' subtitle='--background' colors={{ Background: 'oklch(0.145 0 0)' }} />
+    <ColorItem title='Foreground' subtitle='--foreground' colors={{ Foreground: 'oklch(0.985 0 0)' }} />
+    <ColorItem
+        title='Primary'
+        subtitle='--primary / --primary-foreground'
+        colors={{
+            'Primary': 'oklch(0.985 0 0)',
+            'Primary Foreground': 'oklch(0.205 0 0)',
+        }}
+    />
+    <ColorItem
+        title='Secondary'
+        subtitle='--secondary / --secondary-foreground'
+        colors={{
+            'Secondary': 'oklch(0.269 0 0)',
+            'Secondary Foreground': 'oklch(0.985 0 0)',
+        }}
+    />
+    <ColorItem
+        title='Muted'
+        subtitle='--muted / --muted-foreground'
+        colors={{
+            'Muted': 'oklch(0.269 0 0)',
+            'Muted Foreground': 'oklch(0.708 0 0)',
+        }}
+    />
+    <ColorItem
+        title='Accent'
+        subtitle='--accent / --accent-foreground'
+        colors={{
+            'Accent': 'oklch(0.269 0 0)',
+            'Accent Foreground': 'oklch(0.985 0 0)',
+        }}
+    />
+    <ColorItem
+        title='Destructive'
+        subtitle='--destructive / --destructive-foreground'
+        colors={{
+            'Destructive': 'oklch(0.396 0.141 25.723)',
+            'Destructive Foreground': 'oklch(0.637 0.237 25.331)',
+        }}
+    />
+    <ColorItem
+        title='Border & Input'
+        subtitle='--border / --input / --ring'
+        colors={{
+            Border: 'oklch(0.269 0 0)',
+            Input: 'oklch(0.269 0 0)',
+            Ring: 'oklch(0.439 0 0)',
+        }}
+    />
+</ColorPalette>
+
+## Chart Colors
+
+<ColorPalette>
+    <ColorItem
+        title='Chart Colors (Light Theme)'
+        subtitle='--chart-1 to --chart-5'
+        colors={{
+            'Chart 1': 'oklch(0.646 0.222 41.116)',
+            'Chart 2': 'oklch(0.6 0.118 184.704)',
+            'Chart 3': 'oklch(0.398 0.07 227.392)',
+            'Chart 4': 'oklch(0.828 0.189 84.429)',
+            'Chart 5': 'oklch(0.769 0.188 70.08)',
+        }}
+    />
+    <ColorItem
+        title='Chart Colors (Dark Theme)'
+        subtitle='--chart-1 to --chart-5'
+        colors={{
+            'Chart 1': 'oklch(0.488 0.243 264.376)',
+            'Chart 2': 'oklch(0.696 0.17 162.48)',
+            'Chart 3': 'oklch(0.769 0.188 70.08)',
+            'Chart 4': 'oklch(0.627 0.265 303.9)',
+            'Chart 5': 'oklch(0.645 0.246 16.439)',
+        }}
+    />
+</ColorPalette>
+
+## Sidebar Colors
+
+<ColorPalette>
+    <ColorItem
+        title='Sidebar (Light Theme)'
+        subtitle='--sidebar / --sidebar-foreground'
+        colors={{
+            'Sidebar': 'oklch(0.985 0 0)',
+            'Sidebar Foreground': 'oklch(0.145 0 0)',
+        }}
+    />
+    <ColorItem
+        title='Sidebar Primary (Light Theme)'
+        subtitle='--sidebar-primary / --sidebar-primary-foreground'
+        colors={{
+            'Sidebar Primary': 'oklch(0.205 0 0)',
+            'Sidebar Primary Foreground': 'oklch(0.985 0 0)',
+        }}
+    />
+    <ColorItem
+        title='Sidebar (Dark Theme)'
+        subtitle='--sidebar / --sidebar-foreground'
+        colors={{
+            'Sidebar': 'oklch(0.205 0 0)',
+            'Sidebar Foreground': 'oklch(0.985 0 0)',
+        }}
+    />
+    <ColorItem
+        title='Sidebar Primary (Dark Theme)'
+        subtitle='--sidebar-primary / --sidebar-primary-foreground'
+        colors={{
+            'Sidebar Primary': 'oklch(0.488 0.243 264.376)',
+            'Sidebar Primary Foreground': 'oklch(0.985 0 0)',
+        }}
+    />
+</ColorPalette>

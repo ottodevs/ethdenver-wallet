@@ -1,0 +1,64 @@
+import { Meta } from '@storybook/blocks'
+
+<Meta title='Design System/Backgrounds' />
+
+# Backgrounds and Gradients
+
+Our application uses various backgrounds and gradients to create visual depth.
+
+## Card Gradients
+
+<div className='flex flex-wrap gap-8'>
+    <div className='flex flex-col items-center'>
+        <div className='bg-gradient-card-dark flex h-40 w-64 items-center justify-center rounded-xl text-white shadow-md'>
+            Dark Gradient
+        </div>
+        <p className='mt-2 text-sm'>bg-gradient-card-dark</p>
+    </div>
+
+    <div className='flex flex-col items-center'>
+        <div className='bg-gradient-card-light flex h-40 w-64 items-center justify-center rounded-xl shadow-md'>
+            Light Gradient
+        </div>
+        <p className='mt-2 text-sm'>bg-gradient-card-light</p>
+    </div>
+
+</div>
+
+## CSS Code
+
+```css
+/* Gradients for dark/light themes */
+.bg-gradient-card-dark {
+    @apply bg-gradient-to-br from-[#252531] to-[#13121E];
+}
+
+.bg-gradient-card-light {
+    @apply bg-gradient-to-br from-[#f0f4f8] to-[#d9e2ec];
+}
+```
+
+## Usage
+
+To use these gradients, simply add the corresponding class to your element:
+
+```jsx
+<div className="bg-gradient-card-dark">
+  Content with dark gradient
+</div>
+
+<div className="bg-gradient-card-light">
+  Content with light gradient
+</div>
+```
+
+## Theme-Adaptive Backgrounds
+
+These gradients are designed to work well with both light and dark themes of the application. You can combine them with other utility classes to create different visual effects.
+
+```jsx
+<div className='bg-gradient-card-dark rounded-xl p-6 shadow-lg'>
+    <h3 className='font-medium text-white'>Card with Dark Gradient</h3>
+    <p className='mt-2 text-gray-300'>Card content</p>
+</div>
+```
