@@ -1,5 +1,10 @@
 // components/options-dropdown.tsx
-import { Button } from '@/components/ui/button'
+import { computed } from '@legendapp/state'
+import { Copy, ExternalLink, LogOut, Moon, MoreVertical, Settings as SettingsIcon, Shield, Sun } from 'lucide-react'
+import Link from 'next/link'
+import { memo, useCallback, useMemo, useState } from 'react'
+
+import { useToast } from '@/components/hooks/use-toast'
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -8,130 +13,180 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { useToast } from '@/components/ui/toast-context'
+import { useSignOut } from '@/features/auth/hooks/use-sign-out'
 import { useCopyToClipboard } from '@/features/shared/hooks/use-copy-to-clipboard'
-import { useOktoAccount } from '@/features/shared/hooks/use-okto-account'
 import { DelegatedApproval } from '@/features/wallet/components/delegated-approval'
-import { useWallet } from '@/features/wallet/hooks/use-wallet'
+import { appState$, settings$ } from '@/lib/stores/app.store'
 import { openExplorer } from '@/lib/utils/explorer'
-import { Check, Copy, ExternalLink, LogOut, Moon, MoreVertical, Settings, Shield, Sun } from 'lucide-react'
-import { signOut } from 'next-auth/react'
-import { useTheme } from 'next-themes'
-import { useRouter } from 'next/navigation'
-import { useRef, useState } from 'react'
+import { useWalletAddress } from '@/okto/hooks'
+import { formatAddress } from '@/okto/utils/address'
 
-export function OptionsDropdown() {
-    const { theme, setTheme } = useTheme()
-    const { disconnect } = useWallet()
-    const { selectedAccount } = useOktoAccount()
-    const walletAddress = selectedAccount?.address || ''
-    const [delegatedApprovalOpen, setDelegatedApprovalOpen] = useState(false)
-    const router = useRouter()
-    const { addToast, removeToast } = useToast()
-    const { copyToClipboard, copying } = useCopyToClipboard()
-    const themeToastIdRef = useRef<string | null>(null)
+// Computed observable for theme icon
+const themeIcon$ = computed(() =>
+    settings$.theme.get() === 'dark' ? <Sun className='mr-2 size-4' /> : <Moon className='mr-2 size-4' />,
+)
 
-    const handleCopyAddress = () => {
-        if (!walletAddress) {
-            console.log('No wallet address available')
-            return
-        }
+// Computed observable for theme text
+const themeText$ = computed(() => (settings$.theme.get() === 'dark' ? 'Light Mode' : 'Dark Mode'))
 
-        console.log('Copying address in options dropdown:', walletAddress)
-        copyToClipboard(walletAddress, 'Address')
-    }
-
-    const handleViewOnExplorer = () => {
-        if (!walletAddress) return
-        openExplorer('ethereum', 'address', walletAddress, true)
-    }
-
-    const handleNavigateToSettings = () => {
-        router.push('/settings')
-    }
-
-    const handleLogout = async () => {
-        try {
-            // First disconnect from Okto
-            disconnect()
-
-            // Then sign out from Next-Auth with relative URL
-            await signOut({ redirect: true, callbackUrl: '/auth' })
-        } catch (error) {
-            console.error('Logout failed:', error)
-        }
-    }
-
+// Memoized theme toggle item
+const ThemeToggleItem = memo(function ThemeToggleItem() {
     const toggleTheme = () => {
-        const newTheme = theme === 'dark' ? 'light' : 'dark'
-        setTheme(newTheme)
-
-        // Remove previous theme toast if exists
-        if (themeToastIdRef.current) {
-            removeToast(themeToastIdRef.current)
-        }
-
-        // Show toast notification and store its ID
-        const toastId = Math.random().toString(36).substring(2, 9)
-        themeToastIdRef.current = toastId
-
-        addToast({
-            id: toastId,
-            description: `Switched to ${newTheme} mode`,
-            variant: 'default',
-        })
+        settings$.theme.set(theme => (theme === 'dark' ? 'light' : 'dark'))
     }
 
     return (
-        <>
-            <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                    <Button variant='ghost' size='icon'>
-                        <MoreVertical className='h-5 w-5' />
-                        <span className='sr-only'>Open menu</span>
-                    </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align='end'>
-                    <DropdownMenuLabel>My Wallet</DropdownMenuLabel>
-                    <DropdownMenuItem onClick={handleCopyAddress}>
-                        {copying ? <Check className='mr-2 h-4 w-4' /> : <Copy className='mr-2 h-4 w-4' />}
-                        {copying ? 'Copied!' : 'Copy Address'}
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={handleViewOnExplorer}>
-                        <ExternalLink className='mr-2 h-4 w-4' />
-                        View on Explorer
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={toggleTheme}>
-                        {theme === 'dark' ? (
-                            <>
-                                <Sun className='mr-2 h-4 w-4' />
-                                Light Mode
-                            </>
-                        ) : (
-                            <>
-                                <Moon className='mr-2 h-4 w-4' />
-                                Dark Mode
-                            </>
-                        )}
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => setDelegatedApprovalOpen(true)}>
-                        <Shield className='mr-2 h-4 w-4' />
-                        Automatic Approvals
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={handleNavigateToSettings}>
-                        <Settings className='mr-2 h-4 w-4' />
-                        Settings
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={handleLogout} className='text-red-500 focus:text-red-500'>
-                        <LogOut className='mr-2 h-4 w-4' />
-                        Sign Out
-                    </DropdownMenuItem>
-                </DropdownMenuContent>
-            </DropdownMenu>
+        <DropdownMenuItem onClick={toggleTheme}>
+            {themeIcon$.get()}
+            {themeText$.get()}
+        </DropdownMenuItem>
+    )
+})
 
-            <DelegatedApproval open={delegatedApprovalOpen} onOpenChange={setDelegatedApprovalOpen} />
+// Memoized copy address item
+const CopyAddressItem = memo(function CopyAddressItem() {
+    const { copyToClipboard } = useCopyToClipboard()
+    const { walletAddress, isLoading } = useWalletAddress()
+    const { toast } = useToast()
+
+    // Memoize the formatted address to prevent recalculation on every render
+    const displayAddress = useMemo(() => {
+        return walletAddress ? formatAddress(walletAddress) : ''
+    }, [walletAddress])
+
+    // Memoize the copy handler to prevent recreation on every render
+    const handleCopyAddress = useCallback(() => {
+        if (walletAddress) {
+            copyToClipboard(walletAddress, 'Wallet Address')
+        } else {
+            toast({
+                title: 'No wallet address available',
+                description: 'Please connect your wallet or try again later.',
+                variant: 'destructive',
+            })
+        }
+    }, [walletAddress, copyToClipboard, toast])
+
+    return (
+        <DropdownMenuItem
+            onClick={handleCopyAddress}
+            disabled={isLoading}
+            className={!walletAddress && !isLoading ? 'cursor-not-allowed opacity-50' : ''}>
+            <Copy className='mr-2 size-4' />
+            <div className='flex flex-col'>
+                <span>Copy Address</span>
+                {!isLoading && walletAddress && <span className='text-muted-foreground text-xs'>{displayAddress}</span>}
+                {isLoading && <span className='text-muted-foreground text-xs'>Loading...</span>}
+                {!isLoading && !walletAddress && (
+                    <span className='text-muted-foreground text-xs'>No address available</span>
+                )}
+            </div>
+        </DropdownMenuItem>
+    )
+})
+
+// Memoized view on explorer item
+const ViewOnExplorerItem = memo(function ViewOnExplorerItem() {
+    const { walletAddress, isLoading } = useWalletAddress()
+    const { toast } = useToast()
+
+    // Memoize the handler to prevent recreation on every render
+    const handleViewOnExplorer = useCallback(() => {
+        if (walletAddress) {
+            // Use the current chain or default to ethereum
+            const currentChain = appState$.wallet.selectedChain.get() || 'ethereum'
+            openExplorer(currentChain, 'address', walletAddress)
+        } else {
+            toast({
+                title: 'No wallet address available',
+                description: 'Please connect your wallet or try again later.',
+                variant: 'destructive',
+            })
+        }
+    }, [walletAddress, toast])
+
+    return (
+        <DropdownMenuItem
+            onClick={handleViewOnExplorer}
+            disabled={isLoading || !walletAddress}
+            className={!walletAddress && !isLoading ? 'cursor-not-allowed opacity-50' : ''}>
+            <ExternalLink className='mr-2 size-4' />
+            View on Explorer
+        </DropdownMenuItem>
+    )
+})
+
+// Memoized delegated signatures item
+const DelegatedSignaturesItem = memo(function DelegatedSignaturesItem() {
+    const [isOpen, setIsOpen] = useState(false)
+    const delegationEnabled = appState$.ui.delegationEnabled.get()
+
+    // Ensure the modal opens correctly
+    const handleOpenModal = useCallback(() => {
+        setIsOpen(true)
+    }, [])
+
+    return (
+        <>
+            <DropdownMenuItem onClick={handleOpenModal}>
+                <Shield className='mr-2 size-4' />
+                <div className='flex flex-col'>
+                    <span>Delegated Signatures</span>
+                    <span className='text-muted-foreground text-xs'>{delegationEnabled ? 'Enabled' : 'Disabled'}</span>
+                </div>
+            </DropdownMenuItem>
+            <DelegatedApproval open={isOpen} onOpenChange={setIsOpen} />
         </>
     )
-}
+})
+
+// Memoized settings item
+const SettingsItem = memo(function SettingsItem() {
+    return (
+        <Link href='/settings' passHref>
+            <DropdownMenuItem asChild>
+                <span>
+                    <SettingsIcon className='mr-2 size-4' />
+                    Settings
+                </span>
+            </DropdownMenuItem>
+        </Link>
+    )
+})
+
+// Memoized sign out item
+const SignOutItem = memo(function SignOutItem() {
+    const signOut = useSignOut()
+
+    return (
+        <DropdownMenuItem onClick={signOut} className='text-red-500 focus:text-red-500'>
+            <LogOut className='mr-2 size-4' />
+            Sign Out
+        </DropdownMenuItem>
+    )
+})
+
+export const OptionsDropdown = memo(function OptionsDropdown() {
+    return (
+        <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+                <span className='flex items-center justify-center'>
+                    <MoreVertical className='size-5' />
+                    <span className='sr-only'>Open menu</span>
+                </span>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align='end'>
+                <DropdownMenuLabel>My Wallet</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <CopyAddressItem />
+                <ViewOnExplorerItem />
+                <DropdownMenuSeparator />
+                <ThemeToggleItem />
+                <DelegatedSignaturesItem />
+                <SettingsItem />
+                <DropdownMenuSeparator />
+                <SignOutItem />
+            </DropdownMenuContent>
+        </DropdownMenu>
+    )
+})
