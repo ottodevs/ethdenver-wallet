@@ -1,22 +1,17 @@
-'use client'
-
 import { OptionsDropdown } from '@/components/options-dropdown'
 import { Button } from '@/components/ui/button'
-import { QrCode } from 'lucide-react'
-import { useRouter } from 'next/navigation'
+import { QrCodeIcon } from 'lucide-react'
 
-export function WalletHeader() {
-    const router = useRouter()
+export interface WalletHeaderProps {
+    onQrCodeClick?: () => void
+}
+
+export function WalletHeader({ onQrCodeClick }: WalletHeaderProps) {
     return (
-        <div className='mb-4 flex items-center justify-between'>
+        <div className='text-foreground flex items-center justify-between'>
             <OptionsDropdown />
-            <div className='w-8' /> {/* Empty space to maintain layout */}
-            <Button
-                variant='ghost'
-                size='icon'
-                className='text-foreground size-8'
-                onClick={() => router.push('/receive')}>
-                <QrCode className='size-5' />
+            <Button variant='ghost' size='icon' className='size-8' onClick={onQrCodeClick}>
+                <QrCodeIcon className='size-5' />
             </Button>
         </div>
     )
