@@ -8,7 +8,8 @@ import type { OktoPortfolioData } from '@/types/okto'
  */
 export class PortfolioService {
     private static lastRefreshTimestamp: number | null = null
-    private static DEBOUNCE_TIME = 2000 // 2 seconds
+    private static DEBOUNCE_TIME = 500 // Reduced from 2000ms to 500ms for faster loading after login
+    private static cachedPortfolioData: OktoPortfolioData | undefined = undefined
 
     /**
      * Load portfolio data with debouncing to prevent multiple simultaneous calls
@@ -43,12 +44,17 @@ export class PortfolioService {
                 )
 
                 // Update the portfolio state with a timestamp
-                if (typeof portfolioState$.set === 'function') {
-                    portfolioState$.set({
-                        ...result,
-                        lastUpdated: Date.now(),
-                    })
+                const portfolioWithTimestamp = {
+                    ...result,
+                    lastUpdated: Date.now(),
                 }
+
+                // Update both the observable state and our cached copy
+                if (typeof portfolioState$.set === 'function') {
+                    portfolioState$.set(portfolioWithTimestamp)
+                }
+
+                this.cachedPortfolioData = portfolioWithTimestamp
 
                 return result
             } else {
@@ -58,6 +64,36 @@ export class PortfolioService {
         } catch (error) {
             console.error('💼 [portfolio-service] Error loading portfolio:', error)
             return null
+        }
+    }
+
+    /**
+     * Set portfolio data directly
+     * @param data The portfolio data to set
+     */
+    static setPortfolioData(data: OktoPortfolioData): void {
+        if (!data) return
+
+        try {
+            console.log('💼 [portfolio-service] Setting portfolio data directly')
+
+            // Ensure the data has a lastUpdated timestamp
+            const portfolioWithTimestamp = {
+                ...data,
+                lastUpdated: data.lastUpdated || Date.now(),
+            }
+
+            // Update both the observable state and our cached copy
+            if (typeof portfolioState$.set === 'function') {
+                portfolioState$.set(portfolioWithTimestamp)
+                this.lastRefreshTimestamp = Date.now()
+                this.cachedPortfolioData = portfolioWithTimestamp
+                console.log('💼 [portfolio-service] Portfolio data set successfully')
+            } else {
+                console.error('💼 [portfolio-service] Cannot set portfolio data: portfolioState$.set is not a function')
+            }
+        } catch (error) {
+            console.error('💼 [portfolio-service] Error setting portfolio data:', error)
         }
     }
 
@@ -83,14 +119,19 @@ export class PortfolioService {
      */
     static getPortfolioData(): OktoPortfolioData | undefined {
         try {
-            // Check if portfolioState$ is properly initialized and has a get method
+            // First try to get from the observable state
             if (portfolioState$ && typeof portfolioState$.get === 'function') {
-                return portfolioState$.get() as OktoPortfolioData | undefined
+                const stateData = portfolioState$.get() as OktoPortfolioData | undefined
+                if (stateData && stateData.aggregated_data) {
+                    return stateData
+                }
             }
-            return undefined
+
+            // Fallback to our cached copy
+            return this.cachedPortfolioData
         } catch (error) {
             console.error('💼 [portfolio-service] Error getting portfolio data:', error)
-            return undefined
+            return this.cachedPortfolioData
         }
     }
 }
