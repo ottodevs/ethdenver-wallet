@@ -1,8 +1,6 @@
 import { FlatCompat } from '@eslint/eslintrc'
 import { dirname } from 'path'
 import { fileURLToPath } from 'url'
-// Comment temporarily until Tailwind 4 support is added
-// import tailwind from 'eslint-plugin-tailwindcss'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
