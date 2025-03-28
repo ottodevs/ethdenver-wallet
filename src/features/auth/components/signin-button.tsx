@@ -1,4 +1,4 @@
-import { signIn } from '../config'
+import { signIn } from 'next-auth/react'
 
 export function SignIn() {
     return (
