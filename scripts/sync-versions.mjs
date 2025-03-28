@@ -1,14 +1,12 @@
-import fs from 'fs'
-import { readFile } from 'fs/promises'
-import path from 'path'
-import { fileURLToPath } from 'url'
+import fs from 'node:fs'
+import { findPackageJSON } from 'node:module'
+import path from 'node:path'
+import { fileURLToPath } from 'node:url'
 
 // Configure __dirname correctly in ES modules
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
-
-const packageJsonPath = path.join(__dirname, '../package.json')
-const packageJson = JSON.parse(await readFile(packageJsonPath, 'utf8'))
+const packageJson = findPackageJSON(import.meta.url)
 
 // Get Node.js version
 const nodeVersion = packageJson.engines?.node || '22'
