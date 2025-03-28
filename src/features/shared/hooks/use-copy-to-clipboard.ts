@@ -1,8 +1,8 @@
-import { useToast } from '@/components/ui/toast-context'
+import { useToast } from '@/components/hooks/use-toast'
 import { useState } from 'react'
 
 export function useCopyToClipboard() {
-    const { addToast } = useToast()
+    const { toast } = useToast()
     const [copying, setCopying] = useState(false)
 
     const copyToClipboard = async (text: string, label: string = 'Text') => {
@@ -16,10 +16,10 @@ export function useCopyToClipboard() {
             setCopying(true)
 
             // Show toast notification
-            addToast({
+            toast({
                 title: `${label} Copied`,
                 description: text.length > 30 ? `${text.substring(0, 6)}...${text.substring(text.length - 4)}` : text,
-                variant: 'success',
+                variant: 'default',
             })
 
             // Reset copying state after a short delay
@@ -27,7 +27,7 @@ export function useCopyToClipboard() {
         } catch (error) {
             console.error(`Failed to copy ${label.toLowerCase()}:`, error)
 
-            addToast({
+            toast({
                 title: 'Copy Failed',
                 description: `Could not copy ${label.toLowerCase()} to clipboard. Please try again.`,
                 variant: 'destructive',

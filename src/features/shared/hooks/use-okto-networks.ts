@@ -1,23 +1,12 @@
 'use client'
 
-import {
-    fetchNetworks,
-    getCaip2IdForChain,
-    getNetworkByCaipId,
-    getNetworkByChainId,
-    networksState$,
-    type OktoNetwork,
-} from '@/okto/explorer/networks'
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { fetchNetworks, networksState$, type OktoNetwork } from '@/okto/explorer/networks'
+import { useCallback, useEffect, useState } from 'react'
 
-export interface Chain {
-    id: number
-    name: string
-    icon: string
-    caip2Id: string
-}
-
-export function useChainService() {
+/**
+ * Hook to access and manage Okto networks data
+ */
+export function useOktoNetworks() {
     // Initialize state from networksState$.getValue() to handle test mocks properly
     const initialState = (() => {
         try {
@@ -26,6 +15,7 @@ export function useChainService() {
                 networks: Array.isArray(state.networks) ? state.networks : [],
                 isLoading: state.loading || false,
                 error: state.error || null,
+                lastUpdated: state.lastUpdated || null,
             }
         } catch (err) {
             console.error('Error getting initial networks state:', err)
@@ -33,6 +23,7 @@ export function useChainService() {
                 networks: [],
                 isLoading: false,
                 error: null,
+                lastUpdated: null,
             }
         }
     })()
@@ -41,9 +32,10 @@ export function useChainService() {
     const [error, setError] = useState<string | null>(initialState.error)
     const [hasInitialized, setHasInitialized] = useState(false)
     const [networks, setNetworks] = useState<OktoNetwork[]>(initialState.networks)
+    const [lastUpdated, setLastUpdated] = useState<number | null>(initialState.lastUpdated)
 
-    // Fetch chains data - memoize to prevent recreation on every render
-    const fetchChainsData = useCallback(
+    // Fetch networks data
+    const fetchNetworksData = useCallback(
         async (forceRefresh = false) => {
             if (isLoading) return
 
@@ -54,10 +46,11 @@ export function useChainService() {
                 const fetchedNetworks = await fetchNetworks(forceRefresh)
                 // Ensure networks is always an array
                 setNetworks(Array.isArray(fetchedNetworks) ? fetchedNetworks : [])
+                setLastUpdated(Date.now())
                 setHasInitialized(true)
             } catch (err) {
-                console.error('Error fetching chains data:', err)
-                setError(err instanceof Error ? err.message : 'Failed to fetch chains data')
+                console.error('Error fetching networks data:', err)
+                setError(err instanceof Error ? err.message : 'Failed to fetch networks data')
             } finally {
                 setIsLoading(false)
             }
@@ -73,7 +66,7 @@ export function useChainService() {
             if (networks.length > 0) {
                 setHasInitialized(true)
             } else {
-                fetchChainsData()
+                fetchNetworksData()
             }
         }
 
@@ -87,6 +80,7 @@ export function useChainService() {
                 setIsLoading(state.loading)
                 // Make sure to propagate the error state from the networksState$ observable
                 setError(state.error)
+                setLastUpdated(state.lastUpdated)
             })
         } catch (err) {
             console.error('Error subscribing to networks state:', err)
@@ -103,37 +97,59 @@ export function useChainService() {
                 }
             }
         }
-    }, [fetchChainsData, hasInitialized, networks.length])
-
-    // Transform networks to chains format - memoize to prevent recalculation on every render
-    const chains = useMemo(() => {
-        // Ensure networks is an array before mapping
-        if (!Array.isArray(networks)) {
-            console.warn('Networks is not an array:', networks)
-            return []
-        }
-
-        return networks.map(network => ({
-            id: network.chain_id,
-            name: network.network_name,
-            icon: network.logo || `/chain-icons/${network.network_name.toLowerCase()}.svg`,
-            caip2Id: network.caip_id,
-        }))
-    }, [networks])
-
-    // Memoize the refetch function to prevent recreation on every render
-    const refetch = useCallback((forceRefresh = true) => fetchChainsData(forceRefresh), [fetchChainsData])
+    }, [fetchNetworksData, hasInitialized, networks.length])
 
     // Return the hook data
     return {
-        chains,
+        networks,
+        isLoading,
+        error,
+        hasInitialized,
+        lastUpdated,
+        refetch: (forceRefresh = true) => fetchNetworksData(forceRefresh),
+    }
+}
+
+/**
+ * Hook to get a specific network by ID
+ */
+export function useNetwork(networkId?: string | number | null) {
+    const { networks, isLoading, error, hasInitialized, refetch } = useOktoNetworks()
+
+    // Find the network by ID (chain_id)
+    const network = networkId
+        ? networks.find(n => {
+              if (typeof networkId === 'number') {
+                  return n.chain_id === networkId
+              }
+              // Para compatibilidad con código existente que usa strings
+              return n.chain_id.toString() === networkId || n.network_name.toLowerCase() === networkId.toLowerCase()
+          })
+        : undefined
+
+    return {
+        network,
         isLoading,
         error,
         hasInitialized,
         refetch,
-        getCaip2IdForChain,
     }
 }
 
-// Export helper functions directly
-export { getCaip2IdForChain, getNetworkByCaipId, getNetworkByChainId }
+/**
+ * Hook to get a specific network by CAIP ID
+ */
+export function useNetworkByCaipId(caipId?: string | null) {
+    const { networks, isLoading, error, hasInitialized, refetch } = useOktoNetworks()
+
+    // Find the network by CAIP ID
+    const network = caipId ? networks.find(n => n.caip_id === caipId) : undefined
+
+    return {
+        network,
+        isLoading,
+        error,
+        hasInitialized,
+        refetch,
+    }
+}
