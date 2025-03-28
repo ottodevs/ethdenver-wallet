@@ -30,7 +30,7 @@ export const ThemeDecorator = (Story, context) => {
         handleThemeChange(isDark)
 
         return () => chan.off(DARK_MODE_EVENT_NAME, handleThemeChange)
-    }, [])
+    }, [isDark])
 
     return (
         <div className={isDark ? 'dark' : 'light'}>
