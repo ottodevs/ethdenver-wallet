@@ -1,7 +1,7 @@
 'use client'
 
-import { useAuth } from '@/features/auth/contexts/auth-context'
 import { useOktoAccount } from '@/features/shared/hooks/use-okto-account'
+import { useAuth } from '@/hooks/use-auth'
 import type { UserOp } from '@okto_web3/react-sdk'
 import { getPortfolioNFT, nftTransfer, useOkto } from '@okto_web3/react-sdk'
 import { useCallback, useEffect, useMemo, useState } from 'react'
