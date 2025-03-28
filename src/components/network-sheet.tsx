@@ -79,7 +79,7 @@ export function NetworkSheet({
                             <div className='space-y-4'>
                                 {chains.map(chain => {
                                     const { color, shortName } = getNetworkInfo(chain.name)
-                                    const isSelected = chain.id === selectedChain
+                                    const isSelected = selectedChain === chain.id.toString()
 
                                     return (
                                         <div
@@ -89,7 +89,7 @@ export function NetworkSheet({
                                                     ? 'border-[#373747] bg-[#25252F]'
                                                     : 'border-[#373747]/50 bg-[#25252F]/50 hover:bg-[#25252F]/80'
                                             }`}
-                                            onClick={() => handleNetworkSelect(chain.id)}>
+                                            onClick={() => handleNetworkSelect(chain.id.toString())}>
                                             <div className='flex items-center gap-3'>
                                                 <div
                                                     className={`h-8 w-8 ${color} flex items-center justify-center rounded-full text-xs text-white`}>
