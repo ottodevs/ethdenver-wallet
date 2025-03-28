@@ -1,24 +1,72 @@
+import { saveChat } from '@/features/ai/services/chat-store'
+import { RateLimiter } from '@/lib/rate-limiter'
 import { openai } from '@ai-sdk/openai'
-import { streamText } from 'ai'
+import { appendResponseMessages, streamText } from 'ai'
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
 
 // Allow streaming responses up to 30 seconds
 export const maxDuration = 30
 
+// Create rate limiters for different tiers
+const freeRateLimiter = new RateLimiter({
+    tokensPerInterval: 10, // 10 requests
+    interval: 'hour',
+    uniqueTokenPerInterval: 500, // Max 500 users per hour
+})
+
+const premiumRateLimiter = new RateLimiter({
+    tokensPerInterval: 50, // 50 requests
+    interval: 'hour',
+    uniqueTokenPerInterval: 500,
+})
+
 export async function POST(req: Request) {
     console.log('🔍 API /api/chat - Received POST request')
 
     try {
-        const { messages } = await req.json()
+        const { messages, chatId } = await req.json()
         console.log('📦 API /api/chat - Request body:', {
             messageCount: messages?.length || 0,
             lastMessage: messages?.length ? messages[messages.length - 1] : null,
+            chatId,
         })
 
         if (!messages || !Array.isArray(messages)) {
             console.error('❌ API /api/chat - Invalid messages format:', messages)
             throw new Error('Invalid messages format')
+        }
+
+        // Get user identifier (in a real app, this would be a user ID or session ID)
+        // For now, we'll use IP address or a default value
+        const ip = req.headers.get('x-forwarded-for') || 'anonymous'
+
+        // Check rate limit (would check user subscription in a real app)
+        // For now, everyone is on the free tier
+        const isPremium = false // In a real app, check if user has premium subscription
+        const rateLimiter = isPremium ? premiumRateLimiter : freeRateLimiter
+
+        const { success, limit, remaining, reset } = await rateLimiter.limit(ip)
+
+        if (!success) {
+            console.log('⛔ API /api/chat - Rate limit exceeded:', { ip, limit, remaining, reset })
+            return NextResponse.json(
+                {
+                    error: 'Rate limit exceeded',
+                    limit,
+                    remaining,
+                    reset,
+                    upgradeUrl: '/settings/subscription', // URL to upgrade subscription
+                },
+                {
+                    status: 429,
+                    headers: {
+                        'X-RateLimit-Limit': limit.toString(),
+                        'X-RateLimit-Remaining': remaining.toString(),
+                        'X-RateLimit-Reset': reset.toString(),
+                    },
+                },
+            )
         }
 
         console.log('🔄 API /api/chat - Starting response streaming')
@@ -65,7 +113,23 @@ export async function POST(req: Request) {
                 },
             },
             maxSteps: 3, // Allow multiple steps of tools
+            async onFinish({ response }) {
+                // Save the chat if we have a chatId
+                if (chatId) {
+                    await saveChat({
+                        id: chatId,
+                        messages: appendResponseMessages({
+                            messages,
+                            responseMessages: response.messages,
+                        }),
+                    })
+                }
+            },
         })
+
+        // Consume the stream to ensure it runs to completion & triggers onFinish
+        // even when the client response is aborted
+        result.consumeStream() // no await
 
         console.log('✅ API /api/chat - Streaming started correctly')
 
