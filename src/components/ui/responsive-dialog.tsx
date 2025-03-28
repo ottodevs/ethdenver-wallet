@@ -48,6 +48,14 @@ export function ResponsiveDialog({
 }: ResponsiveDialogProps) {
     const isDesktop = useMediaQuery('(min-width: 768px)')
 
+    // Force re-render when open state changes to ensure proper initialization
+    const [key, setKey] = React.useState(0)
+    React.useEffect(() => {
+        if (open !== undefined) {
+            setKey(prev => prev + 1)
+        }
+    }, [open])
+
     if (isDesktop) {
         return (
             <Dialog open={open} onOpenChange={onOpenChange}>
@@ -64,7 +72,13 @@ export function ResponsiveDialog({
     }
 
     return (
-        <Drawer open={open} onOpenChange={onOpenChange} shouldScaleBackground snapPoints={[0.95]}>
+        <Drawer
+            key={key}
+            open={open}
+            onOpenChange={onOpenChange}
+            shouldScaleBackground
+            snapPoints={[0.95]}
+            modal={true}>
             {trigger && <DrawerTrigger asChild>{trigger}</DrawerTrigger>}
             <DrawerContent className={cn(contentClassName)}>
                 {!hideCloseButton && (
