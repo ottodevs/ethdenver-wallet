@@ -1,51 +1,57 @@
 # Aeris Wallet Structure
 
-## App Structure
+## Project Structure
 
 ```bash
 src/
-├── app/
-│   ├── layout.tsx                 # Root layout with providers
-│   ├── page.tsx                   # Main dashboard (redirects to /auth if not authenticated)
+├── app/                          # Next.js App Router
+│   ├── layout.tsx               # Root layout with providers
+│   ├── page.tsx                 # Main dashboard
 │   ├── ask/
-│   │   └── page.tsx               # AI assistant page
+│   │   └── page.tsx            # AI assistant page
 │   ├── auth/
-│   │   └── page.tsx               # Authentication page
+│   │   └── page.tsx            # Authentication page
 │   ├── buy/
-│   │   └── page.tsx               # Buy crypto page
+│   │   └── page.tsx            # Buy crypto page
 │   ├── receive/
-│   │   └── page.tsx               # Receive crypto page
+│   │   └── page.tsx            # Receive crypto page
 │   ├── send/
-│   │   └── page.tsx               # Send crypto page
+│   │   └── page.tsx            # Send crypto page
 │   ├── settings/
-│   │   └── page.tsx               # Settings page
+│   │   └── page.tsx            # Settings page
 │   └── swap/
-│       └── page.tsx               # Swap tokens page
-├── features/
+│       └── page.tsx            # Swap tokens page
+├── features/                     # Feature-based modules
+│   ├── ai/
+│   │   ├── components/         # UI Components
+│   │   ├── hooks/             # React hooks for AI
+│   │   ├── services/          # Pure business logic
+│   │   └── types/             # TypeScript definitions
 │   ├── assets/
 │   │   ├── components/
 │   │   │   ├── token-list.tsx
 │   │   │   └── token-item.tsx
 │   │   ├── hooks/
 │   │   │   └── use-tokens.tsx
-│   │   └── services/
-│   │       └── token-service.ts
+│   │   ├── services/
+│   │   │   └── token-service.ts
+│   │   └── types/
+│   │       └── token.types.ts
 │   ├── auth/
 │   │   ├── components/
 │   │   │   ├── login-form.tsx
 │   │   │   └── onboarding.tsx
 │   │   ├── hooks/
 │   │   │   └── use-auth.tsx
-│   │   └── services/
-│   │       └── auth-service.ts
+│   │   ├── services/
+│   │   │   └── auth-service.ts
+│   │   └── types/
+│   │       └── auth.types.ts
 │   ├── nfts/
 │   │   ├── components/
-│   │   │   ├── nft-gallery.tsx
-│   │   │   └── nft-item.tsx
 │   │   ├── hooks/
-│   │   │   └── use-nfts.tsx
-│   │   └── services/
-│   │       └── nft-service.ts
+│   │   ├── services/
+│   │   └── types/
 │   ├── shared/
 │   │   ├── components/
 │   │   │   ├── loading-screen.tsx
@@ -54,185 +60,118 @@ src/
 │   │   ├── hooks/
 │   │   │   ├── use-copy-to-clipboard.tsx
 │   │   │   └── use-okto-client.tsx
-│   │   └── services/
-│   │       └── chain-service.ts
+│   │   ├── services/
+│   │   │   └── chain-service.ts
+│   │   └── types/
+│   │       └── shared.types.ts
 │   ├── transactions/
 │   │   ├── components/
-│   │   │   ├── transaction-history.tsx
-│   │   │   └── transaction-item.tsx
 │   │   ├── hooks/
-│   │   │   └── use-transactions.tsx
-│   │   └── services/
-│   │       ├── transaction-service.ts
-│   │       └── token-transfer-service.ts
+│   │   ├── services/
+│   │   └── types/
 │   └── wallet/
 │       ├── components/
-│       │   ├── balance-display.tsx
-│       │   ├── action-buttons.tsx
-│       │   ├── tab-navigation.tsx
-│       │   ├── token-list.tsx
-│       │   └── wallet-header.tsx
 │       ├── hooks/
-│       │   ├── use-wallet.tsx
-│       │   └── use-privacy-mode.tsx
-│       └── services/
-│           └── wallet-service.ts
-└── lib/
-    ├── utils/
-    │   ├── format.ts
-    │   └── explorer.ts
-    └── middleware.ts              # Auth middleware
+│       ├── services/
+│       └── types/
+├── lib/                         # Pure utility functions
+│   ├── utils/
+│   │   ├── format.ts
+│   │   └── explorer.ts
+│   ├── constants/
+│   │   └── config.ts
+│   └── types/
+│       └── global.types.ts
+└── hooks/                       # Shared React hooks
+    ├── use-persistence.ts
+    └── use-sync.ts
 ```
 
-## Route Structure
+## Architectural Principles
 
-- `/` - Main dashboard with wallet overview
-- `/ask` - AI assistant
-- `/auth` - Authentication page
-- `/buy` - Buy crypto
-- `/receive` - Receive crypto
-- `/send` - Send crypto
-- `/settings` - User settings
-- `/swap` - Swap tokens
+### 1. Feature-First Organization
+
+- Each feature is self-contained with its own components, hooks, services, and types
+- Features can share code through the shared feature module
+- Clear boundaries between features improve maintainability
+
+### 2. Clean Separation of Concerns
+
+- `lib/`: Pure utility functions without React dependencies
+- `features/*/services/`: Pure business logic
+- `features/*/hooks/`: React-specific logic
+- `hooks/`: Shared React hooks
+- `app/`: Next.js pages and layouts
+
+### 3. State Management
+
+- Legend State for global state management
+- TanStack Query for server state
+- Local state when appropriate
+- Persistent storage with IndexedDB
+
+### 4. Data Flow
+
+```mermaid
+graph TD
+    A[Components] --> B[Hooks]
+    B --> C[Services]
+    C --> D[API/State]
+    D --> C
+    C --> B
+    B --> A
+```
 
 ## Key Components
 
 ### Dashboard Components
 
-- `WalletHeader` - Top navigation with options dropdown and QR code button
-- `BalanceDisplay` - Shows total balance with privacy toggle
-- `ActionButtons` - Buy, Swap, Send, Ask buttons
-- `TabNavigation` - Assets, Activity, NFTs tabs
-- `TokenList` - List of tokens with balances
-- `TransactionHistory` - List of transactions
-- `NFTGallery` - Gallery of NFTs
+- `WalletHeader`: Navigation and options
+- `BalanceDisplay`: Total balance with privacy toggle
+- `ActionButtons`: Primary actions
+- `TabNavigation`: Main navigation tabs
+- `TokenList`: Asset listing
+- `TransactionHistory`: Activity log
+- `NFTGallery`: NFT display
 
 ### Modal Components
 
-- `SendModal` - Send crypto interface
-- `SwapModal` - Swap tokens interface
-- `BuyModal` - Buy crypto interface
-- `ReceiveModal` - Receive crypto interface
+- `SendModal`: Transfer interface
+- `SwapModal`: Token swap interface
+- `BuyModal`: Purchase interface
+- `ReceiveModal`: Receive address
 
 ### Shared Components
 
-- `LoadingScreen` - Loading animation
-- `ErrorDisplay` - Error messages
-- `ResponsiveDialog` - Responsive modal dialog
+- `LoadingScreen`: Loading states
+- `ErrorDisplay`: Error handling
+- `ResponsiveDialog`: Modal dialogs
 
-## Implementation Plan
+## Implementation Guidelines
 
-1. Create the feature folder structure
-2. Extract components from the current Wallet component
-3. Create page components for each route
-4. Implement shared components
-5. Refactor hooks and services by feature
-6. Update imports and references
+### 1. Component Creation
 
-## Example Implementation
+- Use TypeScript for all components
+- Implement proper error boundaries
+- Add loading states
+- Include accessibility features
 
-```typescript
+### 2. Hook Usage
 
-//src/app/layout.tsx
-import '@/app/globals.css'
-import AppProvider from '@/components/providers'
-import { outfit } from '@/lib/utils/fonts'
-import type { Metadata } from 'next'
-import { ThemeProvider } from 'next-themes'
+- Create custom hooks for reusable logic
+- Use Legend State hooks for global state
+- Implement TanStack Query for API calls
 
-export const metadata: Metadata = {
-    title: 'Aeris Wallet',
-    description:
-        'Effortless login, seamless wallet management, and reliable transactions across the most popular blockchains—combining simplicity with interoperability.',
-}
+### 3. Service Implementation
 
-export default async function RootLayout({
-  children,
-}: Readonly<{
-        children: React.ReactNode
-    }>
-) {
-    return (
-        <html lang='en' suppressHydrationWarning>
-            <body
-                className={`${outfit.variable} antialiased`}
-            >
-                <ThemeProvider
-                    attribute='class'
-                    defaultTheme='system'
-                    enableSystem
-                    disableTransitionOnChange
-            >
-                <AppProvider>{children}</AppProvider>
-            </ThemeProvider>
-            </body>
-        </html>
-    )
-}
-```
+- Pure functions without side effects
+- Clear input/output types
+- Error handling
+- Logging where appropriate
 
-```typescript
+### 4. Testing Strategy
 
-//src/app/page.tsx
-import { WalletDashboard } from '@/features/wallet/components/wallet-dashboard'
-
-export default function HomePage() {
-    return (
-        <main className='flex min-h-screen flex-col items-center bg-[#11101C]'>
-            <div className='container max-w-md px-4 min-h-screen'>
-                <WalletDashboard />
-            </div>
-        </main>
-    )
-}
-```
-
-```typescript
-//src/features/wallet/components/wallet-dashboard.tsx
-
-'use client';
-
-import { WalletHeader } from './wallet-header'
-import { BalanceDisplay } from './balance-display'
-import { ActionButtons } from './action-buttons'
-import { TabNavigation } from './tab-navigation'
-import { TokenList } from '@/features/assets/components/token-list'
-import { TransactionHistory } from '@/features/transactions/components/transaction-history'
-import { NFTGallery } from '@/features/nfts/components/nft-gallery'
-import { LoadingScreen } from '@/features/shared/components/loading-screen'
-import { useOktoAccount } from '@/features/shared/hooks/use-okto-account'
-import { useOktoPortfolio } from '@/features/shared/hooks/use-okto-portfolio'
-import { useState } from 'react'
-
-export function WalletDashboard() {
-    const { isLoading: accountLoading, isAuthenticated } = useOktoAccount()
-    const { isLoading: isLoadingPortfolio, hasInitialized } = useOktoPortfolio()
-    const [activeTab, setActiveTab] = useState('assets')
-
-  // Show loading screen while authenticating or loading the portfolio
-  if (accountLoading || (isAuthenticated && isLoadingPortfolio && !hasInitialized)) {
-    return <LoadingScreen />;
-    }
-
-    return (
-        <div className='pt-3 pb-4 font-outfit'>
-            <WalletHeader />
-            <BalanceDisplay />
-            <ActionButtons />
-            <TabNavigation activeTab={activeTab} onTabChange={setActiveTab} />
-
-            <div className='w-full mx-auto rounded-t-2xl bg-gradient-to-br from-[#252531] to-[#13121E] min-h-[calc(100vh-300px)]'>
-                <div className='py-4'>
-                    {activeTab === 'assets' ? (
-                        <TokenList />
-                    ) : activeTab === 'activity' ? (
-                        <TransactionHistory />
-                    ) : activeTab === 'nfts' ? (
-                        <NFTGallery />
-                    ) : null}
-                </div>
-            </div>
-        </div>
-    )
-}
-```
+- Unit tests for services
+- Integration tests for hooks
+- E2E tests for critical flows
+- Performance monitoring
